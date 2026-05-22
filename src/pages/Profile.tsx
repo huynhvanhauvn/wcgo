@@ -83,7 +83,7 @@ export default function ProfilePage() {
             required
             disabled
           />
-          <p className="mt-1 text-xs text-gray-500">Tên này dùng để đăng nhập và không thể thay đổi.</p>
+          <p className="mt-1 text-xs text-gray-500">{t('usernameHint')}</p>
         </label>
 
         <label className="block">
@@ -93,7 +93,7 @@ export default function ProfilePage() {
             value={displayName}
             onChange={(event) => setDisplayName(event.target.value)}
             className="w-full rounded border p-2"
-            placeholder="Tên hiển thị trên bảng xếp hạng"
+            placeholder={t('displayNamePlaceholder')}
             maxLength={50}
           />
         </label>

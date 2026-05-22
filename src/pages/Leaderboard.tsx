@@ -68,7 +68,7 @@ export default function LeaderboardPage() {
           {t('realtimeLeaderboard')}
         </h2>
         <div className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-4 py-2 rounded-full border border-slate-100">
-          Live Updates
+          {t('liveUpdates')}
         </div>
       </div>
 

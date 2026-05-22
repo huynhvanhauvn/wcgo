@@ -1,10 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
 
-const url = import.meta.env.VITE_SUPABASE_URL
-const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+// Use import.meta.env for Vite
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY // Using the key name from your .env
 
-if (!url || !key) {
-  console.warn('Supabase keys are missing in env')
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("Supabase keys are missing in env!");
 }
 
-export const supabase = createClient(url as string, key as string)
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder'
+)

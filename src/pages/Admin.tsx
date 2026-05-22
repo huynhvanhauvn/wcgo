@@ -62,30 +62,61 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-lg bg-white/80 p-4 shadow-md">
-        <h2 className="text-xl font-semibold mb-4">{t('adminSettleTitle')}</h2>
-        {error && <div className="mb-4 rounded bg-red-100 p-3 text-sm text-red-700">{error}</div>}
-        <div className="space-y-3">
+      <div className="glass-card p-6 md:p-8">
+        <h2 className="text-2xl font-black text-[#0a2647] uppercase tracking-tight italic mb-6 border-b border-slate-100 pb-4">
+          {t('adminSettleTitle')}
+        </h2>
+
+        {error && (
+          <div className="mb-6 p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs font-bold uppercase tracking-wider">
+            {error}
+          </div>
+        )}
+
+        <div className="space-y-4">
           {matches.map((m) => (
-            <div key={m.id} className="flex items-center justify-between p-3 border rounded">
-              <div>
-                <div className="font-medium">
-                  {m.team_a} {t('versus')} {m.team_b} - {DateTime.fromISO(m.start_time).setLocale(i18n.language).toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)}
+            <div key={m.id} className="flex flex-col md:flex-row md:items-center justify-between p-5 bg-slate-50 border border-slate-100 rounded-2xl gap-4 hover:border-slate-200 transition-all">
+              <div className="flex-1">
+                <div className="font-bold text-[#0a2647] text-lg">
+                  {m.team_a} <span className="text-slate-400 mx-1 font-medium">vs</span> {m.team_b}
                 </div>
-                <div className="text-sm text-gray-500">{m.venue}</div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
+                  {DateTime.fromISO(m.start_time).setLocale(i18n.language).toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)} • {m.venue}
+                </div>
                 {m.status === 'FINISHED' && (
-                  <div className="mt-1 text-sm font-medium text-emerald-700">
+                  <div className="mt-2 inline-block px-3 py-1 bg-emerald-50 rounded-full text-[10px] font-black text-emerald-600 uppercase tracking-widest border border-emerald-100">
                     {t('finalScore')}: {m.score_a} - {m.score_b}
                   </div>
                 )}
               </div>
-              <div className="flex items-center space-x-2">
-                <input type="number" min={0} placeholder="A" value={editing[m.id]?.a ?? m.score_a ?? ''} onChange={(e) => setScore(m.id, 'a', e.target.value)} className="w-20 p-2 border rounded" />
-                <input type="number" min={0} placeholder="B" value={editing[m.id]?.b ?? m.score_b ?? ''} onChange={(e) => setScore(m.id, 'b', e.target.value)} className="w-20 p-2 border rounded" />
-                <button className="btn-primary" onClick={() => handleSettle(m)}>{t('settle')}</button>
+
+              <div className="flex items-center gap-3">
+                <div className="flex gap-1">
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="A"
+                    value={editing[m.id]?.a ?? m.score_a ?? ''}
+                    onChange={(e) => setScore(m.id, 'a', e.target.value)}
+                    className="w-14 p-2 bg-white border border-slate-200 rounded-lg text-center font-bold text-[#0a2647] focus:border-[#0a2647] outline-none"
+                  />
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="B"
+                    value={editing[m.id]?.b ?? m.score_b ?? ''}
+                    onChange={(e) => setScore(m.id, 'b', e.target.value)}
+                    className="w-14 p-2 bg-white border border-slate-200 rounded-lg text-center font-bold text-[#0a2647] focus:border-[#0a2647] outline-none"
+                  />
+                </div>
+                <button className="btn-primary px-4 text-xs" onClick={() => handleSettle(m)}>
+                  {t('settle')}
+                </button>
                 {m.status === 'FINISHED' && (
-                  <button className="rounded border border-red-300 px-3 py-2 text-sm font-semibold text-red-700" onClick={() => handleReset(m)}>
-                    {t('reset')}
+                  <button className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all" onClick={() => handleReset(m)} title={t('reset')}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
                   </button>
                 )}
               </div>
@@ -95,20 +126,20 @@ export default function AdminPage() {
       </div>
 
       {results && (
-        <div className="rounded-lg bg-white/80 p-4 shadow-md">
-          <h3 className="font-semibold mb-2">{t('settlementResults')}</h3>
-          <ul className="space-y-1">
+        <div className="glass-card p-6 md:p-8 animate-in slide-in-from-bottom duration-500">
+          <h3 className="text-xl font-black text-[#0a2647] uppercase tracking-tight italic mb-6">{t('settlementResults')}</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {results.map((r) => {
               const uid = r.user_id ?? r.out_user_id
               const pts = r.points ?? r.out_points
               return (
-                <li key={uid} className="flex justify-between">
-                  <span>{uid}</span>
-                  <strong>{pts} {t('pointsShort')}</strong>
-                </li>
+                <div key={uid} className="flex justify-between items-center p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider truncate mr-2">{uid.substring(0, 8)}</span>
+                  <strong className="text-[#0a2647] font-black">{pts} {t('pointsShort')}</strong>
+                </div>
               )
             })}
-          </ul>
+          </div>
         </div>
       )}
     </div>

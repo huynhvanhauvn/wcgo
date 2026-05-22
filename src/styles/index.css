@@ -43,7 +43,7 @@
     @apply bg-white/90 backdrop-blur-xl border border-white rounded-2xl shadow-[0_8px_30px_rgba(10,38,71,0.06)];
   }
 
-  /* Header luôn xanh sẫm từ đầu */
+  /* Header always deep navy from start */
   .header-fixed {
     @apply py-3 bg-[#0a2647] shadow-[0_4px_20px_rgba(0,0,0,0.2)];
   }

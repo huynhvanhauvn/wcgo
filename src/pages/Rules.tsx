@@ -6,14 +6,14 @@ export default function RulesPage() {
 
   return (
     <div className="glass-card p-6 md:p-10 bg-white/95 shadow-xl border-white">
-      {/* Tiêu đề chính: Màu xanh sẫm */}
+      {/* Main Title: Deep Navy */}
       <h1 className="text-3xl md:text-5xl font-black text-center mb-12 tracking-tight uppercase italic">
         <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#0a2647] via-blue-900 to-wc-accent">
           {t('rules_screen.title')}
         </span>
       </h1>
 
-      {/* Phần 1: Thời gian và Khóa */}
+      {/* Section 1: Timing and Lock */}
       <section className="mb-10 bg-slate-50 p-6 rounded-2xl border border-slate-100 hover:border-blue-500/30 transition-all duration-300">
         <h2 className="text-xl font-bold text-blue-800 mb-4 flex items-center gap-3">
           <span className="h-3 w-3 bg-blue-600 rounded-full shadow-[0_0_10px_rgba(30,58,138,0.2)]"></span>
@@ -27,7 +27,7 @@ export default function RulesPage() {
         </div>
       </section>
 
-      {/* Phần 2: Tính điểm */}
+      {/* Section 2: Scoring */}
       <section className="mb-10 bg-slate-50 p-6 rounded-2xl border border-slate-100 hover:border-emerald-500/30 transition-all duration-300">
         <h2 className="text-xl font-bold text-emerald-700 mb-6 flex items-center gap-3">
            <span className="h-3 w-3 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.2)]"></span>
@@ -69,7 +69,7 @@ export default function RulesPage() {
         </div>
       </section>
 
-      {/* Phần 3: Tính tiền phạt */}
+      {/* Section 3: Penalty Calculation */}
       <section className="bg-slate-50 p-6 rounded-2xl border border-slate-100 hover:border-wc-gold/30 transition-all duration-300">
         <h2 className="text-xl font-bold text-wc-gold mb-8 flex items-center gap-3">
           <span className="h-3 w-3 bg-wc-gold rounded-full shadow-[0_0_10px_rgba(255,183,0,0.2)]"></span>
@@ -93,7 +93,7 @@ export default function RulesPage() {
           </div>
         </div>
 
-        {/* Hiển thị công thức toán học */}
+        {/* Display Mathematical Formula */}
         <div className="relative group">
           <div className="absolute -inset-1 bg-gradient-to-r from-[#0a2647] to-wc-gold rounded-3xl blur opacity-10 group-hover:opacity-20 transition duration-1000"></div>
           <div className="relative bg-[#0a2647] p-10 rounded-2xl text-center border border-white/10 shadow-xl overflow-hidden">
@@ -110,7 +110,7 @@ export default function RulesPage() {
           <span className="text-lg">🛡️</span> {t('rules_screen.champion_privilege')}
         </p>
 
-        {/* Xử lý quỹ dư/thiếu */}
+        {/* Surplus/Deficit Handling */}
         <div className="mt-12 pt-10 border-t border-slate-100">
           <h3 className="text-sm font-black text-[#0a2647] mb-6 uppercase tracking-[0.3em] text-center">{t('rules_screen.fund_handling_title')}</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">

@@ -31,7 +31,6 @@ export async function signUpWithUsername(username: string, password: string) {
     password,
     options: {
       data: {
-        username: normalized,
         username: normalized
       }
     }
