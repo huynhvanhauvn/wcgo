@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root{
+  --wc-primary: #0b2545; /* Dark Navy */
+  --wc-accent: #d4af37; /* Metallic Gold */
+  --wc-bg: #f8fafc; /* Snow like */
+  --wc-foreground: #0f172a;
+}
+
+.bg-wc-bg{ background-color: var(--wc-bg); }
+.text-wc-foreground{ color: var(--wc-foreground); }
+.bg-wc-primary{ background-color: var(--wc-primary); }
+.text-wc-accent{ color: var(--wc-accent); }
+
+.btn-primary{
+  background: linear-gradient(90deg,var(--wc-accent),#f2d26b);
+  color: #082033;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+}
+
+.rounded-lg { border-radius: 0.75rem; }
