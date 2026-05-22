@@ -98,12 +98,16 @@ export default function AdminPage() {
         <div className="rounded-lg bg-white/80 p-4 shadow-md">
           <h3 className="font-semibold mb-2">{t('settlementResults')}</h3>
           <ul className="space-y-1">
-            {results.map((r) => (
-              <li key={r.user_id} className="flex justify-between">
-                <span>{r.user_id}</span>
-                <strong>{r.points} {t('pointsShort')}</strong>
-              </li>
-            ))}
+            {results.map((r) => {
+              const uid = r.user_id ?? r.out_user_id
+              const pts = r.points ?? r.out_points
+              return (
+                <li key={uid} className="flex justify-between">
+                  <span>{uid}</span>
+                  <strong>{pts} {t('pointsShort')}</strong>
+                </li>
+              )
+            })}
           </ul>
         </div>
       )}

@@ -9,7 +9,8 @@ export default function ProfilePage() {
   const { t } = useTranslation()
   const { user, profile, updateProfile } = useAuth()
   const fallbackName = getUserDisplayName(user)
-  const [fullName, setFullName] = useState(profile?.full_name || fallbackName)
+  const [username, setUsername] = useState(profile?.username || fallbackName)
+  const [displayName, setDisplayName] = useState(profile?.display_name || '')
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '')
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState('')
@@ -17,7 +18,8 @@ export default function ProfilePage() {
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    setFullName(profile?.full_name || fallbackName)
+    setUsername(profile?.username || fallbackName)
+    setDisplayName(profile?.display_name || '')
     setAvatarUrl(profile?.avatar_url || '')
   }, [profile, fallbackName])
 
@@ -44,7 +46,7 @@ export default function ProfilePage() {
         setAvatarUrl(nextAvatarUrl)
         setAvatarFile(null)
       }
-      await updateProfile({ fullName, avatarUrl: nextAvatarUrl })
+      await updateProfile({ username, displayName, avatarUrl: nextAvatarUrl })
       setMessage(t('profileSaved'))
     } catch (e: any) {
       setMessage(e.message || t('profileSaveFailed'))
@@ -56,10 +58,10 @@ export default function ProfilePage() {
   return (
     <div className="mx-auto max-w-xl rounded-lg bg-white/90 p-6 shadow-md">
       <div className="mb-6 flex items-center gap-4">
-        <UserAvatar name={fullName || fallbackName} avatarUrl={avatarPreviewUrl || avatarUrl} className="h-16 w-16 text-xl" />
+        <UserAvatar name={displayName || username || fallbackName} avatarUrl={avatarPreviewUrl || avatarUrl} className="h-16 w-16 text-xl" />
         <div>
           <h1 className="text-2xl font-semibold">{t('profileTitle')}</h1>
-          <p className="text-sm text-gray-500">{fallbackName}</p>
+          <p className="text-sm text-gray-500">{username || fallbackName}</p>
         </div>
       </div>
 
@@ -71,14 +73,28 @@ export default function ProfilePage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <label className="block">
+          <span className="mb-1 block text-sm font-medium text-gray-700">{t('username')}</span>
+          <input
+            type="text"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            className="w-full rounded border p-2 bg-gray-50"
+            maxLength={80}
+            required
+            disabled
+          />
+          <p className="mt-1 text-xs text-gray-500">Tên này dùng để đăng nhập và không thể thay đổi.</p>
+        </label>
+
+        <label className="block">
           <span className="mb-1 block text-sm font-medium text-gray-700">{t('displayName')}</span>
           <input
             type="text"
-            value={fullName}
-            onChange={(event) => setFullName(event.target.value)}
+            value={displayName}
+            onChange={(event) => setDisplayName(event.target.value)}
             className="w-full rounded border p-2"
-            maxLength={80}
-            required
+            placeholder="Tên hiển thị trên bảng xếp hạng"
+            maxLength={50}
           />
         </label>
 

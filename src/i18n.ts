@@ -31,6 +31,7 @@ const resources = {
       realtimeLeaderboard: 'Realtime Leaderboard',
       penalty: 'Penalty',
       profileTitle: 'Profile',
+      username: 'Username',
       displayName: 'Display name',
       avatarUrl: 'Avatar URL',
       uploadAvatar: 'Upload avatar',
@@ -45,12 +46,41 @@ const resources = {
       adminResetFailed: 'Could not reset match.',
       signUp: 'Sign up',
       signIn: 'Sign in',
-      username: 'Username',
       password: 'Password',
       alreadyHaveAccount: 'Already have an account? Sign in',
       newHere: 'New here? Sign up',
       accountCreated: 'Account created. Please sign in with your username and password.',
-      authFailed: 'Auth failed'
+      authFailed: 'Auth failed',
+      app_title: 'WORLD CUP 2026 PREDICTION TOURNAMENT',
+      tabs: {
+        dashboard: 'Schedule',
+        leaderboard: 'Leaderboard',
+        rules: 'Rules & FAQ'
+      },
+      rules_screen: {
+        title: 'GAME RULES & REGULATIONS',
+        section_1_title: '1. PARTICIPATION & LOCK TIME',
+        rule_deadline: 'All members must submit their predictions before the match starts.',
+        rule_lock_time: 'The system will automatically LOCK predictions exactly 15 minutes before kickoff (🔒).',
+        section_2_title: '2. SCORING SYSTEM',
+        score_exact: 'Exact Score: +3 points (e.g., Prediction 2-1, Result 2-1).',
+        score_difference: 'Correct Outcome & Goal Difference: +2 points (e.g., Prediction 3-1, Result 2-0 - same 2-goal margin).',
+        score_outcome: 'Correct Outcome Only or Draw with wrong score: +1 point (e.g., Prediction 3-0, Result 1-0).',
+        score_wrong: 'Incorrect Result: 0 points.',
+        multipliers_title: 'Point Multipliers per Round:',
+        mult_group: 'Group Stage & Round of 32: Base Multiplier (x1 point)',
+        mult_knockout: 'Round of 16, Quarter-finals & Semi-finals: Double Multiplier (x2 points)',
+        mult_final: 'Third Place Play-off & Final: Triple Multiplier (x3 points)',
+        section_3_title: '3. PROGRESSIVE PENALTY FORMULA',
+        penalty_free: 'Top 1, Top 2, Top 3: 100% FREE dining/drinks (0 VND).',
+        penalty_last: 'Last Place: Pays the maximum insurance cap of 500,000 VND.',
+        penalty_others: "Other positions' penalties are calculated based on the point gap between Top 3 and Last place using a mathematical progressive formula.",
+        penalty_formula_label: 'Applied Mathematical Formula:',
+        champion_privilege: 'Champion Privilege (Top 1): Exempt from any additional costs if the penalty fund is insufficient.',
+        fund_handling_title: 'Fund Surplus/Deficit Handling:',
+        deficit_rule: 'If total penalties are insufficient: The deficit will be shared equally among all participants EXCEPT Top 1.',
+        surplus_rule: 'If there is a surplus: The extra funds will be used for communal group activities or carried over to the next season.'
+      }
     }
   },
   vi: {
@@ -82,6 +112,7 @@ const resources = {
       realtimeLeaderboard: 'Bảng xếp hạng realtime',
       penalty: 'Tiền phạt',
       profileTitle: 'Hồ sơ cá nhân',
+      username: 'Tên đăng nhập',
       displayName: 'Tên hiển thị',
       avatarUrl: 'URL avatar',
       uploadAvatar: 'Tải avatar lên',
@@ -96,12 +127,41 @@ const resources = {
       adminResetFailed: 'Không reset được trận đấu.',
       signUp: 'Đăng ký',
       signIn: 'Đăng nhập',
-      username: 'Tên đăng nhập',
       password: 'Mật khẩu',
       alreadyHaveAccount: 'Đã có tài khoản? Đăng nhập',
       newHere: 'Người mới? Đăng ký',
       accountCreated: 'Đã tạo tài khoản. Hãy đăng nhập bằng username và mật khẩu.',
-      authFailed: 'Đăng nhập thất bại'
+      authFailed: 'Đăng nhập thất bại',
+      app_title: 'GIẢI ĐẤU DỰ ĐOÁN WORLD CUP 2026',
+      tabs: {
+        dashboard: 'Lịch Thi Đấu',
+        leaderboard: 'Bảng Xếp Hạng',
+        rules: 'Điều Lệ & FAQ'
+      },
+      rules_screen: {
+        title: 'ĐIỀU LỆ VÀ QUY TẮC TRÒ CHƠI',
+        section_1_title: '1. QUY TẮC THAM GIA & KHÓA DỰ ĐOÁN',
+        rule_deadline: 'Tất cả thành viên phải nhập tỷ số dự đoán của mình trước khi trận đấu bắt đầu.',
+        rule_lock_time: 'Hệ thống sẽ tự động KHÓA chức năng chỉnh sửa trước giờ lăn bóng chính thức đúng 15 phút (🔒).',
+        section_2_title: '2. HỆ THỐNG TÍNH ĐIỂM (SCORING SYSTEM)',
+        score_exact: 'Trúng vanh vách tỷ số: Cộng 3 điểm (Ví dụ: Đoán 2-1, Kết quả 2-1).',
+        score_difference: 'Đúng đội thắng & Đúng khoảng cách tỷ số: Cộng 2 điểm (Ví dụ: Đoán 3-1, Kết quả 2-0 - Cùng cách biệt 2 bàn).',
+        score_outcome: 'Chỉ đúng đội thắng hoặc Hòa sai tỷ số: Cộng 1 điểm (Ví dụ: Đoán 3-0, Kết quả 1-0).',
+        score_wrong: 'Sai hoàn toàn kết quả: 0 điểm.',
+        multipliers_title: 'Hệ số điểm theo Vòng đấu:',
+        mult_group: 'Vòng bảng & Vòng 32: Hệ số gốc (x1 điểm)',
+        mult_knockout: 'Vòng 16, Tứ kết & Bán kết: Nhân đôi hệ số (x2 điểm)',
+        mult_final: 'Tranh hạng Ba & Chung kết: Nhân ba hệ số (x3 điểm)',
+        section_3_title: '3. CÔNG THỨC TÍNH TIỀN PHẠT LŨY TIẾN',
+        penalty_free: 'Top 1, Top 2, Top 3: Được MIỄN PHÍ 100% chi phí ăn uống (0 VNĐ).',
+        penalty_last: 'Vị trí Bét bảng (Cuối cùng): Đóng mức kịch trần bảo hiểm là 500,000 VNĐ.',
+        penalty_others: 'Các vị trí còn lại tính tiền phạt dựa trên khoảng cách điểm so với Top 3 và Bét bảng theo công thức lũy tiến toán học.',
+        penalty_formula_label: 'Công thức toán học áp dụng:',
+        champion_privilege: 'Đặc quyền Vô Địch (Top 1): Miễn trừ mọi chi phí phát sinh bổ sung nếu quỹ phạt bị thiếu hụt.',
+        fund_handling_title: 'Xử lý Quỹ dư/thiếu:',
+        deficit_rule: 'Trường hợp thiếu hụt: Phần tiền thiếu sẽ được chia đều cho tất cả mọi người TRỪ Top 1.',
+        surplus_rule: 'Trường hợp dư thừa: Số tiền dư sẽ được dùng cho các hoạt động tập thể chung hoặc cộng dồn cho mùa giải kế tiếp.'
+      }
     }
   }
 }

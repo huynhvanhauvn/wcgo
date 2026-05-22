@@ -5,6 +5,7 @@ This workspace contains a Vite + React + TypeScript frontend scaffold tailored f
 - TailwindCSS-based design system with World Cup palette
 - i18n (English & Vietnamese)
 - Supabase client wrapper for auth/data
+- User Profiles: Support for Username, Display Name, and Avatars
 - Pages: Auth, Matches, Leaderboard, Admin
 
 Quick start

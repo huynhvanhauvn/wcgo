@@ -1,4 +1,5 @@
 const TEAM_FLAG_CODES: Record<string, string> = {
+  // English
   Algeria: 'dz',
   Argentina: 'ar',
   Australia: 'au',
@@ -47,10 +48,39 @@ const TEAM_FLAG_CODES: Record<string, string> = {
   Turkey: 'tr',
   USA: 'us',
   Uruguay: 'uy',
-  Uzbekistan: 'uz'
+  Uzbekistan: 'uz',
+  Vietnam: 'vn',
+
+  // Vietnamese
+  'Pháp': 'fr',
+  'Đức': 'de',
+  'Anh': 'gb-eng',
+  'Bồ Đào Nha': 'pt',
+  'Tây Ban Nha': 'es',
+  'Nhật Bản': 'jp',
+  'Hàn Quốc': 'kr',
+  'Mỹ': 'us',
+  'Ý': 'it',
+  'Thụy Sĩ': 'ch',
+  'Thụy Điển': 'se',
+  'Bỉ': 'be',
+  'Hà Lan': 'nl',
+  'Việt Nam': 'vn'
 }
 
 export function getFlagUrl(teamName: string) {
-  const code = TEAM_FLAG_CODES[teamName]
-  return code ? `https://flagcdn.com/${code}.svg` : null
+  if (!teamName) return null
+
+  // Try direct match
+  let code = TEAM_FLAG_CODES[teamName]
+
+  // Try case-insensitive match
+  if (!code) {
+    const entry = Object.entries(TEAM_FLAG_CODES).find(
+      ([key]) => key.toLowerCase() === teamName.toLowerCase()
+    )
+    if (entry) code = entry[1]
+  }
+
+  return code ? `https://flagcdn.com/${code}.svg` : `https://placehold.co/40x28/e2e8f0/64748b?text=${teamName.substring(0, 2).toUpperCase()}`
 }

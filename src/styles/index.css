@@ -2,24 +2,64 @@
 @tailwind components;
 @tailwind utilities;
 
-:root{
-  --wc-primary: #0b2545; /* Dark Navy */
-  --wc-accent: #d4af37; /* Metallic Gold */
-  --wc-bg: #f8fafc; /* Snow like */
-  --wc-foreground: #0f172a;
+:root {
+  --wc-primary: #f8fafc;
+  --wc-accent: #00d4ff;
+  --wc-dark-blue: #0a2647;
+  --wc-gold: #f59e0b;
+  --wc-mexico: #006341;
+  --wc-canada: #ef3340;
+  --wc-usa: #002868;
 }
 
-.bg-wc-bg{ background-color: var(--wc-bg); }
-.text-wc-foreground{ color: var(--wc-foreground); }
-.bg-wc-primary{ background-color: var(--wc-primary); }
-.text-wc-accent{ color: var(--wc-accent); }
-
-.btn-primary{
-  background: linear-gradient(90deg,var(--wc-accent),#f2d26b);
-  color: #082033;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
+@layer base {
+  html {
+    @apply bg-[#f1f5f9];
+  }
+  body {
+    @apply bg-[#f1f5f9] text-[#0a2647] antialiased;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
 }
 
-.rounded-lg { border-radius: 0.75rem; }
+@layer components {
+  .btn-primary {
+    @apply bg-gradient-to-r from-[#0a2647] to-blue-800 text-white px-5 py-2 rounded-xl font-bold shadow-[0_4px_12px_rgba(10,38,71,0.3)]
+           hover:shadow-indigo-500/40 hover:scale-105 active:scale-95 transition-all duration-300 disabled:opacity-50;
+  }
+
+  .nav-link-active {
+    @apply relative text-wc-accent font-bold;
+  }
+
+  .nav-link-active::after {
+    content: '';
+    @apply absolute -bottom-1 left-0 w-full h-1 bg-gradient-to-r from-wc-accent to-wc-gold rounded-full shadow-[0_0_8px_rgba(0,212,255,0.4)];
+  }
+
+  .glass-card {
+    @apply bg-white/90 backdrop-blur-xl border border-white rounded-2xl shadow-[0_8px_30px_rgba(10,38,71,0.06)];
+  }
+
+  /* Header luôn xanh sẫm từ đầu */
+  .header-fixed {
+    @apply py-3 bg-[#0a2647] shadow-[0_4px_20px_rgba(0,0,0,0.2)];
+  }
+}
+
+.text-navy {
+  @apply text-[#0a2647];
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-[#f1f5f9];
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 rounded-full hover:bg-slate-400;
+}

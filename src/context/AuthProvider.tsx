@@ -10,7 +10,8 @@ type User = {
 
 type Profile = {
   user_id: string
-  full_name?: string | null
+  username?: string | null
+  display_name?: string | null
   avatar_url?: string | null
   is_admin?: boolean | null
 }
@@ -20,7 +21,7 @@ const AuthContext = createContext<{
   profile: Profile | null
   isAdmin: boolean
   loading: boolean
-  updateProfile: (values: { fullName: string; avatarUrl: string }) => Promise<void>
+  updateProfile: (values: { username?: string; displayName?: string; avatarUrl?: string }) => Promise<void>
   signOut: () => Promise<void>
 } | null>(null)
 
@@ -69,11 +70,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => sub?.subscription?.unsubscribe?.()
   }, [])
 
-  const updateProfile = async ({ fullName, avatarUrl }: { fullName: string; avatarUrl: string }) => {
+  const updateProfile = async ({ username, displayName, avatarUrl }: { username?: string; displayName?: string; avatarUrl?: string }) => {
     if (!user) return
-    const nextName = fullName.trim() || getUserDisplayName(user)
-    const nextAvatar = avatarUrl.trim() || null
-    await api.upsertProfile(user.id, nextName, nextAvatar)
+    const nextUsername = username?.trim() ?? profile?.username ?? getUserDisplayName(user)
+    const nextDisplayName = displayName?.trim() ?? profile?.display_name ?? null
+    const nextAvatar = avatarUrl?.trim() ?? profile?.avatar_url ?? null
+
+    await api.upsertProfile(user.id, nextUsername, nextAvatar, nextDisplayName)
     const nextProfile = await api.fetchProfileById(user.id)
     setProfile(nextProfile)
     setIsAdmin(getUserDisplayName(user).toLowerCase() === 'hvhau' || nextProfile?.is_admin === true)

@@ -93,26 +93,27 @@ export default function MatchesPage() {
 
   if (loading) {
     return (
-      <div className="rounded-lg bg-white/80 p-6 shadow-md">
-        <div className="text-sm text-gray-500">{t('loadingMatches')}</div>
+      <div className="glass-card p-10 flex flex-col items-center gap-4 bg-white shadow-xl">
+        <div className="animate-spin h-8 w-8 border-4 border-wc-accent border-t-transparent rounded-full"></div>
+        <div className="text-sm font-bold text-wc-accent uppercase tracking-widest">{t('loadingMatches')}</div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="rounded-lg bg-white/80 p-6 shadow-md">
-        <h2 className="text-lg font-semibold mb-2">{t('matchesLoadError')}</h2>
-        <p className="text-sm text-red-700">{error}</p>
+      <div className="glass-card p-10 text-center bg-white shadow-xl">
+        <h2 className="text-xl font-bold text-rose-600 mb-2 uppercase tracking-tight">{t('matchesLoadError')}</h2>
+        <p className="text-slate-500 font-medium">{error}</p>
       </div>
     )
   }
 
   if (matches.length === 0) {
     return (
-      <div className="rounded-lg bg-white/80 p-6 shadow-md">
-        <h2 className="text-lg font-semibold mb-2">{t('noMatches')}</h2>
-        <p className="text-sm text-gray-600">{t('noMatchesHint')}</p>
+      <div className="glass-card p-10 text-center bg-white shadow-xl">
+        <h2 className="text-xl font-bold text-wc-gold mb-2 uppercase tracking-tight">{t('noMatches')}</h2>
+        <p className="text-slate-400 font-medium">{t('noMatchesHint')}</p>
       </div>
     )
   }
@@ -130,17 +131,17 @@ export default function MatchesPage() {
     : []
 
   return (
-    <div className="space-y-8">
-      <section className="space-y-3">
-        <div className="flex items-center gap-3">
-          <WorldCupMark size="md" />
+    <div className="space-y-12">
+      <section className="space-y-6">
+        <div className="flex items-center gap-4 bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-white shadow-sm">
+          <WorldCupMark size="md" className="drop-shadow-sm" />
           <div>
-            <h2 className="text-xl font-semibold">{t('upcomingMatches')}</h2>
-            <p className="text-sm text-gray-600">{t('upcomingMatchesHint')}</p>
+            <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight italic">{t('upcomingMatches')}</h2>
+            <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">{t('upcomingMatchesHint')}</p>
           </div>
         </div>
         {highlightedMatches.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {highlightedMatches.map((m) => (
               <MatchCard
                 key={m.id}
@@ -152,16 +153,16 @@ export default function MatchesPage() {
             ))}
           </div>
         ) : (
-          <div className="rounded-lg bg-white/80 p-6 shadow-md">
-            <p className="text-sm text-gray-600">{t('noUpcomingMatches')}</p>
+          <div className="glass-card p-10 text-center border-dashed border-slate-200 bg-white/50">
+            <p className="text-slate-400 font-medium italic">{t('noUpcomingMatches')}</p>
           </div>
         )}
       </section>
 
-      <section className="space-y-3">
-        <div className="border-t border-gray-200 pt-6">
-          <h2 className="text-xl font-semibold">{t('allMatches')}</h2>
-          <p className="text-sm text-gray-600">{t('allMatchesHint')}</p>
+      <section className="space-y-6">
+        <div className="flex flex-col gap-1 border-l-4 border-wc-accent pl-4">
+          <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight italic">{t('allMatches')}</h2>
+          <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">{t('allMatchesHint')}</p>
         </div>
         <div className="space-y-4">
           {matches.map((m) => (

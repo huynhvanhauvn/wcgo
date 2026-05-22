@@ -1,7 +1,8 @@
 -- Profiles table to store display name and avatar for users
 create table if not exists public.profiles (
   user_id uuid primary key references auth.users(id),
-  full_name text,
+  username text,
+  display_name text,
   avatar_url text,
   is_admin boolean not null default false,
   created_at timestamptz default now(),

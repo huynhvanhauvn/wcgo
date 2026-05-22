@@ -62,7 +62,7 @@ create policy "predictions_delete_own" on public.predictions
 
 -- Settlement function: computes points, updates user_totals, and marks match finished
 create or replace function public.settle_match(p_match_id int, p_score_a int, p_score_b int)
-returns table(user_id uuid, points int)
+returns table(out_user_id uuid, out_points int)
 language plpgsql security definer as $$
 declare
   rec record;
@@ -70,6 +70,7 @@ declare
   mult int;
   preddiff int;
   actualdiff int;
+  points int;
 begin
   -- update match
   update public.matches set score_a = p_score_a, score_b = p_score_b, status = 'FINISHED' where id = p_match_id;
@@ -98,7 +99,8 @@ begin
     end if;
 
     points := base * mult;
-    user_id := rec.user_id;
+    out_user_id := rec.user_id;
+    out_points := points;
 
     insert into public.user_totals(user_id, total) values (rec.user_id, points)
       on conflict (user_id) do update set total = public.user_totals.total + excluded.total;

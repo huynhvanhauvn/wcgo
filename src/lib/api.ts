@@ -48,10 +48,11 @@ export function subscribeMatches(onChange: (payload: any) => void) {
   return channel
 }
 
-export async function upsertProfile(userId: string, fullName?: string | null, avatarUrl?: string | null) {
+export async function upsertProfile(userId: string, username?: string | null, avatarUrl?: string | null, displayName?: string | null) {
   const payload: any = { user_id: userId }
-  if (fullName !== undefined) payload.full_name = fullName
+  if (username !== undefined) payload.username = username
   if (avatarUrl !== undefined) payload.avatar_url = avatarUrl
+  if (displayName !== undefined) payload.display_name = displayName
   const { data, error } = await supabase.from('profiles').upsert(payload, { onConflict: ['user_id'] })
   if (error) throw error
   return data
@@ -120,7 +121,13 @@ export async function settleMatch(matchId: number, scoreA: number, scoreB: numbe
     p_score_a: scoreA,
     p_score_b: scoreB
   })
-  if (error) throw error
+  if (error) {
+    const details = [error.message, error.details, error.hint].filter(Boolean).join(' | ')
+    const err = new Error(details || 'settle_match failed')
+    // attach original for easier inspect in console
+    ;(err as any).supabaseError = error
+    throw err
+  }
   return data
 }
 

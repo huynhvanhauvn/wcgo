@@ -3,4 +3,4 @@ alter table public.profiles
 
 update public.profiles
 set is_admin = true
-where full_name = 'hvhau';
+where username = 'hvhau';

@@ -16,22 +16,25 @@ create policy "match_points_select_authenticated" on public.match_points
 
 create or replace function public.is_admin_user()
 returns boolean
-language sql
+language plpgsql
 security definer
-stable
+set search_path = public, auth
 as $$
-  select exists (
+begin
+  return exists (
     select 1
     from public.profiles
     where user_id = auth.uid()
       and is_admin = true
   );
+end;
 $$;
 
 create or replace function public.settle_match(p_match_id int, p_score_a int, p_score_b int)
-returns table(user_id uuid, points int)
+returns table(out_user_id uuid, out_points int)
 language plpgsql
 security definer
+set search_path = public, auth
 as $$
 declare
   rec record;
@@ -41,6 +44,7 @@ declare
   actualdiff int;
   old_points int;
   point_delta int;
+  points int;
 begin
   if not public.is_admin_user() then
     raise exception 'Only admins can settle matches';
@@ -80,7 +84,8 @@ begin
     end if;
 
     points := base * mult;
-    user_id := rec.user_id;
+    out_user_id := rec.user_id;
+    out_points := points;
 
     select coalesce(mp.points, 0)
     into old_points
@@ -109,6 +114,7 @@ create or replace function public.reset_match(p_match_id int)
 returns void
 language plpgsql
 security definer
+set search_path = public, auth
 as $$
 declare
   rec record;

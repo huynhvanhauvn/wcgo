@@ -27,8 +27,10 @@ Stores the match predictions submitted by each team member.
 ## 3. Table: `profiles`
 Stores user profile information.
 - `user_id`: uuid (Primary Key, Foreign Key linking to `auth.users.id`)
-- `full_name`: text
+- `username`: text (The unique name used for login/identification)
+- `display_name`: text (Optional name shown on the leaderboard)
 - `avatar_url`: text
+- `is_admin`: boolean (Default: false)
 - `created_at`: timestamp with time zone (Default: `now()`)
 - `updated_at`: timestamp with time zone (Default: `now()`)
 

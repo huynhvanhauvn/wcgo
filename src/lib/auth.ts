@@ -32,7 +32,7 @@ export async function signUpWithUsername(username: string, password: string) {
     options: {
       data: {
         username: normalized,
-        full_name: normalized
+        username: normalized
       }
     }
   })
