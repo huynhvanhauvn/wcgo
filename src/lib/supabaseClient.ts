@@ -25,7 +25,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
   })
 }
 
+// Revert to using placeholders to prevent initialization crash if variables are missing
 export const supabase = createClient(
-  supabaseUrl || '',
-  supabaseAnonKey || ''
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder'
 )
