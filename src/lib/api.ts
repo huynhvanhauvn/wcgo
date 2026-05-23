@@ -72,7 +72,11 @@ export async function fetchProfilesByIds(ids: string[]) {
 }
 
 export async function fetchAllProfiles() {
-  const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: true })
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('is_deleted', false)
+    .order('created_at', { ascending: true })
   if (error) throw error
   return data
 }
@@ -118,7 +122,10 @@ export async function savePrediction(userId: string, matchId: number, predictedA
 export async function requestAccountDeletion(userId: string) {
   const { data, error } = await supabase
     .from('profiles')
-    .update({ deletion_requested_at: new Date().toISOString() })
+    .update({
+      deletion_requested_at: new Date().toISOString(),
+      deletion_status: 'PENDING'
+    })
     .eq('user_id', userId)
   if (error) throw error
   return data
@@ -127,7 +134,22 @@ export async function requestAccountDeletion(userId: string) {
 export async function cancelAccountDeletionRequest(userId: string) {
   const { data, error } = await supabase
     .from('profiles')
-    .update({ deletion_requested_at: null })
+    .update({
+      deletion_requested_at: null,
+      deletion_status: null
+    })
+    .eq('user_id', userId)
+  if (error) throw error
+  return data
+}
+
+export async function rejectAccountDeletionRequest(userId: string) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({
+      deletion_requested_at: null,
+      deletion_status: 'REJECTED'
+    })
     .eq('user_id', userId)
   if (error) throw error
   return data
@@ -137,16 +159,13 @@ export async function fetchDeletionRequests() {
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
-    .not('deletion_requested_at', 'is', null)
+    .eq('deletion_status', 'PENDING')
   if (error) throw error
   return data
 }
 
-export async function deleteUserAccount(userId: string) {
-  // This usually requires admin service role if done from client,
-  // but we'll simulate it by calling an RPC or a custom function if available.
-  // For Supabase, deleting from auth.users needs service role.
-  // We'll provide an RPC call 'delete_user_by_admin'
+export async function approveAccountDeletion(userId: string) {
+  // Use RPC for actual data cleaning and marking as deleted
   const { data, error } = await supabase.rpc('delete_user_by_admin', { p_user_id: userId })
   if (error) throw error
   return data

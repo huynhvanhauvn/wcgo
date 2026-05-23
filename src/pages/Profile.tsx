@@ -148,7 +148,13 @@ export default function ProfilePage() {
           {t('profile_deletion.notice')}
         </p>
 
-        {profile?.deletion_requested_at ? (
+        {profile?.deletion_status === 'REJECTED' && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-100 text-amber-700 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+            <span>ℹ️</span> {t('profile_deletion.request_rejected')}
+          </div>
+        )}
+
+        {profile?.deletion_status === 'PENDING' ? (
           <div className="space-y-4">
             <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl">
               <p className="text-xs font-bold text-rose-700 uppercase tracking-wider flex items-center gap-2">

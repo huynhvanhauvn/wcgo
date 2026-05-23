@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import * as auth from '../lib/auth'
+import * as api from '../lib/api'
 import WorldCupMark from '../components/WorldCupMark'
 
 export default function AuthPage() {
@@ -22,18 +23,25 @@ export default function AuthPage() {
         const { data, error: err } = await auth.signUpWithUsername(username, password)
         if (err) {
           setError(err.message)
-      } else if (data.session) {
+        } else if (data.session) {
           navigate('/')
         } else {
           setError(t('accountCreated'))
           setIsSignUp(false)
         }
       } else {
-        const { error: err } = await auth.signInWithUsername(username, password)
+        const { data, error: err } = await auth.signInWithUsername(username, password)
         if (err) {
           setError(err.message)
-        } else {
-          navigate('/')
+        } else if (data.user) {
+          // Check if profile is deleted before proceeding
+          const profile = await api.fetchProfileById(data.user.id).catch(() => null)
+          if (profile?.is_deleted) {
+            await auth.signOut()
+            setError(t('profile_deletion.account_disabled'))
+          } else {
+            navigate('/')
+          }
         }
       }
     } catch (e: any) {

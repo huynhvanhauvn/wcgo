@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { getCurrentUser, getUserDisplayName, onAuthStateChange, signOut } from '../lib/auth'
+import { supabase } from '../lib/supabaseClient'
 import * as api from '../lib/api'
 
 type User = {
@@ -14,6 +15,9 @@ type Profile = {
   display_name?: string | null
   avatar_url?: string | null
   is_admin?: boolean | null
+  is_deleted?: boolean | null
+  deletion_status?: string | null
+  deletion_requested_at?: string | null
 }
 
 const AuthContext = createContext<{
@@ -38,36 +42,76 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    let sub: any
-    const syncUser = async (u: User | null) => {
-      setUser(u)
-      setProfile(null)
-      setIsAdmin(false)
+    let authSub: any
+    let profileSub: any
 
-      if (u) {
-        const name = getUserDisplayName(u)
-        const avatar = u.user_metadata?.avatar_url ?? null
+    const syncUser = async (u: User | null) => {
+      if (!u) {
+        setUser(null)
+        setProfile(null)
+        setIsAdmin(false)
+        if (profileSub) profileSub.unsubscribe()
+        return
+      }
+
+      setUser(u)
+
+      // Initial profile fetch
+      const fetchAndSetProfile = async () => {
         let currentProfile = await api.fetchProfileById(u.id).catch(() => null)
+
         if (!currentProfile) {
+          const name = getUserDisplayName(u)
+          const avatar = u.user_metadata?.avatar_url ?? null
           await api.upsertProfile(u.id, name, avatar).catch(() => {})
           currentProfile = await api.fetchProfileById(u.id).catch(() => null)
         }
-        const username = getUserDisplayName(u).toLowerCase()
+
+        if (currentProfile?.is_deleted) {
+          await signOut()
+          setUser(null)
+          setProfile(null)
+          setIsAdmin(false)
+          return
+        }
+
         setProfile(currentProfile)
+        const username = (currentProfile?.username || getUserDisplayName(u)).toLowerCase()
         setIsAdmin(username === 'hvhau' || currentProfile?.is_admin === true)
       }
+
+      await fetchAndSetProfile()
+
+      // REALTIME SUBSCRIPTION to profile changes (for deletion status/approval)
+      if (profileSub) profileSub.unsubscribe()
+      profileSub = supabase
+        .channel(`profile:${u.id}`)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `user_id=eq.${u.id}` }, (payload) => {
+          const updated = payload.new as Profile
+          if (updated.is_deleted) {
+            signOut().then(() => {
+              window.location.href = '/login'
+            })
+          } else {
+            setProfile(updated)
+          }
+        })
+        .subscribe()
     }
 
     getCurrentUser().then((u) => {
       syncUser(u ?? null).finally(() => setLoading(false))
     })
 
-    sub = onAuthStateChange((_event, session) => {
+    authSub = onAuthStateChange((_event, session) => {
       const u = session?.user ?? null
       syncUser(u)
     })
 
-    return () => sub?.subscription?.unsubscribe?.()
+    return () => {
+      authSub?.subscription?.unsubscribe?.()
+      if (profileSub) profileSub.unsubscribe()
+    }
   }, [])
 
   const updateProfile = async ({ username, displayName, avatarUrl }: { username?: string; displayName?: string; avatarUrl?: string }) => {

@@ -65,9 +65,9 @@ export default function AdminPage() {
   }
 
   const handleDeleteUser = async (userId: string) => {
-    if (!window.confirm('Are you sure you want to delete this account? This action is permanent.')) return
+    if (!window.confirm('Are you sure you want to approve this deletion request? This will disable the account.')) return
     try {
-      await api.deleteUserAccount(userId)
+      await api.approveAccountDeletion(userId)
       setDeletionRequests(current => current.filter(r => r.user_id !== userId))
     } catch (e: any) {
       alert(e.message)
@@ -75,8 +75,9 @@ export default function AdminPage() {
   }
 
   const handleRejectDeletion = async (userId: string) => {
+    if (!window.confirm('Reject this deletion request?')) return
     try {
-      await api.cancelAccountDeletionRequest(userId)
+      await api.rejectAccountDeletionRequest(userId)
       setDeletionRequests(current => current.filter(r => r.user_id !== userId))
     } catch (e: any) {
       alert(e.message)

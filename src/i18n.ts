@@ -112,6 +112,8 @@ const resources = {
         request_button: 'Request Account Deletion',
         request_sent: 'Deletion request sent. Admin will review.',
         request_pending: 'Deletion request pending review.',
+        request_rejected: 'Your last deletion request was rejected by the collective.',
+        account_disabled: 'This account has been disabled/deleted by the admin.',
         notice: 'The decision to delete the account will be made by the admin after consulting the collective\'s opinion.',
         cancel_request: 'Cancel Request'
       },
@@ -233,6 +235,8 @@ const resources = {
         request_button: 'Gửi yêu cầu xoá tài khoản',
         request_sent: 'Yêu cầu đã được gửi. Quản trị viên sẽ xem xét.',
         request_pending: 'Yêu cầu xoá đang chờ xử lý.',
+        request_rejected: 'Yêu cầu xoá trước đó của bạn đã bị từ chối sau khi tham khảo ý kiến tập thể.',
+        account_disabled: 'Tài khoản này đã bị vô hiệu hoá/xoá bởi Admin.',
         notice: 'Việc quyết định có xoá hay không sẽ được Admin thực hiện sau khi tham khảo ý kiến chung của tập thể.',
         cancel_request: 'Huỷ yêu cầu'
       },
