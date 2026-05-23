@@ -63,7 +63,7 @@ export default function LeaderboardPage() {
   return (
     <div className="glass-card p-6 md:p-8 bg-white/90 shadow-xl border-white">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 border-b border-slate-100 pb-6">
-        <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight italic flex items-center gap-3">
+        <h2 className="text-3xl font-black text-[#0a2647] uppercase tracking-tight italic flex items-center gap-3">
           <span className="p-2 bg-wc-accent/10 rounded-lg">🏆</span>
           {t('realtimeLeaderboard')}
         </h2>
@@ -97,8 +97,9 @@ export default function LeaderboardPage() {
                 <div className="font-black text-xl text-[#0a2647] tracking-tighter">
                   {row.total} <span className="text-xs uppercase ml-1 opacity-70">{t('pointsShort')}</span>
                 </div>
-                <div className={`text-xs font-bold uppercase tracking-wider ${penalty > 0 ? 'text-rose-500' : 'text-slate-400'}`}>
-                  {penalty > 0 ? `-${currency(penalty)}` : '0'} <span className="text-[10px]">VND</span>
+                {/* Penalty highlight: Red text with minus sign */}
+                <div className={`text-xs font-black uppercase tracking-wider ${penalty > 0 ? 'text-rose-600 animate-pulse-slow' : 'text-slate-300'}`}>
+                  {penalty > 0 ? `- ${currency(penalty)}` : '0'} <span className="text-[10px]">VND</span>
                 </div>
               </div>
             </div>

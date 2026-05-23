@@ -8,26 +8,30 @@ import { getFlagUrl } from '../lib/flags'
 import { calculateMatchPoints } from '../lib/scoring'
 import WorldCupMark from './WorldCupMark'
 
-function TeamName({ name, align = 'left' }: { name: string; align?: 'left' | 'right' }) {
+function TeamName({ name, align = 'left', stack = false }: { name: string; align?: 'left' | 'right'; stack?: boolean }) {
   const flagUrl = getFlagUrl(name)
   const [error, setError] = useState(false)
 
+  const containerClass = stack
+    ? "flex flex-col items-center gap-2"
+    : `inline-flex min-w-0 items-center gap-2 ${align === 'right' ? 'flex-row-reverse text-right' : ''}`
+
   return (
-    <span className={`inline-flex min-w-0 items-center gap-2 ${align === 'right' ? 'flex-row-reverse text-right' : ''}`}>
+    <span className={containerClass}>
       {flagUrl && !error ? (
         <img
           src={flagUrl}
           alt={`${name} flag`}
-          className="h-5 w-7 shrink-0 rounded-sm object-cover ring-1 ring-slate-200 shadow-sm"
+          className={`${stack ? 'h-8 w-11' : 'h-5 w-7'} shrink-0 rounded-sm object-cover ring-1 ring-slate-200 shadow-sm transition-all`}
           loading="lazy"
           onError={() => setError(true)}
         />
       ) : (
-        <div className="h-5 w-7 shrink-0 rounded-sm bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-400 ring-1 ring-slate-200">
+        <div className={`${stack ? 'h-8 w-11' : 'h-5 w-7'} shrink-0 rounded-sm bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-400 ring-1 ring-slate-200`}>
           {name.substring(0, 2).toUpperCase()}
         </div>
       )}
-      <span className="truncate text-slate-900 font-bold">{name}</span>
+      <span className={`truncate text-slate-900 font-bold ${stack ? 'text-base' : 'text-lg'}`}>{name}</span>
     </span>
   )
 }
@@ -61,11 +65,14 @@ export default function MatchCard({
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState<string | null>(null)
   const { user } = useAuth()
+
   const hasSavedPrediction = savedAt && savedPredA !== '' && savedPredB !== ''
   const predictionChanged = predA !== savedPredA || predB !== savedPredB
   const canSave = !locked && !!user && !saving && (!hasSavedPrediction || predictionChanged)
+
   const teamAResult = predA === '' || predB === '' ? 'pending' : predA > predB ? 'win' : predA < predB ? 'loss' : 'draw'
   const teamBResult = predA === '' || predB === '' ? 'pending' : predB > predA ? 'win' : predB < predA ? 'loss' : 'draw'
+
   const hasFinalScore = match.status === 'FINISHED' && match.score_a !== null && match.score_b !== null
   const earnedPoints = hasFinalScore && hasSavedPrediction
     ? calculateMatchPoints(
@@ -93,13 +100,13 @@ export default function MatchCard({
   }, [prediction])
 
   const getScoreClass = (result: 'pending' | 'win' | 'loss' | 'draw') => {
-    const base = 'w-16 p-2 rounded-lg border text-center font-bold transition-all duration-200'
-    const disabled = locked ? ' bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' : ' bg-white border-slate-200 text-slate-900 focus:border-[#0a2647] focus:ring-1 focus:ring-[#0a2647] outline-none shadow-sm'
+    const base = 'w-16 md:w-20 p-3 rounded-xl border text-center font-black text-xl transition-all duration-300 shadow-sm'
+    const disabled = locked ? ' bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' : ' outline-none focus:ring-2 focus:ring-opacity-30'
 
-    if (result === 'pending' || !hasSavedPrediction || predictionChanged) return `${base}${disabled}`
-    if (result === 'win') return `${base} border-emerald-200 bg-emerald-50 text-emerald-700${disabled}`
-    if (result === 'loss') return `${base} border-rose-200 bg-rose-50 text-rose-700${disabled}`
-    return `${base} border-sky-200 bg-sky-50 text-sky-700${disabled}`
+    if (result === 'pending') return `${base} bg-white border-slate-200 text-slate-900 focus:border-[#0a2647] focus:ring-[#0a2647] ${disabled}`
+    if (result === 'win') return `${base} border-emerald-500 bg-emerald-50 text-emerald-700 focus:border-emerald-600 focus:ring-emerald-500 ${disabled}`
+    if (result === 'loss') return `${base} border-rose-500 bg-rose-50 text-rose-700 focus:border-rose-600 focus:ring-rose-500 ${disabled}`
+    return `${base} border-blue-500 bg-blue-50 text-blue-700 focus:border-blue-600 focus:ring-blue-500 ${disabled}`
   }
 
   const handleSave = async () => {
@@ -124,75 +131,87 @@ export default function MatchCard({
     }
   }
 
-  const scoreControls = (
-    <div className="flex flex-wrap items-center justify-center gap-2">
-      <input type="number" min={0} value={predA} onChange={(e) => setPredA(e.target.value === '' ? '' : Number(e.target.value))} disabled={locked} className={getScoreClass(teamAResult)} />
-      <span className="font-bold text-slate-300">vs</span>
-      <input type="number" min={0} value={predB} onChange={(e) => setPredB(e.target.value === '' ? '' : Number(e.target.value))} disabled={locked} className={getScoreClass(teamBResult)} />
-    </div>
-  )
-
-  const saveControls = (
-    <div className="flex flex-wrap items-center justify-center gap-2">
-      {canSave && (
-        <button
-          className="btn-primary"
-          disabled={predA === '' || predB === ''}
-          onClick={handleSave}
-        >
-          {saving ? t('saving') : t('save')}
-        </button>
-      )}
-      {locked && <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500 border border-slate-200 uppercase tracking-wider">{t('closed')}</div>}
-      {!user && <div className="text-sm text-slate-400 italic">{t('loginToSave')}</div>}
-      {hasSavedPrediction && !predictionChanged && <div className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-200 uppercase tracking-wider">{t('saved')}</div>}
-      {earnedPoints !== null && <div className="rounded-full bg-wc-gold/10 px-3 py-1 text-xs font-bold text-wc-gold border border-wc-gold/20 uppercase tracking-wider">+{earnedPoints} {t('pointsShort')}</div>}
-    </div>
-  )
-
   const finalScore = hasFinalScore && (
-    <div className="mt-3 text-center text-sm font-black text-emerald-600 uppercase tracking-widest">
+    <div className="mt-4 py-2 px-4 bg-emerald-50 rounded-full inline-block text-[10px] font-black text-emerald-700 uppercase tracking-[0.2em] border border-emerald-100">
       {t('finalScore')}: {match.score_a} - {match.score_b}
     </div>
   )
 
   const cardStyle = highlighted
-    ? "glass-card p-6 border-[#0a2647]/10 bg-white shadow-[0_10px_40px_rgba(10,38,71,0.04)]"
-    : "glass-card p-5 bg-white shadow-sm"
+    ? "glass-card p-6 border-[#0a2647]/10 bg-white shadow-[0_15px_50px_rgba(10,38,71,0.06)]"
+    : "glass-card p-6 bg-white shadow-sm"
 
   return (
     <div className={`${cardStyle} relative overflow-hidden transition-all duration-300 hover:shadow-md group`}>
       {highlighted && (
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#0a2647] via-wc-gold to-wc-canada"></div>
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#0a2647] via-wc-gold to-wc-canada"></div>
       )}
 
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 border-b border-slate-100 pb-4">
-        <div className="flex flex-col items-center md:items-start gap-1">
-          <div className="text-xs font-black text-[#0a2647] uppercase tracking-[0.2em]">{formattedStart}</div>
-          <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">{match.venue}</div>
-        </div>
-        {highlighted && <WorldCupMark size="sm" className="opacity-80 group-hover:scale-110 transition-transform duration-500" />}
+      <div className="flex flex-col items-center mb-8 text-center">
+        <div className="text-[10px] font-black text-[#0a2647] uppercase tracking-[0.3em] mb-1">{formattedStart}</div>
+        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{match.venue}</div>
         {finalScore}
       </div>
 
-      <div className="grid items-center gap-4 md:grid-cols-[1fr_auto_1fr]">
-        <div className="min-w-0 md:text-right">
-          <div className="mt-1 text-xl">
-            <TeamName name={match.team_a} align="right" />
-          </div>
+      {/* Desktop Layout */}
+      <div className="hidden md:grid items-center gap-8 grid-cols-[1fr_auto_1fr]">
+        <div className="min-w-0 text-right">
+          <TeamName name={match.team_a} align="right" />
         </div>
-        <div className="flex justify-center bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
-          {scoreControls}
+        <div className="flex justify-center items-center gap-4 bg-slate-50/50 p-6 rounded-3xl border border-slate-100 shadow-inner">
+          <input type="number" min={0} value={predA} onChange={(e) => setPredA(e.target.value === '' ? '' : Number(e.target.value))} disabled={locked} className={getScoreClass(teamAResult)} />
+          <span className="font-black text-slate-300 text-xl tracking-tighter italic">VS</span>
+          <input type="number" min={0} value={predB} onChange={(e) => setPredB(e.target.value === '' ? '' : Number(e.target.value))} disabled={locked} className={getScoreClass(teamBResult)} />
         </div>
         <div className="min-w-0">
-          <div className="mt-1 text-xl">
-            <TeamName name={match.team_b} />
-          </div>
+          <TeamName name={match.team_b} />
         </div>
       </div>
 
-      <div className="mt-6 flex justify-center">
-        {saveControls}
+      {/* Mobile Layout: Symmetric Top-Down with Vertical Scores */}
+      <div className="flex flex-col md:hidden items-center gap-4">
+        <TeamName name={match.team_a} stack />
+
+        <div className="flex flex-col items-center gap-3 w-full py-6 bg-slate-50/80 rounded-2xl border border-slate-100 shadow-inner">
+          <input
+            type="number"
+            min={0}
+            value={predA}
+            onChange={(e) => setPredA(e.target.value === '' ? '' : Number(e.target.value))}
+            disabled={locked}
+            className={getScoreClass(teamAResult)}
+          />
+          <div className="h-px w-8 bg-slate-200"></div>
+          <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">VS</span>
+          <div className="h-px w-8 bg-slate-200"></div>
+          <input
+            type="number"
+            min={0}
+            value={predB}
+            onChange={(e) => setPredB(e.target.value === '' ? '' : Number(e.target.value))}
+            disabled={locked}
+            className={getScoreClass(teamBResult)}
+          />
+        </div>
+
+        <TeamName name={match.team_b} stack />
+      </div>
+
+      <div className="mt-8 flex flex-col items-center gap-4">
+        <div className="flex flex-wrap justify-center gap-2">
+          {canSave && (
+            <button
+              className="btn-primary min-w-[140px] py-3.5 uppercase tracking-widest text-xs shadow-xl"
+              disabled={predA === '' || predB === ''}
+              onClick={handleSave}
+            >
+              {saving ? t('saving') : t('save')}
+            </button>
+          )}
+          {locked && <div className="rounded-full bg-slate-100 px-4 py-1.5 text-[10px] font-black text-slate-500 border border-slate-200 uppercase tracking-widest">{t('closed')}</div>}
+          {hasSavedPrediction && !predictionChanged && <div className="rounded-full bg-emerald-100 px-4 py-1.5 text-[10px] font-black text-emerald-700 border border-emerald-200 uppercase tracking-widest">{t('saved')}</div>}
+          {earnedPoints !== null && <div className="rounded-full bg-amber-100 px-4 py-1.5 text-[10px] font-black text-amber-700 border border-amber-200 uppercase tracking-widest">+{earnedPoints} {t('pointsShort')}</div>}
+        </div>
       </div>
     </div>
   )

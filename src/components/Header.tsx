@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthProvider'
@@ -11,10 +11,11 @@ export default function Header() {
   const { user, profile, loading, isAdmin, signOut } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const [scrolled, setScrolled] = React.useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const displayName = profile?.display_name || profile?.username || getUserDisplayName(user)
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20)
     }
@@ -22,57 +23,152 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Close menu when route changes
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [location.pathname])
+
   const handleSignOut = async () => {
     await signOut()
     navigate('/login')
   }
 
-  const getNavLinkClass = (path: string) => {
+  const getNavLinkClass = (path: string, mobile = false) => {
     const isActive = location.pathname === path
-    return `text-sm font-bold transition-all duration-300 hover:text-wc-accent ${isActive ? 'nav-link-active scale-110 text-wc-accent' : 'text-slate-300'}`
+    const base = mobile
+      ? "flex items-center gap-4 p-4 rounded-xl transition-all duration-200"
+      : "text-sm font-bold transition-all duration-300 hover:text-wc-accent"
+
+    const activeClass = isActive
+      ? mobile ? "bg-wc-accent/10 text-wc-accent" : "nav-link-active scale-110 text-wc-accent"
+      : mobile ? "text-slate-200 hover:bg-white/5" : "text-slate-300"
+
+    return `${base} ${activeClass}`
   }
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'py-3 bg-[#0a2647]/95 backdrop-blur-md shadow-lg' : 'py-4 bg-[#0a2647]'}`}>
-      <div className="max-w-4xl mx-auto px-4 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-3 font-black text-2xl tracking-tighter italic group">
-          <WorldCupMark size="sm" className={`transition-transform duration-300 ${scrolled ? 'scale-90' : 'scale-100'}`} />
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-300 pr-2">
-            WCGO
-          </span>
-        </Link>
+    <>
+      <header className={`fixed top-0 left-0 right-0 z-[60] transition-all duration-300 ${scrolled ? 'py-3 bg-[#0a2647]/95 backdrop-blur-md shadow-lg' : 'py-4 bg-[#0a2647]'}`}>
+        <div className="max-w-4xl mx-auto px-4 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-3 font-black text-2xl tracking-tighter italic group">
+            <WorldCupMark size="sm" className={`transition-transform duration-300 ${scrolled ? 'scale-90' : 'scale-100'}`} />
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-300 pr-2">
+              WCGO
+            </span>
+          </Link>
 
-        <nav className="flex items-center gap-6">
-          <div className="hidden md:flex items-center gap-6">
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex items-center gap-8">
             <Link to="/" className={getNavLinkClass('/')}>{t('tabs.dashboard')}</Link>
             <Link to="/leaderboard" className={getNavLinkClass('/leaderboard')}>{t('tabs.leaderboard')}</Link>
+            <Link to="/news" className={getNavLinkClass('/news')}>{t('tabs.news')}</Link>
             <Link to="/rules" className={getNavLinkClass('/rules')}>{t('tabs.rules')}</Link>
             {isAdmin && (
               <Link to="/admin" className={getNavLinkClass('/admin')}>{t('admin')}</Link>
             )}
-          </div>
 
-          {!loading && !user && (
-            <Link to="/login" className="btn-primary">{t('login')}</Link>
-          )}
-
-          {user && (
-            <div className="flex items-center gap-4 pl-4 border-l border-white/10">
-              <Link to="/profile" className="group flex items-center gap-2">
-                <div className="relative">
+            {user && (
+              <div className="flex items-center gap-4 pl-4 border-l border-white/10">
+                <Link to="/profile" className="group flex items-center gap-2">
                   <UserAvatar name={displayName} avatarUrl={profile?.avatar_url} className="h-9 w-9 ring-2 ring-white/10 group-hover:ring-wc-accent transition-all shadow-sm" />
-                </div>
-                <span className="hidden sm:block text-sm font-bold text-white group-hover:text-wc-accent transition-colors">{displayName}</span>
+                  <span className="text-sm font-bold text-white group-hover:text-wc-accent transition-colors">{displayName}</span>
+                </Link>
+                <button onClick={handleSignOut} className="p-2 text-slate-400 hover:text-rose-400 transition-colors" title={t('signOut')}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                </button>
+              </div>
+            )}
+            {!loading && !user && (
+              <Link to="/login" className="btn-primary">{t('login')}</Link>
+            )}
+          </nav>
+
+          {/* Mobile Hamburger Button */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="md:hidden p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+          >
+            {menuOpen ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
+        </div>
+      </header>
+
+      {/* Mobile Menu Overlay */}
+      <div className={`fixed inset-0 z-50 md:hidden transition-all duration-300 ${menuOpen ? 'visible' : 'invisible'}`}>
+        {/* Backdrop */}
+        <div
+          className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${menuOpen ? 'opacity-100' : 'opacity-0'}`}
+          onClick={() => setMenuOpen(false)}
+        ></div>
+
+        {/* Menu Content */}
+        <aside className={`absolute right-0 top-0 bottom-0 w-[280px] bg-[#0a2647] shadow-2xl transition-transform duration-300 ease-out ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+          <div className="flex flex-col h-full pt-20 p-6">
+            {user && (
+              <div className="mb-8 p-4 bg-white/5 rounded-2xl border border-white/10">
+                <Link to="/profile" className="flex items-center gap-4">
+                  <UserAvatar name={displayName} avatarUrl={profile?.avatar_url} className="h-12 w-12 ring-2 ring-wc-accent shadow-lg" />
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="text-white font-black truncate">{displayName}</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{t('profileTitle')}</span>
+                  </div>
+                </Link>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-2">
+              <Link to="/" className={getNavLinkClass('/', true)}>
+                <span className="text-xl">📅</span>
+                <span className="font-bold uppercase tracking-widest text-xs">{t('tabs.dashboard')}</span>
               </Link>
-              <button onClick={handleSignOut} className="p-2 text-slate-400 hover:text-rose-400 transition-colors" title={t('signOut')}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
+              <Link to="/leaderboard" className={getNavLinkClass('/leaderboard', true)}>
+                <span className="text-xl">🏆</span>
+                <span className="font-bold uppercase tracking-widest text-xs">{t('tabs.leaderboard')}</span>
+              </Link>
+              <Link to="/news" className={getNavLinkClass('/news', true)}>
+                <span className="text-xl">📰</span>
+                <span className="font-bold uppercase tracking-widest text-xs">{t('tabs.news')}</span>
+              </Link>
+              <Link to="/rules" className={getNavLinkClass('/rules', true)}>
+                <span className="text-xl">📜</span>
+                <span className="font-bold uppercase tracking-widest text-xs">{t('tabs.rules')}</span>
+              </Link>
+              {isAdmin && (
+                <Link to="/admin" className={getNavLinkClass('/admin', true)}>
+                  <span className="text-xl">🛡️</span>
+                  <span className="font-bold uppercase tracking-widest text-xs">{t('admin')}</span>
+                </Link>
+              )}
             </div>
-          )}
-        </nav>
+
+            <div className="mt-auto pt-6 border-t border-white/10 flex flex-col gap-4">
+              {!loading && !user ? (
+                <Link to="/login" className="btn-primary w-full text-center uppercase tracking-widest text-xs py-4">{t('login')}</Link>
+              ) : (
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-4 p-4 text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all font-bold uppercase tracking-widest text-xs"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  {t('signOut')}
+                </button>
+              )}
+            </div>
+          </div>
+        </aside>
       </div>
-    </header>
+    </>
   )
 }

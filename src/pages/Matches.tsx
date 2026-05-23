@@ -3,6 +3,7 @@ import { DateTime } from 'luxon'
 import { useTranslation } from 'react-i18next'
 import MatchCard from '../components/MatchCard'
 import WorldCupMark from '../components/WorldCupMark'
+import CountdownTimer from '../components/CountdownTimer'
 import { useAuth } from '../context/AuthProvider'
 import * as api from '../lib/api'
 
@@ -122,7 +123,10 @@ export default function MatchesPage() {
     const startTime = DateTime.fromISO(match.start_time)
     return startTime >= DateTime.now() && match.status !== 'FINISHED'
   })
-  const firstUpcomingTime = upcomingMatches[0] ? DateTime.fromISO(upcomingMatches[0].start_time) : null
+
+  const nextMatch = upcomingMatches[0] || null
+
+  const firstUpcomingTime = nextMatch ? DateTime.fromISO(nextMatch.start_time) : null
   const highlightedMatches = firstUpcomingTime
     ? upcomingMatches.filter((match) => {
         const startTime = DateTime.fromISO(match.start_time)
@@ -132,6 +136,15 @@ export default function MatchesPage() {
 
   return (
     <div className="space-y-12">
+      {/* NEXT MATCH COUNTDOWN */}
+      {nextMatch && (
+        <CountdownTimer
+          targetDate={nextMatch.start_time}
+          teamA={nextMatch.team_a}
+          teamB={nextMatch.team_b}
+        />
+      )}
+
       <section className="space-y-6">
         <div className="flex items-center gap-4 bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-white shadow-sm">
           <WorldCupMark size="md" className="drop-shadow-sm" />
