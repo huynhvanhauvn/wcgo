@@ -22,16 +22,16 @@ function TeamName({ name, align = 'left', stack = false }: { name: string; align
         <img
           src={flagUrl}
           alt={`${name} flag`}
-          className={`${stack ? 'h-8 w-11' : 'h-5 w-7'} shrink-0 rounded-sm object-cover ring-1 ring-slate-200 shadow-sm transition-all`}
+          className={`${stack ? 'h-10 w-14' : 'h-5 w-7'} shrink-0 rounded-sm object-cover ring-1 ring-slate-200 shadow-sm transition-all`}
           loading="lazy"
           onError={() => setError(true)}
         />
       ) : (
-        <div className={`${stack ? 'h-8 w-11' : 'h-5 w-7'} shrink-0 rounded-sm bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-400 ring-1 ring-slate-200`}>
+        <div className={`${stack ? 'h-10 w-14' : 'h-5 w-7'} shrink-0 rounded-sm bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-400 ring-1 ring-slate-200`}>
           {name.substring(0, 2).toUpperCase()}
         </div>
       )}
-      <span className={`truncate text-slate-900 font-bold ${stack ? 'text-base' : 'text-lg'}`}>{name}</span>
+      <span className={`truncate text-slate-900 font-black ${stack ? 'text-lg' : 'text-lg'}`}>{name}</span>
     </span>
   )
 }
@@ -167,7 +167,6 @@ export default function MatchCard({
       setSavedPredB(predB)
       setSavedAt(nextPrediction.created_at)
       onPredictionSaved?.(nextPrediction)
-      // Refresh stats if they are showing
       if (showStats) {
         setStats(null)
         fetchStats()
@@ -178,6 +177,12 @@ export default function MatchCard({
       setSaving(false)
     }
   }
+
+  const finalScoreLabel = hasFinalScore && (
+    <div className="mt-4 py-2 px-4 bg-emerald-50 rounded-full inline-block text-[10px] font-black text-emerald-700 uppercase tracking-[0.2em] border border-emerald-100">
+      {t('finalScore')}: {match.score_a} - {match.score_b}
+    </div>
+  )
 
   const scoreControls = (
     <div className="flex items-center justify-center gap-3">
@@ -204,12 +209,6 @@ export default function MatchCard({
     </div>
   )
 
-  const finalScore = hasFinalScore && (
-    <div className="mt-4 py-2 px-4 bg-emerald-50 rounded-full inline-block text-[10px] font-black text-emerald-700 uppercase tracking-[0.2em] border border-emerald-100">
-      {t('finalScore')}: {match.score_a} - {match.score_b}
-    </div>
-  )
-
   const cardStyle = highlighted
     ? "glass-card p-6 border-[#0a2647]/10 bg-white shadow-[0_15px_50px_rgba(10,38,71,0.06)]"
     : "glass-card p-6 bg-white shadow-sm"
@@ -226,10 +225,10 @@ export default function MatchCard({
       <div className="flex flex-col items-center mb-8 text-center">
         <div className="text-[10px] font-black text-[#0a2647] uppercase tracking-[0.3em] mb-1">{formattedStart}</div>
         <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{match.venue}</div>
-        {finalScore}
+        {finalScoreLabel}
       </div>
 
-      {/* Desktop Layout */}
+      {/* Desktop Layout: Horizontal */}
       <div className="hidden md:grid items-center gap-8 grid-cols-[1fr_auto_1fr]">
         <div className="min-w-0 text-right">
           <TeamName name={match.team_a} align="right" />
@@ -243,11 +242,33 @@ export default function MatchCard({
       </div>
 
       {/* Mobile Layout: Symmetric Top-Down with Vertical Scores */}
-      <div className="flex flex-col md:hidden items-center gap-4">
+      <div className="flex flex-col md:hidden items-center gap-6">
         <TeamName name={match.team_a} stack />
 
-        <div className="flex flex-col items-center gap-3 w-full py-6 bg-slate-50/80 rounded-2xl border border-slate-100 shadow-inner">
-          {scoreControls}
+        <div className="flex flex-col items-center gap-3 w-full max-w-[200px] py-4 bg-slate-50/80 rounded-3xl border border-slate-100 shadow-inner">
+          <input
+            type="number"
+            min={0}
+            value={predA}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => setPredA(e.target.value === '' ? '' : Number(e.target.value))}
+            disabled={locked}
+            className={getScoreClass(teamAResult)}
+          />
+          <div className="flex items-center gap-3 w-full px-8">
+            <div className="h-px flex-1 bg-slate-200"></div>
+            <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">VS</span>
+            <div className="h-px flex-1 bg-slate-200"></div>
+          </div>
+          <input
+            type="number"
+            min={0}
+            value={predB}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => setPredB(e.target.value === '' ? '' : Number(e.target.value))}
+            disabled={locked}
+            className={getScoreClass(teamBResult)}
+          />
         </div>
 
         <TeamName name={match.team_b} stack />
@@ -278,7 +299,7 @@ export default function MatchCard({
               </div>
               <div className="grid grid-cols-3 text-[10px] font-black uppercase tracking-wider">
                 <div className="text-emerald-600 flex flex-col items-start">
-                  <span>{match.team_a} Win</span>
+                  <span>{match.team_a.substring(0, 10)} Win</span>
                   <span className="text-lg">{stats.winA}%</span>
                 </div>
                 <div className="text-slate-400 flex flex-col items-center">
@@ -286,7 +307,7 @@ export default function MatchCard({
                   <span className="text-lg">{stats.draw}%</span>
                 </div>
                 <div className="text-rose-600 flex flex-col items-end">
-                  <span>{match.team_b} Win</span>
+                  <span>{match.team_b.substring(0, 10)} Win</span>
                   <span className="text-lg">{stats.winB}%</span>
                 </div>
               </div>
@@ -301,7 +322,7 @@ export default function MatchCard({
 
       <div className="absolute bottom-2 right-4 opacity-20 group-hover:opacity-100 transition-opacity">
         <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">
-          {showStats ? 'Click to hide stats' : 'Click to see stats'}
+          {showStats ? 'Click to hide stats' : 'Click to see community stats'}
         </span>
       </div>
     </div>

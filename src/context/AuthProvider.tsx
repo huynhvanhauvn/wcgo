@@ -43,20 +43,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let authSub: any
-    let profileSub: any
+    let profileChannel: any
+
+    const cleanupProfileSub = async () => {
+      if (profileChannel) {
+        await supabase.removeChannel(profileChannel)
+        profileChannel = null
+      }
+    }
 
     const syncUser = async (u: User | null) => {
+      // 1. Always cleanup existing subscription when user changes
+      await cleanupProfileSub()
+
       if (!u) {
         setUser(null)
         setProfile(null)
         setIsAdmin(false)
-        if (profileSub) profileSub.unsubscribe()
         return
       }
 
       setUser(u)
 
-      // Initial profile fetch
       const fetchAndSetProfile = async () => {
         let currentProfile = await api.fetchProfileById(u.id).catch(() => null)
 
@@ -82,13 +90,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       await fetchAndSetProfile()
 
-      // REALTIME SUBSCRIPTION to profile changes (for deletion status/approval)
-      if (profileSub) profileSub.unsubscribe()
-      profileSub = supabase
-        .channel(`profile:${u.id}`)
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `user_id=eq.${u.id}` }, (payload) => {
+      // 2. Setup NEW subscription with a unique channel name to avoid conflicts
+      profileChannel = supabase
+        .channel(`profile_realtime_${u.id}_${Date.now()}`)
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `user_id=eq.${u.id}`
+        }, (payload) => {
           const updated = payload.new as Profile
           if (updated.is_deleted) {
+            // Force logout if admin deletes account while user is online
             signOut().then(() => {
               window.location.href = '/login'
             })
@@ -110,7 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       authSub?.subscription?.unsubscribe?.()
-      if (profileSub) profileSub.unsubscribe()
+      cleanupProfileSub()
     }
   }, [])
 
