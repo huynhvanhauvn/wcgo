@@ -13,6 +13,28 @@ export default function RulesPage() {
         </span>
       </h1>
 
+      {/* Internal Only Notice */}
+      <div className="mb-10 grid gap-6 md:grid-cols-3">
+        <div className="p-5 bg-blue-50/50 border border-blue-100 rounded-2xl shadow-sm">
+          <h3 className="text-sm font-black text-blue-900 uppercase tracking-widest mb-2 flex items-center gap-2">
+            <span className="text-xl">🎯</span> {t('rules_screen.purpose_title')}
+          </h3>
+          <p className="text-xs text-blue-800 leading-relaxed font-medium">{t('rules_screen.purpose_content')}</p>
+        </div>
+        <div className="p-5 bg-emerald-50/50 border border-emerald-100 rounded-2xl shadow-sm">
+          <h3 className="text-sm font-black text-emerald-900 uppercase tracking-widest mb-2 flex items-center gap-2">
+            <span className="text-xl">⚙️</span> {t('rules_screen.mechanism_title')}
+          </h3>
+          <p className="text-xs text-emerald-800 leading-relaxed font-medium">{t('rules_screen.mechanism_content')}</p>
+        </div>
+        <div className="p-5 bg-amber-50/50 border border-amber-100 rounded-2xl shadow-sm">
+          <h3 className="text-sm font-black text-amber-900 uppercase tracking-widest mb-2 flex items-center gap-2">
+            <span className="text-xl">📜</span> {t('rules_screen.usage_title')}
+          </h3>
+          <p className="text-xs text-amber-800 leading-relaxed font-medium">{t('rules_screen.usage_content')}</p>
+        </div>
+      </div>
+
       {/* Section 1: Timing and Lock */}
       <section className="mb-10 bg-slate-50 p-6 rounded-2xl border border-slate-100 hover:border-blue-500/30 transition-all duration-300">
         <h2 className="text-xl font-bold text-blue-800 mb-4 flex items-center gap-3">
@@ -48,7 +70,7 @@ export default function RulesPage() {
           </li>
           <li className="p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
             <span className="text-2xl block mb-2">🔴</span>
-            <span className="text-slate-500 font-bold">{t('rules_screen.score_wrong')}</span>
+            <span className="text-slate-400 font-bold">{t('rules_screen.score_wrong')}</span>
           </li>
         </ul>
 
@@ -123,6 +145,16 @@ export default function RulesPage() {
               <span className="text-sm text-slate-600 font-bold leading-relaxed">{t('rules_screen.surplus_rule')}</span>
             </div>
           </div>
+        </div>
+
+        {/* Legal Disclaimer */}
+        <div className="mt-10 p-6 bg-amber-50/50 border border-amber-100 rounded-2xl shadow-inner">
+          <h4 className="text-xs font-black text-amber-700 uppercase tracking-widest mb-3 flex items-center gap-2">
+            <span className="text-lg">⚖️</span> {t('rules_screen.disclaimer_title')}
+          </h4>
+          <p className="text-xs text-amber-800/80 leading-relaxed italic font-medium">
+            {t('rules_screen.disclaimer_content')}
+          </p>
         </div>
       </section>
     </div>

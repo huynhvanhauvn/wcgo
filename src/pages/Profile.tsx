@@ -55,74 +55,122 @@ export default function ProfilePage() {
     }
   }
 
+  const handleDeletionRequest = async () => {
+    if (!user) return
+    try {
+      if (profile?.deletion_requested_at) {
+        await api.cancelAccountDeletionRequest(user.id)
+      } else {
+        await api.requestAccountDeletion(user.id)
+      }
+      // Re-fetch profile or update context
+      window.location.reload()
+    } catch (e: any) {
+      alert(e.message)
+    }
+  }
+
   return (
-    <div className="mx-auto max-w-xl rounded-lg bg-white/90 p-6 shadow-md">
-      <div className="mb-6 flex items-center gap-4">
-        <UserAvatar name={displayName || username || fallbackName} avatarUrl={avatarPreviewUrl || avatarUrl} className="h-16 w-16 text-xl" />
-        <div>
-          <h1 className="text-2xl font-semibold">{t('profileTitle')}</h1>
-          <p className="text-sm text-gray-500">{username || fallbackName}</p>
+    <div className="mx-auto max-w-xl space-y-6">
+      <div className="glass-card p-6 shadow-md border-white">
+        <div className="mb-6 flex items-center gap-4">
+          <UserAvatar name={displayName || username || fallbackName} avatarUrl={avatarPreviewUrl || avatarUrl} className="h-16 w-16 text-xl shadow-lg ring-2 ring-[#0a2647]/5" />
+          <div>
+            <h1 className="text-2xl font-black text-[#0a2647] tracking-tight">{t('profileTitle')}</h1>
+            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">{username || fallbackName}</p>
+          </div>
         </div>
+
+        {message && (
+          <div className="mb-6 p-4 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl text-xs font-bold uppercase tracking-wider">
+            {message}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-1">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('username')}</label>
+            <input
+              type="text"
+              value={username}
+              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-400 cursor-not-allowed"
+              disabled
+            />
+            <p className="mt-1 text-[10px] font-bold text-slate-400 italic ml-1">{t('usernameHint')}</p>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('displayName')}</label>
+            <input
+              type="text"
+              value={displayName}
+              onChange={(event) => setDisplayName(event.target.value)}
+              className="w-full p-3 bg-white border border-slate-200 rounded-xl focus:border-[#0a2647] focus:ring-1 focus:ring-[#0a2647] outline-none transition-all font-bold text-[#0a2647]"
+              placeholder={t('displayNamePlaceholder')}
+              maxLength={50}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('avatarUrl')}</label>
+            <input
+              type="url"
+              value={avatarUrl}
+              onChange={(event) => setAvatarUrl(event.target.value)}
+              className="w-full p-3 bg-white border border-slate-200 rounded-xl focus:border-[#0a2647] focus:ring-1 focus:ring-[#0a2647] outline-none transition-all font-medium text-slate-600"
+              placeholder="https://example.com/avatar.png"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('uploadAvatar')}</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(event) => setAvatarFile(event.target.files?.[0] ?? null)}
+              className="w-full p-3 bg-slate-50 border border-slate-200 border-dashed rounded-xl text-xs font-bold text-slate-500 cursor-pointer hover:bg-slate-100 transition-all"
+            />
+          </div>
+
+          <button type="submit" className="btn-primary w-full py-4 uppercase tracking-[0.2em] text-sm mt-4" disabled={saving}>
+            {saving ? t('saving') : t('saveProfile')}
+          </button>
+        </form>
       </div>
 
-      {message && (
-        <div className="mb-4 rounded bg-slate-100 p-3 text-sm text-slate-700">
-          {message}
-        </div>
-      )}
+      {/* Account Deletion Section */}
+      <div className="glass-card p-6 border-rose-100 bg-rose-50/30">
+        <h3 className="text-sm font-black text-rose-700 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <span className="text-xl">⚠️</span> {t('profile_deletion.request_title')}
+        </h3>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <label className="block">
-          <span className="mb-1 block text-sm font-medium text-gray-700">{t('username')}</span>
-          <input
-            type="text"
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-            className="w-full rounded border p-2 bg-gray-50"
-            maxLength={80}
-            required
-            disabled
-          />
-          <p className="mt-1 text-xs text-gray-500">{t('usernameHint')}</p>
-        </label>
+        <p className="text-xs text-rose-800/70 mb-6 italic leading-relaxed font-medium">
+          {t('profile_deletion.notice')}
+        </p>
 
-        <label className="block">
-          <span className="mb-1 block text-sm font-medium text-gray-700">{t('displayName')}</span>
-          <input
-            type="text"
-            value={displayName}
-            onChange={(event) => setDisplayName(event.target.value)}
-            className="w-full rounded border p-2"
-            placeholder={t('displayNamePlaceholder')}
-            maxLength={50}
-          />
-        </label>
-
-        <label className="block">
-          <span className="mb-1 block text-sm font-medium text-gray-700">{t('avatarUrl')}</span>
-          <input
-            type="url"
-            value={avatarUrl}
-            onChange={(event) => setAvatarUrl(event.target.value)}
-            className="w-full rounded border p-2"
-            placeholder="https://example.com/avatar.png"
-          />
-        </label>
-
-        <label className="block">
-          <span className="mb-1 block text-sm font-medium text-gray-700">{t('uploadAvatar')}</span>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(event) => setAvatarFile(event.target.files?.[0] ?? null)}
-            className="w-full rounded border p-2 text-sm"
-          />
-        </label>
-
-        <button type="submit" className="btn-primary w-full" disabled={saving}>
-          {saving ? t('saving') : t('saveProfile')}
-        </button>
-      </form>
+        {profile?.deletion_requested_at ? (
+          <div className="space-y-4">
+            <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl">
+              <p className="text-xs font-bold text-rose-700 uppercase tracking-wider flex items-center gap-2">
+                <span className="animate-pulse">⏳</span> {t('profile_deletion.request_pending')}
+              </p>
+            </div>
+            <button
+              onClick={handleDeletionRequest}
+              className="text-xs font-bold text-slate-400 hover:text-slate-600 underline uppercase tracking-widest transition-colors"
+            >
+              {t('profile_deletion.cancel_request')}
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={handleDeletionRequest}
+            className="w-full py-3 border-2 border-rose-200 text-rose-600 rounded-xl text-xs font-black uppercase tracking-[0.15em] hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all"
+          >
+            {t('profile_deletion.request_button')}
+          </button>
+        )}
+      </div>
     </div>
   )
 }

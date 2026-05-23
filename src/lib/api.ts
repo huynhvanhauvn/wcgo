@@ -115,6 +115,43 @@ export async function savePrediction(userId: string, matchId: number, predictedA
   return data
 }
 
+export async function requestAccountDeletion(userId: string) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ deletion_requested_at: new Date().toISOString() })
+    .eq('user_id', userId)
+  if (error) throw error
+  return data
+}
+
+export async function cancelAccountDeletionRequest(userId: string) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ deletion_requested_at: null })
+    .eq('user_id', userId)
+  if (error) throw error
+  return data
+}
+
+export async function fetchDeletionRequests() {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .not('deletion_requested_at', 'is', null)
+  if (error) throw error
+  return data
+}
+
+export async function deleteUserAccount(userId: string) {
+  // This usually requires admin service role if done from client,
+  // but we'll simulate it by calling an RPC or a custom function if available.
+  // For Supabase, deleting from auth.users needs service role.
+  // We'll provide an RPC call 'delete_user_by_admin'
+  const { data, error } = await supabase.rpc('delete_user_by_admin', { p_user_id: userId })
+  if (error) throw error
+  return data
+}
+
 export async function settleMatch(matchId: number, scoreA: number, scoreB: number) {
   const { data, error } = await supabase.rpc('settle_match', {
     p_match_id: matchId,

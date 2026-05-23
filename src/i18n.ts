@@ -97,7 +97,29 @@ const resources = {
         champion_privilege: 'Champion Privilege (Top 1): Exempt from any additional costs if the penalty fund is insufficient.',
         fund_handling_title: 'Fund Surplus/Deficit Handling:',
         deficit_rule: 'If total penalties are insufficient: The deficit will be shared equally among all participants EXCEPT Top 1.',
-        surplus_rule: 'If there is a surplus: The extra funds will be used for communal group activities or carried over to the next season.'
+        surplus_rule: 'If there is a surplus: The extra funds will be used for communal group activities or carried over to the next season.',
+        disclaimer_title: 'Notice & Legal Disclaimer:',
+        disclaimer_content: 'This is a non-profit recreational platform for internal team engagement. It is strictly not for gambling or illegal betting. We comply with all local regulations regarding private recreational activities.',
+        purpose_title: 'Purpose:',
+        purpose_content: 'This is an internal activity management application (Internal Only), not for commercial purposes or economic gain.',
+        mechanism_title: 'Mechanism:',
+        mechanism_content: 'All scores and simulated penalties are used solely to calculate contribution ratios for real-life group meals/events. There is no "house" or middleman, and no individual profits from these activities. 100% of the funds are dedicated to collective communal use. This application is strictly for internal team use and does not provide any payment, refund, or financial transaction services for individuals outside the group.',
+        usage_title: 'Usage Regulations:',
+        usage_content: 'By logging in and participating, members confirm they use the application in the spirit of healthy, voluntary entertainment and comply with the collective\'s rules.'
+      },
+      profile_deletion: {
+        request_title: 'Account Deletion Request',
+        request_button: 'Request Account Deletion',
+        request_sent: 'Deletion request sent. Admin will review.',
+        request_pending: 'Deletion request pending review.',
+        notice: 'The decision to delete the account will be made by the admin after consulting the collective\'s opinion.',
+        cancel_request: 'Cancel Request'
+      },
+      admin_deletion: {
+        title: 'Manage Deletion Requests',
+        approve: 'Approve Deletion',
+        reject: 'Reject/Reset',
+        no_requests: 'No pending deletion requests.'
       }
     }
   },
@@ -196,7 +218,29 @@ const resources = {
         champion_privilege: 'Đặc quyền Vô Địch (Top 1): Miễn trừ mọi chi phí phát sinh bổ sung nếu quỹ phạt bị thiếu hụt.',
         fund_handling_title: 'Xử lý Quỹ dư/thiếu:',
         deficit_rule: 'Trường hợp thiếu hụt: Phần tiền thiếu sẽ được chia đều cho tất cả mọi người TRỪ Top 1.',
-        surplus_rule: 'Trường hợp dư thừa: Số tiền dư sẽ được dùng cho các hoạt động tập thể chung hoặc cộng dồn cho mùa giải kế tiếp.'
+        surplus_rule: 'Trường hợp dư thừa: Số tiền dư sẽ được dùng cho các hoạt động tập thể chung hoặc cộng dồn cho mùa giải kế tiếp.',
+        disclaimer_title: 'Lưu ý & Miễn trừ trách nhiệm:',
+        disclaimer_content: 'Đây là nền tảng dự đoán giải trí phi lợi nhuận, dành riêng cho tập thể nhằm tăng tính kết nối. Hoạt động này hoàn toàn không mang tính chất cờ bạc, sát phạt hay cá độ trái phép. Chúng tôi cam kết tuân thủ nghiêm ngặt các quy định pháp luật về hoạt động vui chơi giải trí nội bộ.',
+        purpose_title: 'Mục đích:',
+        purpose_content: 'Đây là ứng dụng quản lý hoạt động vui chơi nội bộ (Internal Only), không mang tính chất thương mại hay sát phạt kinh tế.',
+        mechanism_title: 'Cơ chế:',
+        mechanism_content: 'Toàn bộ điểm số và mức phạt trên ứng dụng chỉ mang tính chất mô phỏng, dùng làm căn cứ phân chia tỷ lệ đóng góp cho các buổi tiệc/ăn uống thực tế của nhóm. Hệ thống không có "nhà cái", không thu phí dịch vụ và không có bất kỳ cá nhân nào trục lợi từ quỹ đóng góp này. 100% quỹ sẽ được chi dùng cho mục đích tập thể. Ứng dụng này chỉ dành riêng cho nội bộ nhóm và không cung cấp bất kỳ chức năng thanh toán, hoàn tiền hay giao dịch tài chính nào cho cá nhân bên ngoài tập thể.',
+        usage_title: 'Quy định sử dụng:',
+        usage_content: 'Bằng việc đăng nhập và tham gia, thành viên xác nhận sử dụng ứng dụng trên tinh thần giải trí lành mạnh, tự nguyện và tuân thủ các quy định sinh hoạt của tập thể.'
+      },
+      profile_deletion: {
+        request_title: 'Yêu cầu xoá tài khoản',
+        request_button: 'Gửi yêu cầu xoá tài khoản',
+        request_sent: 'Yêu cầu đã được gửi. Quản trị viên sẽ xem xét.',
+        request_pending: 'Yêu cầu xoá đang chờ xử lý.',
+        notice: 'Việc quyết định có xoá hay không sẽ được Admin thực hiện sau khi tham khảo ý kiến chung của tập thể.',
+        cancel_request: 'Huỷ yêu cầu'
+      },
+      admin_deletion: {
+        title: 'Quản lý yêu cầu xoá tài khoản',
+        approve: 'Chấp thuận xoá',
+        reject: 'Từ chối/Reset',
+        no_requests: 'Không có yêu cầu xoá nào đang chờ.'
       }
     }
   }

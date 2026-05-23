@@ -7,6 +7,7 @@ import { getFlagUrl } from '../lib/flags'
 export default function AdminPage() {
   const { t, i18n } = useTranslation()
   const [matches, setMatches] = useState<any[]>([])
+  const [deletionRequests, setDeletionRequests] = useState<any[]>([])
   const [editing, setEditing] = useState<Record<number, { a: number | '', b: number | '' }>>({})
   const [results, setResults] = useState<any[] | null>(null)
   const [error, setError] = useState('')
@@ -14,6 +15,8 @@ export default function AdminPage() {
   useEffect(() => {
     let chan: any
     api.fetchMatches().then((rows: any[]) => setMatches(rows || [])).catch(console.error)
+    api.fetchDeletionRequests().then((rows: any[]) => setDeletionRequests(rows || [])).catch(console.error)
+
     chan = api.subscribeMatches((payload: any) => {
       const record = payload.new ?? payload.record
       if (!record) return
@@ -61,10 +64,65 @@ export default function AdminPage() {
     }
   }
 
+  const handleDeleteUser = async (userId: string) => {
+    if (!window.confirm('Are you sure you want to delete this account? This action is permanent.')) return
+    try {
+      await api.deleteUserAccount(userId)
+      setDeletionRequests(current => current.filter(r => r.user_id !== userId))
+    } catch (e: any) {
+      alert(e.message)
+    }
+  }
+
+  const handleRejectDeletion = async (userId: string) => {
+    try {
+      await api.cancelAccountDeletionRequest(userId)
+      setDeletionRequests(current => current.filter(r => r.user_id !== userId))
+    } catch (e: any) {
+      alert(e.message)
+    }
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-10 pb-20">
+      {/* 1. DELETION REQUESTS SECTION */}
+      {deletionRequests.length > 0 && (
+        <div className="glass-card p-6 md:p-8 border-rose-200 bg-rose-50/20">
+          <h2 className="text-xl font-black text-rose-700 uppercase tracking-tight italic mb-6 flex items-center gap-3">
+            <span className="p-2 bg-rose-100 rounded-lg">🚮</span>
+            {t('admin_deletion.title')}
+          </h2>
+          <div className="space-y-4">
+            {deletionRequests.map((req) => (
+              <div key={req.user_id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-rose-100 rounded-2xl gap-4">
+                <div className="flex flex-col">
+                  <span className="font-bold text-slate-800">{req.display_name || req.username}</span>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{req.user_id}</span>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleRejectDeletion(req.user_id)}
+                    className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-100 rounded-xl transition-all"
+                  >
+                    {t('admin_deletion.reject')}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteUser(req.user_id)}
+                    className="px-4 py-2 text-[10px] font-black uppercase tracking-widest bg-rose-600 text-white rounded-xl shadow-lg shadow-rose-200 hover:scale-105 transition-all"
+                  >
+                    {t('admin_deletion.approve')}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 2. MATCH SETTLEMENT SECTION */}
       <div className="glass-card p-6 md:p-8">
-        <h2 className="text-2xl font-black text-[#0a2647] uppercase tracking-tight italic mb-6 border-b border-slate-100 pb-4">
+        <h2 className="text-2xl font-black text-[#0a2647] uppercase tracking-tight italic mb-6 border-b border-slate-100 pb-4 flex items-center gap-3">
+          <span className="p-2 bg-slate-100 rounded-lg">⚖️</span>
           {t('adminSettleTitle')}
         </h2>
 
