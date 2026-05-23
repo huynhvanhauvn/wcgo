@@ -58,12 +58,18 @@ export default function MatchCard({
   const startLocal = useMemo(() => DateTime.fromISO(match.start_time).toLocal().setLocale(i18n.language), [match, i18n.language])
   const formattedStart = startLocal.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)
   const locked = match.status === 'FINISHED' || DateTime.now() > startLocal.minus({ minutes: 15 })
+
   const [predA, setPredA] = useState<number | ''>('')
   const [predB, setPredB] = useState<number | ''>('')
   const [savedPredA, setSavedPredA] = useState<number | ''>('')
   const [savedPredB, setSavedPredB] = useState<number | ''>('')
   const [saving, setSaving] = useState(false)
   const [savedAt, setSavedAt] = useState<string | null>(null)
+
+  const [showStats, setShowStats] = useState(false)
+  const [stats, setStats] = useState<{ winA: number; draw: number; winB: number; total: number } | null>(null)
+  const [loadingStats, setLoadingStats] = useState(false)
+
   const { user } = useAuth()
 
   const hasSavedPrediction = savedAt && savedPredA !== '' && savedPredB !== ''
@@ -99,6 +105,43 @@ export default function MatchCard({
     setSavedAt(prediction.created_at ?? new Date().toISOString())
   }, [prediction])
 
+  const fetchStats = async () => {
+    if (stats || loadingStats) return
+    setLoadingStats(true)
+    try {
+      const allPreds = await api.fetchPredictionsByMatch(match.id)
+      const total = allPreds.length
+      if (total === 0) {
+        setStats({ winA: 0, draw: 0, winB: 0, total: 0 })
+        return
+      }
+
+      let winA = 0, draw = 0, winB = 0
+      allPreds.forEach((p: any) => {
+        if (p.predicted_a > p.predicted_b) winA++
+        else if (p.predicted_a < p.predicted_b) winB++
+        else draw++
+      })
+
+      setStats({
+        winA: Math.round((winA / total) * 100),
+        draw: Math.round((draw / total) * 100),
+        winB: Math.round((winB / total) * 100),
+        total
+      })
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoadingStats(false)
+    }
+  }
+
+  const toggleStats = () => {
+    const nextShow = !showStats
+    setShowStats(nextShow)
+    if (nextShow) fetchStats()
+  }
+
   const getScoreClass = (result: 'pending' | 'win' | 'loss' | 'draw') => {
     const base = 'w-16 md:w-20 p-3 rounded-xl border text-center font-black text-xl transition-all duration-300 shadow-sm'
     const disabled = locked ? ' bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' : ' outline-none focus:ring-2 focus:ring-opacity-30'
@@ -124,12 +167,42 @@ export default function MatchCard({
       setSavedPredB(predB)
       setSavedAt(nextPrediction.created_at)
       onPredictionSaved?.(nextPrediction)
+      // Refresh stats if they are showing
+      if (showStats) {
+        setStats(null)
+        fetchStats()
+      }
     } catch (e) {
       console.error(e)
     } finally {
       setSaving(false)
     }
   }
+
+  const scoreControls = (
+    <div className="flex items-center justify-center gap-3">
+      <input type="number" min={0} value={predA} onClick={(e) => e.stopPropagation()} onChange={(e) => setPredA(e.target.value === '' ? '' : Number(e.target.value))} disabled={locked} className={getScoreClass(teamAResult)} />
+      <span className="font-black text-slate-300 text-xl tracking-tighter italic">VS</span>
+      <input type="number" min={0} value={predB} onClick={(e) => e.stopPropagation()} onChange={(e) => setPredB(e.target.value === '' ? '' : Number(e.target.value))} disabled={locked} className={getScoreClass(teamBResult)} />
+    </div>
+  )
+
+  const saveControls = (
+    <div className="flex flex-wrap items-center justify-center gap-2">
+      {canSave && (
+        <button
+          className="btn-primary min-w-[140px] py-3.5 uppercase tracking-widest text-xs shadow-xl"
+          disabled={predA === '' || predB === ''}
+          onClick={(e) => { e.stopPropagation(); handleSave(); }}
+        >
+          {saving ? t('saving') : t('save')}
+        </button>
+      )}
+      {locked && <div className="rounded-full bg-slate-100 px-4 py-1.5 text-[10px] font-black text-slate-500 border border-slate-200 uppercase tracking-widest">{t('closed')}</div>}
+      {hasSavedPrediction && !predictionChanged && <div className="rounded-full bg-emerald-100 px-4 py-1.5 text-[10px] font-black text-emerald-700 border border-emerald-200 uppercase tracking-widest">{t('saved')}</div>}
+      {earnedPoints !== null && <div className="rounded-full bg-amber-100 px-4 py-1.5 text-[10px] font-black text-amber-700 border border-amber-200 uppercase tracking-widest">+{earnedPoints} {t('pointsShort')}</div>}
+    </div>
+  )
 
   const finalScore = hasFinalScore && (
     <div className="mt-4 py-2 px-4 bg-emerald-50 rounded-full inline-block text-[10px] font-black text-emerald-700 uppercase tracking-[0.2em] border border-emerald-100">
@@ -142,7 +215,10 @@ export default function MatchCard({
     : "glass-card p-6 bg-white shadow-sm"
 
   return (
-    <div className={`${cardStyle} relative overflow-hidden transition-all duration-300 hover:shadow-md group`}>
+    <div
+      className={`${cardStyle} relative overflow-hidden transition-all duration-300 hover:shadow-md group cursor-pointer`}
+      onClick={toggleStats}
+    >
       {highlighted && (
         <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#0a2647] via-wc-gold to-wc-canada"></div>
       )}
@@ -159,9 +235,7 @@ export default function MatchCard({
           <TeamName name={match.team_a} align="right" />
         </div>
         <div className="flex justify-center items-center gap-4 bg-slate-50/50 p-6 rounded-3xl border border-slate-100 shadow-inner">
-          <input type="number" min={0} value={predA} onChange={(e) => setPredA(e.target.value === '' ? '' : Number(e.target.value))} disabled={locked} className={getScoreClass(teamAResult)} />
-          <span className="font-black text-slate-300 text-xl tracking-tighter italic">VS</span>
-          <input type="number" min={0} value={predB} onChange={(e) => setPredB(e.target.value === '' ? '' : Number(e.target.value))} disabled={locked} className={getScoreClass(teamBResult)} />
+          {scoreControls}
         </div>
         <div className="min-w-0">
           <TeamName name={match.team_b} />
@@ -173,45 +247,62 @@ export default function MatchCard({
         <TeamName name={match.team_a} stack />
 
         <div className="flex flex-col items-center gap-3 w-full py-6 bg-slate-50/80 rounded-2xl border border-slate-100 shadow-inner">
-          <input
-            type="number"
-            min={0}
-            value={predA}
-            onChange={(e) => setPredA(e.target.value === '' ? '' : Number(e.target.value))}
-            disabled={locked}
-            className={getScoreClass(teamAResult)}
-          />
-          <div className="h-px w-8 bg-slate-200"></div>
-          <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">VS</span>
-          <div className="h-px w-8 bg-slate-200"></div>
-          <input
-            type="number"
-            min={0}
-            value={predB}
-            onChange={(e) => setPredB(e.target.value === '' ? '' : Number(e.target.value))}
-            disabled={locked}
-            className={getScoreClass(teamBResult)}
-          />
+          {scoreControls}
         </div>
 
         <TeamName name={match.team_b} stack />
       </div>
 
-      <div className="mt-8 flex flex-col items-center gap-4">
-        <div className="flex flex-wrap justify-center gap-2">
-          {canSave && (
-            <button
-              className="btn-primary min-w-[140px] py-3.5 uppercase tracking-widest text-xs shadow-xl"
-              disabled={predA === '' || predB === ''}
-              onClick={handleSave}
-            >
-              {saving ? t('saving') : t('save')}
-            </button>
+      {/* Statistics Section */}
+      {showStats && (
+        <div className="mt-8 pt-6 border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex justify-between items-center mb-4 px-1">
+            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Community Predictions</h4>
+            <span className="text-[10px] font-bold text-slate-400">{stats?.total || 0} participants</span>
+          </div>
+
+          {loadingStats ? (
+            <div className="flex justify-center py-4">
+              <div className="animate-pulse flex gap-2">
+                <div className="w-2 h-2 bg-slate-200 rounded-full"></div>
+                <div className="w-2 h-2 bg-slate-200 rounded-full"></div>
+                <div className="w-2 h-2 bg-slate-200 rounded-full"></div>
+              </div>
+            </div>
+          ) : stats && (
+            <div className="space-y-4">
+              <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
+                <div style={{ width: `${stats.winA}%` }} className="bg-emerald-500 h-full transition-all duration-1000"></div>
+                <div style={{ width: `${stats.draw}%` }} className="bg-slate-300 h-full transition-all duration-1000 border-x border-white/20"></div>
+                <div style={{ width: `${stats.winB}%` }} className="bg-rose-500 h-full transition-all duration-1000"></div>
+              </div>
+              <div className="grid grid-cols-3 text-[10px] font-black uppercase tracking-wider">
+                <div className="text-emerald-600 flex flex-col items-start">
+                  <span>{match.team_a} Win</span>
+                  <span className="text-lg">{stats.winA}%</span>
+                </div>
+                <div className="text-slate-400 flex flex-col items-center">
+                  <span>Draw</span>
+                  <span className="text-lg">{stats.draw}%</span>
+                </div>
+                <div className="text-rose-600 flex flex-col items-end">
+                  <span>{match.team_b} Win</span>
+                  <span className="text-lg">{stats.winB}%</span>
+                </div>
+              </div>
+            </div>
           )}
-          {locked && <div className="rounded-full bg-slate-100 px-4 py-1.5 text-[10px] font-black text-slate-500 border border-slate-200 uppercase tracking-widest">{t('closed')}</div>}
-          {hasSavedPrediction && !predictionChanged && <div className="rounded-full bg-emerald-100 px-4 py-1.5 text-[10px] font-black text-emerald-700 border border-emerald-200 uppercase tracking-widest">{t('saved')}</div>}
-          {earnedPoints !== null && <div className="rounded-full bg-amber-100 px-4 py-1.5 text-[10px] font-black text-amber-700 border border-amber-200 uppercase tracking-widest">+{earnedPoints} {t('pointsShort')}</div>}
         </div>
+      )}
+
+      <div className="mt-8 flex justify-center">
+        {saveControls}
+      </div>
+
+      <div className="absolute bottom-2 right-4 opacity-20 group-hover:opacity-100 transition-opacity">
+        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">
+          {showStats ? 'Click to hide stats' : 'Click to see stats'}
+        </span>
       </div>
     </div>
   )
