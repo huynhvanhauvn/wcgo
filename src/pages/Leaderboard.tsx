@@ -250,7 +250,7 @@ export default function LeaderboardPage() {
 
                 <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 shadow-inner">
                   <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] text-center mb-5">{t('stats.current_form')}</h4>
-                  <div className="flex justify-center items-center gap-3">
+                  <div className="flex justify-center items-center gap-3 overflow-x-auto no-scrollbar pb-2">
                     {userStats.lastFive.length > 0 ? userStats.lastFive.map((f, i) => (
                       <div key={i} className="group relative flex flex-col items-center">
                         <div className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center text-lg font-black shadow-lg transition-transform hover:scale-110

@@ -120,7 +120,7 @@ export default function RulesPage() {
           <div className="absolute -inset-1 bg-gradient-to-r from-[#0a2647] to-wc-gold rounded-3xl blur opacity-10 group-hover:opacity-20 transition duration-1000"></div>
           <div className="relative bg-[#0a2647] p-10 rounded-2xl text-center border border-white/10 shadow-xl overflow-hidden">
             <span className="text-[10px] text-slate-400 block mb-6 uppercase tracking-[0.4em] font-black">{t('rules_screen.penalty_formula_label')}</span>
-            <div className="overflow-x-auto py-4">
+            <div className="overflow-x-auto no-scrollbar py-4">
               <p className="text-[#00d4ff] font-mono text-2xl md:text-4xl whitespace-nowrap tracking-tighter">
                 Penalty = 500k × <span className="text-white">(</span>P<span className="text-[0.6em] align-sub">Top3</span> - P<span className="text-[0.6em] align-sub">User</span><span className="text-white">)</span> / <span className="text-white">(</span>P<span className="text-[0.6em] align-sub">Top3</span> - P<span className="text-[0.6em] align-sub">Last</span><span className="text-white">)</span>
               </p>

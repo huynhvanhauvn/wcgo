@@ -53,7 +53,18 @@
   @apply text-[#0a2647];
 }
 
-/* Custom scrollbar */
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Custom scrollbar for main body */
 ::-webkit-scrollbar {
   width: 8px;
 }

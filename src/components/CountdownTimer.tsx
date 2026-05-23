@@ -77,7 +77,7 @@ export default function CountdownTimer({ targetDate, teamA, teamB }: CountdownTi
           </div>
         </div>
 
-        <div className="flex gap-2 md:gap-4">
+        <div className="flex gap-2 md:gap-4 overflow-x-auto no-scrollbar pb-1">
           <TimeBlock label={t('days')} value={timeLeft.days} />
           <TimeBlock label={t('hours')} value={timeLeft.hours} />
           <TimeBlock label={t('minutes')} value={timeLeft.minutes} />
