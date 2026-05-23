@@ -8,6 +8,67 @@ import { getFlagUrl } from '../lib/flags'
 import { calculateMatchPoints } from '../lib/scoring'
 import WorldCupMark from './WorldCupMark'
 
+interface ScoreStepperProps {
+  value: number | ''
+  onChange: (val: number | '') => void
+  disabled?: boolean
+  result: 'pending' | 'win' | 'loss' | 'draw'
+}
+
+function ScoreStepper({ value, onChange, disabled, result }: ScoreStepperProps) {
+  const currentVal = value === '' ? 0 : value
+
+  const handleIncrement = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (disabled) return
+    onChange(currentVal + 1)
+  }
+
+  const handleDecrement = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (disabled || currentVal <= 0) return
+    onChange(currentVal - 1)
+  }
+
+  const getContainerClass = () => {
+    // Thicker border (border-2) and more vibrant colors
+    const base = "flex items-center gap-1 p-1 rounded-2xl border-2 transition-all duration-300"
+    if (disabled) return `${base} bg-slate-50 border-slate-200 opacity-60`
+    if (result === 'win') return `${base} bg-emerald-50 border-emerald-500 shadow-md shadow-emerald-100`
+    if (result === 'loss') return `${base} bg-rose-50 border-rose-500 shadow-md shadow-rose-100`
+    if (result === 'draw') return `${base} bg-blue-50 border-blue-500 shadow-md shadow-blue-100`
+    return `${base} bg-white border-slate-300 shadow-sm`
+  }
+
+  const getBtnClass = () => {
+    const base = "w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-xl font-bold transition-all active:scale-90 border border-transparent"
+    if (disabled) return `${base} text-slate-200 cursor-not-allowed`
+    return `${base} bg-white text-slate-400 hover:text-[#0a2647] hover:bg-slate-50 hover:border-slate-100 shadow-sm`
+  }
+
+  return (
+    <div className={getContainerClass()}>
+      <button onClick={handleDecrement} disabled={disabled || currentVal <= 0} className={getBtnClass()}>
+        <span className="text-xl">−</span>
+      </button>
+
+      <input
+        type="number"
+        min={0}
+        value={value}
+        onClick={(e) => e.stopPropagation()}
+        onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))}
+        disabled={disabled}
+        className={`w-12 md:w-16 text-center font-black text-3xl md:text-4xl bg-transparent outline-none transition-colors ${disabled ? 'text-slate-300' : 'text-[#0a2647]'}`}
+      />
+
+      <button onClick={handleIncrement} disabled={disabled} className={getBtnClass()}>
+        <span className="text-xl">+</span>
+      </button>
+    </div>
+  )
+}
+
 function TeamName({ name, align = 'left', stack = false }: { name: string; align?: 'left' | 'right'; stack?: boolean }) {
   const flagUrl = getFlagUrl(name)
   const [error, setError] = useState(false)
@@ -142,16 +203,6 @@ export default function MatchCard({
     if (nextShow) fetchStats()
   }
 
-  const getScoreClass = (result: 'pending' | 'win' | 'loss' | 'draw') => {
-    const base = 'w-16 md:w-20 p-3 rounded-xl border text-center font-black text-xl transition-all duration-300 shadow-sm'
-    const disabled = locked ? ' bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' : ' outline-none focus:ring-2 focus:ring-opacity-30'
-
-    if (result === 'pending') return `${base} bg-white border-slate-200 text-slate-900 focus:border-[#0a2647] focus:ring-[#0a2647] ${disabled}`
-    if (result === 'win') return `${base} border-emerald-500 bg-emerald-50 text-emerald-700 focus:border-emerald-600 focus:ring-emerald-500 ${disabled}`
-    if (result === 'loss') return `${base} border-rose-500 bg-rose-50 text-rose-700 focus:border-rose-600 focus:ring-rose-500 ${disabled}`
-    return `${base} border-blue-500 bg-blue-50 text-blue-700 focus:border-blue-600 focus:ring-blue-500 ${disabled}`
-  }
-
   const handleSave = async () => {
     if (!canSave || predA === '' || predB === '') return
     setSaving(true)
@@ -181,14 +232,6 @@ export default function MatchCard({
   const finalScoreLabel = hasFinalScore && (
     <div className="mt-4 py-2 px-4 bg-emerald-50 rounded-full inline-block text-[10px] font-black text-emerald-700 uppercase tracking-[0.2em] border border-emerald-100">
       {t('finalScore')}: {match.score_a} - {match.score_b}
-    </div>
-  )
-
-  const scoreControls = (
-    <div className="flex items-center justify-center gap-3">
-      <input type="number" min={0} value={predA} onClick={(e) => e.stopPropagation()} onChange={(e) => setPredA(e.target.value === '' ? '' : Number(e.target.value))} disabled={locked} className={getScoreClass(teamAResult)} />
-      <span className="font-black text-slate-300 text-xl tracking-tighter italic">VS</span>
-      <input type="number" min={0} value={predB} onClick={(e) => e.stopPropagation()} onChange={(e) => setPredB(e.target.value === '' ? '' : Number(e.target.value))} disabled={locked} className={getScoreClass(teamBResult)} />
     </div>
   )
 
@@ -233,8 +276,10 @@ export default function MatchCard({
         <div className="min-w-0 text-right">
           <TeamName name={match.team_a} align="right" />
         </div>
-        <div className="flex justify-center items-center gap-4 bg-slate-50/50 p-6 rounded-3xl border border-slate-100 shadow-inner">
-          {scoreControls}
+        <div className="flex justify-center items-center gap-6">
+          <ScoreStepper value={predA} onChange={setPredA} disabled={locked} result={teamAResult} />
+          <span className="font-black text-slate-300 text-xl tracking-tighter italic">VS</span>
+          <ScoreStepper value={predB} onChange={setPredB} disabled={locked} result={teamBResult} />
         </div>
         <div className="min-w-0">
           <TeamName name={match.team_b} />
@@ -244,33 +289,15 @@ export default function MatchCard({
       {/* Mobile Layout: Symmetric Top-Down with Vertical Scores */}
       <div className="flex flex-col md:hidden items-center gap-6">
         <TeamName name={match.team_a} stack />
+        <ScoreStepper value={predA} onChange={setPredA} disabled={locked} result={teamAResult} />
 
-        <div className="flex flex-col items-center gap-3 w-full max-w-[200px] py-4 bg-slate-50/80 rounded-3xl border border-slate-100 shadow-inner">
-          <input
-            type="number"
-            min={0}
-            value={predA}
-            onClick={(e) => e.stopPropagation()}
-            onChange={(e) => setPredA(e.target.value === '' ? '' : Number(e.target.value))}
-            disabled={locked}
-            className={getScoreClass(teamAResult)}
-          />
-          <div className="flex items-center gap-3 w-full px-8">
-            <div className="h-px flex-1 bg-slate-200"></div>
-            <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">VS</span>
-            <div className="h-px flex-1 bg-slate-200"></div>
-          </div>
-          <input
-            type="number"
-            min={0}
-            value={predB}
-            onClick={(e) => e.stopPropagation()}
-            onChange={(e) => setPredB(e.target.value === '' ? '' : Number(e.target.value))}
-            disabled={locked}
-            className={getScoreClass(teamBResult)}
-          />
+        <div className="flex items-center gap-3 w-full px-12">
+          <div className="h-px flex-1 bg-slate-100"></div>
+          <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">VS</span>
+          <div className="h-px flex-1 bg-slate-100"></div>
         </div>
 
+        <ScoreStepper value={predB} onChange={setPredB} disabled={locked} result={teamBResult} />
         <TeamName name={match.team_b} stack />
       </div>
 
