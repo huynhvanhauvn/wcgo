@@ -164,6 +164,15 @@ export async function fetchDeletionRequests() {
   return data
 }
 
+export async function fetchUserMatchPoints(userId: string) {
+  const { data, error } = await supabase
+    .from('match_points')
+    .select('*')
+    .eq('user_id', userId)
+  if (error) throw error
+  return data
+}
+
 export async function approveAccountDeletion(userId: string) {
   // Use RPC for actual data cleaning and marking as deleted
   const { data, error } = await supabase.rpc('delete_user_by_admin', { p_user_id: userId })

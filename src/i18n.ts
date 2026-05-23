@@ -75,6 +75,27 @@ const resources = {
         news: 'News',
         rules: 'Rules & FAQ'
       },
+      stats: {
+        analyzing: 'Analyzing Performance...',
+        record: 'Tournament Record',
+        total_points: 'Total Points',
+        accuracy: 'Accuracy',
+        breakdown: 'Breakdown',
+        exact: 'Exact Scores',
+        diff: 'Goal Difference',
+        outcome: 'Correct Outcome',
+        predicted_count: 'Matches Predicted',
+        since: 'Predicting since',
+        current_form: 'Current Form (Last 5)',
+        no_data: 'No matches settled yet',
+        badges: {
+          sharpshooter: 'Sharpshooter',
+          on_fire: 'On Fire',
+          invincible: 'Invincible',
+          cold_feet: 'Cold Feet',
+          contender: 'Contender'
+        }
+      },
       rules_screen: {
         title: 'GAME RULES & REGULATIONS',
         section_1_title: '1. PARTICIPATION & LOCK TIME',
@@ -197,6 +218,27 @@ const resources = {
         leaderboard: 'Bảng Xếp Hạng',
         news: 'Tin tức',
         rules: 'Điều Lệ & FAQ'
+      },
+      stats: {
+        analyzing: 'Đang phân tích thành tích...',
+        record: 'Thành tích giải đấu',
+        total_points: 'Tổng điểm',
+        accuracy: 'Độ chính xác',
+        breakdown: 'Chi tiết điểm',
+        exact: 'Tỉ số chính xác',
+        diff: 'Đúng cách biệt',
+        outcome: 'Đúng kết quả',
+        predicted_count: 'Trận đã dự đoán',
+        since: 'Tham gia từ',
+        current_form: 'Phong độ (5 trận gần nhất)',
+        no_data: 'Chưa có dữ liệu trận đấu',
+        badges: {
+          sharpshooter: 'Tay súng bắn tỉa',
+          on_fire: 'Đang hừng hực',
+          invincible: 'Bất bại',
+          cold_feet: 'Cóng chân',
+          contender: 'Đối thủ đáng gờm'
+        }
       },
       rules_screen: {
         title: 'ĐIỀU LỆ VÀ QUY TẮC TRÒ CHƠI',
