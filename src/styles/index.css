@@ -63,3 +63,16 @@
 ::-webkit-scrollbar-thumb {
   @apply bg-slate-300 rounded-full hover:bg-slate-400;
 }
+
+@keyframes crown-wiggle {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0) rotate(-15deg);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-3px) rotate(-10deg);
+  }
+}
+
+.animate-crown-wiggle {
+  animation: crown-wiggle 3s infinite ease-in-out;
+}

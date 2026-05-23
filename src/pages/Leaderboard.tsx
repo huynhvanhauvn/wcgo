@@ -86,7 +86,21 @@ export default function LeaderboardPage() {
                 </div>
                 <div className="relative group">
                   <UserAvatar name={displayName} avatarUrl={row.profile?.avatar_url} className="h-12 w-12 ring-2 ring-slate-100 group-hover:ring-wc-accent transition-all shadow-sm" />
-                  {row.rank === 1 && <span className="absolute -top-1 -right-1 text-lg">👑</span>}
+                  {row.rank === 1 && (
+                    <span className="absolute -top-[20px] left-[38%] -translate-x-1/2 z-10 text-2xl drop-shadow-lg animate-crown-wiggle select-none pointer-events-none">
+                      👑
+                    </span>
+                  )}
+                  {row.rank === 2 && (
+                    <span className="absolute -top-2 -right-2 z-10 text-xl drop-shadow-md transform rotate-12 select-none">
+                      🥈
+                    </span>
+                  )}
+                  {row.rank === 3 && (
+                    <span className="absolute -top-2 -right-2 z-10 text-xl drop-shadow-md transform -rotate-12 select-none">
+                      🥉
+                    </span>
+                  )}
                 </div>
                 <div className="flex flex-col">
                   <div className="font-bold text-slate-800 text-lg leading-tight">{displayName}</div>
