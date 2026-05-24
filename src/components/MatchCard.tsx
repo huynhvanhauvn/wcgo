@@ -31,25 +31,24 @@ function ScoreStepper({ value, onChange, disabled, result }: ScoreStepperProps) 
   }
 
   const getContainerClass = () => {
-    // Thicker border (border-2) and more vibrant colors
-    const base = "flex items-center gap-1 p-1 rounded-2xl border-2 transition-all duration-300"
+    const base = "flex items-center gap-0.5 md:gap-1 p-0.5 rounded-lg border-2 transition-all duration-300"
     if (disabled) return `${base} bg-slate-50 border-slate-200 opacity-60`
-    if (result === 'win') return `${base} bg-emerald-50 border-emerald-500 shadow-md shadow-emerald-100`
-    if (result === 'loss') return `${base} bg-rose-50 border-rose-500 shadow-md shadow-rose-100`
-    if (result === 'draw') return `${base} bg-blue-50 border-blue-500 shadow-md shadow-blue-100`
-    return `${base} bg-white border-slate-300 shadow-sm`
+    if (result === 'win') return `${base} bg-emerald-50 border-emerald-500 shadow-sm`
+    if (result === 'loss') return `${base} bg-rose-50 border-rose-500 shadow-sm`
+    if (result === 'draw') return `${base} bg-blue-50 border-blue-500 shadow-sm`
+    return `${base} bg-white border-slate-200`
   }
 
   const getBtnClass = () => {
-    const base = "w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-xl font-bold transition-all active:scale-90 border border-transparent"
+    const base = "w-5 h-5 md:w-8 md:h-8 flex items-center justify-center rounded font-bold transition-all active:scale-90 border border-transparent shrink-0"
     if (disabled) return `${base} text-slate-200 cursor-not-allowed`
-    return `${base} bg-white text-slate-400 hover:text-[#0a2647] hover:bg-slate-50 hover:border-slate-100 shadow-sm`
+    return `${base} bg-white text-slate-400 hover:text-[#0a2647]`
   }
 
   return (
     <div className={getContainerClass()}>
       <button onClick={handleDecrement} disabled={disabled || currentVal <= 0} className={getBtnClass()}>
-        <span className="text-xl">−</span>
+        <span className="text-xs md:text-lg">−</span>
       </button>
 
       <input
@@ -59,41 +58,44 @@ function ScoreStepper({ value, onChange, disabled, result }: ScoreStepperProps) 
         onClick={(e) => e.stopPropagation()}
         onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))}
         disabled={disabled}
-        className={`w-12 md:w-16 text-center font-black text-3xl md:text-4xl bg-transparent outline-none transition-colors ${disabled ? 'text-slate-300' : 'text-[#0a2647]'}`}
+        className={`w-6 md:w-10 text-center font-black text-sm md:text-2xl bg-transparent outline-none transition-colors shrink-0 ${disabled ? 'text-slate-300' : 'text-[#0a2647]'}`}
       />
 
       <button onClick={handleIncrement} disabled={disabled} className={getBtnClass()}>
-        <span className="text-xl">+</span>
+        <span className="text-xs md:text-lg">+</span>
       </button>
     </div>
   )
 }
 
-function TeamName({ name, align = 'left', stack = false }: { name: string; align?: 'left' | 'right'; stack?: boolean }) {
+function TeamName({ name, align = 'left' }: { name: string; align?: 'left' | 'right' }) {
+  const { t } = useTranslation()
   const flagUrl = getFlagUrl(name)
   const [error, setError] = useState(false)
 
-  const containerClass = stack
-    ? "flex flex-col items-center gap-2"
-    : `inline-flex min-w-0 items-center gap-2 ${align === 'right' ? 'flex-row-reverse text-right' : ''}`
+  const containerClass = `flex items-center gap-1 min-w-0 flex-1 h-full ${align === 'right' ? 'flex-row-reverse justify-start' : 'flex-row justify-start'}`
 
   return (
-    <span className={containerClass}>
+    <div className={containerClass}>
       {flagUrl && !error ? (
         <img
           src={flagUrl}
           alt={`${name} flag`}
-          className={`${stack ? 'h-10 w-14' : 'h-5 w-7'} shrink-0 rounded-sm object-cover ring-1 ring-slate-200 shadow-sm transition-all`}
+          className="h-3 w-4.5 md:h-4 md:w-6 shrink-0 rounded-sm object-cover ring-1 ring-slate-200"
           loading="lazy"
           onError={() => setError(true)}
         />
       ) : (
-        <div className={`${stack ? 'h-10 w-14' : 'h-5 w-7'} shrink-0 rounded-sm bg-slate-100 flex items-center justify-center text-[8px] font-bold text-slate-400 ring-1 ring-slate-200`}>
+        <div className="h-3 w-4.5 md:h-4 md:w-6 shrink-0 rounded-sm bg-slate-100 flex items-center justify-center text-[5px] font-bold text-slate-400">
           {name.substring(0, 2).toUpperCase()}
         </div>
       )}
-      <span className={`truncate text-slate-900 font-black ${stack ? 'text-lg' : 'text-lg'}`}>{name}</span>
-    </span>
+      <div className={`min-w-0 flex-1 overflow-hidden flex items-center ${align === 'right' ? 'justify-end' : 'justify-start'}`}>
+        <span className={`text-slate-900 font-black truncate text-[9px] sm:text-[10px] md:text-base lg:text-lg leading-none block ${align === 'right' ? 'text-right' : 'text-left'}`}>
+          {t(`teams.${name}`, { defaultValue: name })}
+        </span>
+      </div>
+    </div>
   )
 }
 
@@ -106,11 +108,13 @@ type Prediction = {
 
 export default function MatchCard({
   match,
+  matchNumber,
   highlighted = false,
   prediction,
   onPredictionSaved
 }: {
   match: any
+  matchNumber?: number
   highlighted?: boolean
   prediction?: Prediction | null
   onPredictionSaved?: (prediction: Prediction) => void
@@ -132,6 +136,8 @@ export default function MatchCard({
   const [loadingStats, setLoadingStats] = useState(false)
 
   const { user } = useAuth()
+
+  const isDone = !!savedAt || (!!prediction && prediction.predicted_a !== undefined);
 
   const hasSavedPrediction = savedAt && savedPredA !== '' && savedPredB !== ''
   const predictionChanged = predA !== savedPredA || predB !== savedPredB
@@ -229,127 +235,134 @@ export default function MatchCard({
     }
   }
 
-  const finalScoreLabel = hasFinalScore && (
-    <div className="mt-4 py-2 px-4 bg-emerald-50 rounded-full inline-block text-[10px] font-black text-emerald-700 uppercase tracking-[0.2em] border border-emerald-100">
-      {t('finalScore')}: {match.score_a} - {match.score_b}
+  // --- Sub-renderers ---
+
+  const renderTopIndicator = () => {
+    if (isDone) {
+       return <div className="absolute top-0 left-0 w-full h-[4px] z-20 bg-gradient-to-r from-emerald-500 to-teal-500 shadow-[0_1px_8px_rgba(16,185,129,0.4)]"></div>
+    }
+    if (highlighted) {
+      return <div className="absolute top-0 left-0 w-full h-[4px] z-20 bg-amber-500"></div>
+    }
+    return <div className="absolute top-0 left-0 w-full h-[4px] z-20 bg-[#0a2647] opacity-20"></div>
+  }
+
+  const renderFinalScore = () => {
+    if (!hasFinalScore) return null
+    return (
+      <div className="mt-1 py-0.5 px-3 bg-emerald-50 rounded-full inline-block text-[8px] font-black text-emerald-700 uppercase tracking-widest border border-emerald-100">
+        {t('finalScore')}: {match.score_a} - {match.score_b}
+      </div>
+    )
+  }
+
+  const renderScoreControls = () => (
+    <div className="flex items-center justify-center gap-1 md:gap-2">
+      <ScoreStepper value={predA} onChange={setPredA} disabled={locked} result={teamAResult} />
+      <span className="font-black text-slate-300 text-[8px] md:text-xs tracking-tighter italic shrink-0 px-0.5">VS</span>
+      <ScoreStepper value={predB} onChange={setPredB} disabled={locked} result={teamBResult} />
     </div>
   )
 
-  const saveControls = (
+  const renderSaveControls = () => (
     <div className="flex flex-wrap items-center justify-center gap-2">
       {canSave && (
         <button
-          className="btn-primary min-w-[140px] py-3.5 uppercase tracking-widest text-xs shadow-xl"
+          className="btn-primary min-w-[100px] md:min-w-[140px] py-3 uppercase tracking-widest text-[8px] md:text-xs shadow-xl"
           disabled={predA === '' || predB === ''}
           onClick={(e) => { e.stopPropagation(); handleSave(); }}
         >
           {saving ? t('saving') : t('save')}
         </button>
       )}
-      {locked && <div className="rounded-full bg-slate-100 px-4 py-1.5 text-[10px] font-black text-slate-500 border border-slate-200 uppercase tracking-widest">{t('closed')}</div>}
-      {hasSavedPrediction && !predictionChanged && <div className="rounded-full bg-emerald-100 px-4 py-1.5 text-[10px] font-black text-emerald-700 border border-emerald-200 uppercase tracking-widest">{t('saved')}</div>}
-      {earnedPoints !== null && <div className="rounded-full bg-amber-100 px-4 py-1.5 text-[10px] font-black text-amber-700 border border-amber-200 uppercase tracking-widest">+{earnedPoints} {t('pointsShort')}</div>}
+      {locked && <div className="rounded-full bg-slate-100 px-3 py-1 text-[8px] font-black text-slate-500 border border-slate-200 uppercase tracking-widest">{t('closed')}</div>}
+
+      {hasSavedPrediction && !predictionChanged && earnedPoints === null && (
+        <div className="rounded-full bg-transparent px-3 py-1 text-[8px] md:text-[9px] font-black text-emerald-600 border border-emerald-500 uppercase tracking-widest flex items-center gap-1">
+          <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span>
+          {t('saved')}
+        </div>
+      )}
+
+      {earnedPoints !== null && <div className="rounded-full bg-amber-100 px-3 py-1 text-[8px] md:text-[9px] font-black text-amber-700 border border-amber-200 uppercase tracking-widest">+{earnedPoints} {t('pointsShort')}</div>}
     </div>
   )
 
-  const cardStyle = highlighted
-    ? "glass-card p-6 border-[#0a2647]/10 bg-white shadow-[0_15px_50px_rgba(10,38,71,0.06)]"
-    : "glass-card p-6 bg-white shadow-sm"
+  const cardBaseStyle = "bg-white rounded-2xl md:rounded-[2rem] border border-[#0a2647]/5 shadow-sm transition-all duration-300 hover:shadow-xl w-full"
+  const cardPadding = "p-2.5 md:p-6 pt-4 md:pt-8"
 
   return (
     <div
-      className={`${cardStyle} relative overflow-hidden transition-all duration-300 hover:shadow-md group cursor-pointer`}
+      className={`${cardBaseStyle} ${cardPadding} relative overflow-hidden group cursor-pointer flex flex-col min-w-0`}
       onClick={toggleStats}
     >
-      {highlighted && (
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#0a2647] via-wc-gold to-wc-canada"></div>
+      {renderTopIndicator()}
+
+      {/* Modern Match Number Badge */}
+      {matchNumber && (
+        <div className="absolute top-2 left-3 z-30">
+          <span className="text-[10px] md:text-xs font-black text-[#0a2647]/20 uppercase tracking-tighter italic">
+            #{String(matchNumber).padStart(2, '0')}
+          </span>
+        </div>
       )}
 
-      <div className="flex flex-col items-center mb-8 text-center">
-        <div className="text-[10px] font-black text-[#0a2647] uppercase tracking-[0.3em] mb-1">{formattedStart}</div>
-        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{match.venue}</div>
-        {finalScoreLabel}
+      {/* Centered Match Info Header */}
+      <div className="w-full flex flex-col items-center text-center mb-2 md:mb-6 px-4">
+        <span className="text-[7px] md:text-[10px] font-black text-[#0a2647] opacity-60 uppercase tracking-[0.2em] mb-0.5">
+          {formattedStart}
+        </span>
+        <span className="text-[7px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate max-w-[85%] block">
+          {match.venue}
+        </span>
+        {renderFinalScore()}
       </div>
 
-      {/* Desktop Layout: Horizontal */}
-      <div className="hidden md:grid items-center gap-8 grid-cols-[1fr_auto_1fr]">
-        <div className="min-w-0 text-right">
-          <TeamName name={match.team_a} align="right" />
+      {/* Main Content: Unified 1-Row Layout with Centered Gravity */}
+      <div className="w-full flex items-center gap-1 md:gap-4 min-w-0 px-1 mb-1">
+        <TeamName name={match.team_a} align="right" />
+        <div className="shrink-0 flex items-center h-full">
+          <div className="bg-slate-50/50 p-0.5 md:p-3 rounded-lg md:rounded-xl border border-slate-100 shadow-inner">
+            {renderScoreControls()}
+          </div>
         </div>
-        <div className="flex justify-center items-center gap-6">
-          <ScoreStepper value={predA} onChange={setPredA} disabled={locked} result={teamAResult} />
-          <span className="font-black text-slate-300 text-xl tracking-tighter italic">VS</span>
-          <ScoreStepper value={predB} onChange={setPredB} disabled={locked} result={teamBResult} />
-        </div>
-        <div className="min-w-0">
-          <TeamName name={match.team_b} />
-        </div>
-      </div>
-
-      {/* Mobile Layout: Symmetric Top-Down with Vertical Scores */}
-      <div className="flex flex-col md:hidden items-center gap-6">
-        <TeamName name={match.team_a} stack />
-        <ScoreStepper value={predA} onChange={setPredA} disabled={locked} result={teamAResult} />
-
-        <div className="flex items-center gap-3 w-full px-12">
-          <div className="h-px flex-1 bg-slate-100"></div>
-          <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">VS</span>
-          <div className="h-px flex-1 bg-slate-100"></div>
-        </div>
-
-        <ScoreStepper value={predB} onChange={setPredB} disabled={locked} result={teamBResult} />
-        <TeamName name={match.team_b} stack />
+        <TeamName name={match.team_b} align="left" />
       </div>
 
       {/* Statistics Section */}
       {showStats && (
-        <div className="mt-8 pt-6 border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-300">
-          <div className="flex justify-between items-center mb-4 px-1">
-            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Community Predictions</h4>
-            <span className="text-[10px] font-bold text-slate-400">{stats?.total || 0} participants</span>
+        <div className="mt-3 pt-3 border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-300 w-full overflow-hidden">
+          <div className="flex justify-between items-center mb-2 px-1 text-[7px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            <h4 className="truncate">{t('match_card.community_predictions')}</h4>
+            <span className="whitespace-nowrap">{stats?.total || 0} {t('stats.participants')}</span>
           </div>
 
           {loadingStats ? (
-            <div className="flex justify-center py-4">
-              <div className="animate-pulse flex gap-2">
-                <div className="w-2 h-2 bg-slate-200 rounded-full"></div>
-                <div className="w-2 h-2 bg-slate-200 rounded-full"></div>
-                <div className="w-2 h-2 bg-slate-200 rounded-full"></div>
-              </div>
-            </div>
+            <div className="flex justify-center py-2"><div className="animate-pulse flex gap-1"><div className="w-1 h-1 bg-slate-200 rounded-full"></div><div className="w-1 h-1 bg-slate-200 rounded-full"></div><div className="w-1 h-1 bg-slate-200 rounded-full"></div></div></div>
           ) : stats && (
-            <div className="space-y-4">
-              <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
-                <div style={{ width: `${stats.winA}%` }} className="bg-emerald-500 h-full transition-all duration-1000"></div>
-                <div style={{ width: `${stats.draw}%` }} className="bg-slate-300 h-full transition-all duration-1000 border-x border-white/20"></div>
-                <div style={{ width: `${stats.winB}%` }} className="bg-rose-500 h-full transition-all duration-1000"></div>
+            <div className="space-y-2">
+              <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
+                <div style={{ width: `${stats.winA}%` }} className="bg-emerald-500 h-full"></div>
+                <div style={{ width: `${stats.draw}%` }} className="bg-slate-300 h-full border-x border-white/20"></div>
+                <div style={{ width: `${stats.winB}%` }} className="bg-rose-500 h-full"></div>
               </div>
-              <div className="grid grid-cols-3 text-[10px] font-black uppercase tracking-wider">
-                <div className="text-emerald-600 flex flex-col items-start">
-                  <span>{match.team_a.substring(0, 10)} Win</span>
-                  <span className="text-lg">{stats.winA}%</span>
-                </div>
-                <div className="text-slate-400 flex flex-col items-center">
-                  <span>Draw</span>
-                  <span className="text-lg">{stats.draw}%</span>
-                </div>
-                <div className="text-rose-600 flex flex-col items-end">
-                  <span>{match.team_b.substring(0, 10)} Win</span>
-                  <span className="text-lg">{stats.winB}%</span>
-                </div>
+              <div className="grid grid-cols-3 text-[7px] md:text-[9px] font-black uppercase tracking-wider gap-1">
+                <div className="text-emerald-600 flex flex-col items-start min-w-0"><span className="truncate w-full">{t(`teams.${match.team_a}`, { defaultValue: match.team_a })}</span><span>{stats.winA}%</span></div>
+                <div className="text-slate-400 flex flex-col items-center min-w-0"><span>{t('stats.draw_label')}</span><span>{stats.draw}%</span></div>
+                <div className="text-rose-600 flex flex-col items-end min-w-0"><span className="truncate w-full text-right">{t(`teams.${match.team_b}`, { defaultValue: match.team_b })}</span><span>{stats.winB}%</span></div>
               </div>
             </div>
           )}
         </div>
       )}
 
-      <div className="mt-8 flex justify-center">
-        {saveControls}
+      <div className="mt-3 flex justify-center w-full">
+        {renderSaveControls()}
       </div>
 
-      <div className="absolute bottom-2 right-4 opacity-20 group-hover:opacity-100 transition-opacity">
-        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">
-          {showStats ? 'Click to hide stats' : 'Click to see community stats'}
+      <div className="absolute bottom-0.5 right-3 opacity-20 group-hover:opacity-100 transition-opacity hidden sm:block">
+        <span className="text-[7px] font-bold text-slate-400 uppercase tracking-tighter italic text-center">
+          {showStats ? t('match_card.click_to_hide') : t('match_card.click_to_see')}
         </span>
       </div>
     </div>

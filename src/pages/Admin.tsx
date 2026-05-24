@@ -1,220 +1,174 @@
+
 import React, { useEffect, useState } from 'react'
-import { DateTime } from 'luxon'
 import { useTranslation } from 'react-i18next'
 import * as api from '../lib/api'
-import { getFlagUrl } from '../lib/flags'
+import { useAuth } from '../context/AuthProvider'
 
 export default function AdminPage() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
+  const { isAdmin } = useAuth()
   const [matches, setMatches] = useState<any[]>([])
-  const [deletionRequests, setDeletionRequests] = useState<any[]>([])
-  const [editing, setEditing] = useState<Record<number, { a: number | '', b: number | '' }>>({})
-  const [results, setResults] = useState<any[] | null>(null)
+  const [settling, setSettling] = useState<Record<number, boolean>>({})
+  const [results, setResults] = useState<Record<number, any>>({})
   const [error, setError] = useState('')
 
+  const [deletionRequests, setDeletionRequests] = useState<any[]>([])
+
+  const loadData = async () => {
+    try {
+      const all = await api.fetchMatches()
+      // Only show matches that need settling (have scores but not marked FINISHED)
+      // or are already finished for resetting.
+      setMatches(all || [])
+
+      const reqs = await api.fetchDeletionRequests()
+      setDeletionRequests(reqs || [])
+    } catch (e: any) {
+      setError(e.message)
+    }
+  }
+
   useEffect(() => {
-    let chan: any
-    api.fetchMatches().then((rows: any[]) => setMatches(rows || [])).catch(console.error)
-    api.fetchDeletionRequests().then((rows: any[]) => setDeletionRequests(rows || [])).catch(console.error)
+    if (isAdmin) loadData()
+  }, [isAdmin])
 
-    chan = api.subscribeMatches((payload: any) => {
-      const record = payload.new ?? payload.record
-      if (!record) return
-      setMatches((current) => {
-        const next = current.filter((m) => m.id !== record.id)
-        next.push(record)
-        return next.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
-      })
-    })
-    return () => { chan?.unsubscribe?.() }
-  }, [])
-
-  const setScore = (id: number, side: 'a' | 'b', value: string) => {
-    setEditing((s) => ({ ...s, [id]: { ...(s[id] || { a: '', b: '' }), [side]: value === '' ? '' : Number(value) } }))
-  }
-
-  const handleSettle = async (match: any) => {
-    const edit = editing[match.id]
-    const scoreA = edit?.a ?? match.score_a
-    const scoreB = edit?.b ?? match.score_b
-    if (scoreA === '' || scoreB === '' || scoreA === null || scoreB === null || scoreA === undefined || scoreB === undefined) return
-    setError('')
+  const handleSettle = async (matchId: number) => {
+    setSettling(prev => ({ ...prev, [matchId]: true }))
     try {
-      const settled = await api.settleMatch(match.id, scoreA as number, scoreB as number)
-      setResults(settled || [])
+      const res = await api.settleMatch(matchId)
+      setResults(prev => ({ ...prev, [matchId]: res }))
+      loadData()
     } catch (e: any) {
-      console.error(e)
-      setError(e.message || t('adminSettleFailed'))
+      alert(t('adminSettleFailed') + ': ' + e.message)
+    } finally {
+      setSettling(prev => ({ ...prev, [matchId]: false }))
     }
   }
 
-  const handleReset = async (match: any) => {
-    setError('')
+  const handleReset = async (matchId: number) => {
+    if (!window.confirm(t('adminResetFailed') + '?')) return
     try {
-      await api.resetMatch(match.id)
-      setResults(null)
-      setEditing((current) => {
-        const next = { ...current }
-        delete next[match.id]
-        return next
-      })
+      await api.resetMatch(matchId)
+      loadData()
     } catch (e: any) {
-      console.error(e)
-      setError(e.message || t('adminResetFailed'))
+      alert(e.message)
     }
   }
 
-  const handleDeleteUser = async (userId: string) => {
-    if (!window.confirm('Are you sure you want to approve this deletion request? This will disable the account.')) return
+  const handleApproveDeletion = async (userId: string) => {
+    if (!window.confirm(t('admin_deletion.confirm_delete'))) return
     try {
-      await api.approveAccountDeletion(userId)
-      setDeletionRequests(current => current.filter(r => r.user_id !== userId))
+      await api.deleteUserAccount(userId)
+      loadData()
     } catch (e: any) {
       alert(e.message)
     }
   }
 
   const handleRejectDeletion = async (userId: string) => {
-    if (!window.confirm('Reject this deletion request?')) return
     try {
-      await api.rejectAccountDeletionRequest(userId)
-      setDeletionRequests(current => current.filter(r => r.user_id !== userId))
+      await api.rejectDeletionRequest(userId)
+      loadData()
     } catch (e: any) {
       alert(e.message)
     }
   }
 
-  return (
-    <div className="space-y-10 pb-20">
-      {/* 1. DELETION REQUESTS SECTION */}
-      {deletionRequests.length > 0 && (
-        <div className="glass-card p-6 md:p-8 border-rose-200 bg-rose-50/20">
-          <h2 className="text-xl font-black text-rose-700 uppercase tracking-tight italic mb-6 flex items-center gap-3">
-            <span className="p-2 bg-rose-100 rounded-lg">🚮</span>
-            {t('admin_deletion.title')}
-          </h2>
-          <div className="space-y-4">
-            {deletionRequests.map((req) => (
-              <div key={req.user_id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white border border-rose-100 rounded-2xl gap-4">
-                <div className="flex flex-col">
-                  <span className="font-bold text-slate-800">{req.display_name || req.username}</span>
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{req.user_id}</span>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleRejectDeletion(req.user_id)}
-                    className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-100 rounded-xl transition-all"
-                  >
-                    {t('admin_deletion.reject')}
-                  </button>
-                  <button
-                    onClick={() => handleDeleteUser(req.user_id)}
-                    className="px-4 py-2 text-[10px] font-black uppercase tracking-widest bg-rose-600 text-white rounded-xl shadow-lg shadow-rose-200 hover:scale-105 transition-all"
-                  >
-                    {t('admin_deletion.approve')}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+  if (!isAdmin) return <div className="p-10 text-center font-bold text-rose-500">{t('authFailed')}</div>
 
-      {/* 2. MATCH SETTLEMENT SECTION */}
-      <div className="glass-card p-6 md:p-8">
-        <h2 className="text-2xl font-black text-[#0a2647] uppercase tracking-tight italic mb-6 border-b border-slate-100 pb-4 flex items-center gap-3">
-          <span className="p-2 bg-slate-100 rounded-lg">⚖️</span>
-          {t('adminSettleTitle')}
+  const pendingMatches = matches.filter(m => m.status !== 'FINISHED' && m.score_a !== null && m.score_b !== null)
+
+  return (
+    <div className="space-y-10 animate-in fade-in duration-500 pb-20">
+      <section className="glass-card bg-white p-6 md:p-10 shadow-xl border-none">
+        <h2 className="text-3xl font-black text-[#0a2647] uppercase tracking-tighter italic mb-8 flex items-center gap-3">
+          <span className="p-2 bg-wc-accent/10 rounded-lg text-2xl">⚙️</span>
+          {t('admin_panel.settle_matches')}
         </h2>
 
-        {error && (
-          <div className="mb-6 p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs font-bold uppercase tracking-wider">
-            {error}
-          </div>
-        )}
+        {error && <div className="p-4 bg-rose-50 text-rose-600 rounded-xl mb-6 font-bold text-sm border border-rose-100">{error}</div>}
 
         <div className="space-y-4">
-          {matches.map((m) => {
-            const flagA = getFlagUrl(m.team_a)
-            const flagB = getFlagUrl(m.team_b)
-
-            return (
-              <div key={m.id} className="flex flex-col md:flex-row md:items-center justify-between p-5 bg-slate-50 border border-slate-100 rounded-2xl gap-4 hover:border-slate-200 transition-all">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <div className="flex items-center gap-2">
-                      <img src={flagA || ''} alt="" className="w-5 h-3.5 object-cover rounded-sm ring-1 ring-slate-200" />
-                      <span className="font-bold text-[#0a2647] text-lg">{m.team_a}</span>
-                    </div>
-                    <span className="text-slate-400 font-medium italic">vs</span>
-                    <div className="flex items-center gap-2">
-                      <img src={flagB || ''} alt="" className="w-5 h-3.5 object-cover rounded-sm ring-1 ring-slate-200" />
-                      <span className="font-bold text-[#0a2647] text-lg">{m.team_b}</span>
-                    </div>
+          {pendingMatches.length === 0 ? (
+            <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-3xl">
+               <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">{t('admin_panel.no_pending_matches')}</p>
+            </div>
+          ) : (
+            pendingMatches.map(m => (
+              <div key={m.id} className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-slate-50 rounded-2xl border border-slate-100 gap-6">
+                <div>
+                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Match #{m.id}</div>
+                  <div className="font-black text-[#0a2647] text-lg uppercase italic">
+                    {t(`teams.${m.team_a}`, { defaultValue: m.team_a })} vs {t(`teams.${m.team_b}`, { defaultValue: m.team_b })}
                   </div>
-                  <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
-                    {DateTime.fromISO(m.start_time).setLocale(i18n.language).toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)} • {m.venue}
+                  <div className="mt-2 inline-block px-3 py-1 bg-[#0a2647] text-white rounded-lg font-black text-sm">
+                    {m.score_a} - {m.score_b}
                   </div>
-                  {m.status === 'FINISHED' && (
-                    <div className="mt-2 inline-block px-3 py-1 bg-emerald-50 rounded-full text-[10px] font-black text-emerald-600 uppercase tracking-widest border border-emerald-100">
-                      {t('finalScore')}: {m.score_a} - {m.score_b}
-                    </div>
-                  )}
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="flex gap-1">
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder="A"
-                      value={editing[m.id]?.a ?? m.score_a ?? ''}
-                      onChange={(e) => setScore(m.id, 'a', e.target.value)}
-                      className="w-14 p-2 bg-white border border-slate-200 rounded-lg text-center font-bold text-[#0a2647] focus:border-[#0a2647] outline-none"
-                    />
-                    <input
-                      type="number"
-                      min={0}
-                      placeholder="B"
-                      value={editing[m.id]?.b ?? m.score_b ?? ''}
-                      onChange={(e) => setScore(m.id, 'b', e.target.value)}
-                      className="w-14 p-2 bg-white border border-slate-200 rounded-lg text-center font-bold text-[#0a2647] focus:border-[#0a2647] outline-none"
-                    />
-                  </div>
-                  <button className="btn-primary px-4 text-xs" onClick={() => handleSettle(m)}>
-                    {t('settle')}
-                  </button>
-                  {m.status === 'FINISHED' && (
-                    <button className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all" onClick={() => handleReset(m)} title={t('reset')}>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
+                  {results[m.id] ? (
+                    <div className="text-xs font-bold text-emerald-600 bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-100 flex items-center gap-2">
+                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                       {results[m.id].settledCount} {t('admin_panel.btn_results')}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleSettle(m.id)}
+                      disabled={settling[m.id]}
+                      className="btn-primary min-w-[120px] py-3 text-xs uppercase tracking-widest shadow-lg"
+                    >
+                      {settling[m.id] ? t('saving') : t('admin_panel.btn_settle')}
                     </button>
                   )}
+                  <button
+                    onClick={() => handleReset(m.id)}
+                    className="px-4 py-3 bg-white text-slate-400 font-black text-xs uppercase tracking-widest rounded-xl border border-slate-200 hover:bg-slate-50 transition-all"
+                  >
+                    {t('admin_panel.btn_reset')}
+                  </button>
                 </div>
               </div>
-            )
-          })}
+            ))
+          )}
         </div>
-      </div>
+      </section>
 
-      {results && (
-        <div className="glass-card p-6 md:p-8 animate-in slide-in-from-bottom duration-500">
-          <h3 className="text-xl font-black text-[#0a2647] uppercase tracking-tight italic mb-6">{t('settlementResults')}</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {results.map((r) => {
-              const uid = r.user_id ?? r.out_user_id
-              const pts = r.points ?? r.out_points
-              return (
-                <div key={uid} className="flex justify-between items-center p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider truncate mr-2">{uid.substring(0, 8)}</span>
-                  <strong className="text-[#0a2647] font-black">{pts} {t('pointsShort')}</strong>
+      <section className="glass-card bg-white p-6 md:p-10 shadow-xl border-none">
+        <h2 className="text-2xl font-black text-[#0a2647] uppercase tracking-tighter italic mb-8 flex items-center gap-3">
+          <span className="p-2 bg-rose-50 rounded-lg text-2xl">⚠️</span>
+          {t('admin_deletion.title')}
+        </h2>
+
+        <div className="space-y-4">
+          {deletionRequests.length === 0 ? (
+            <div className="py-10 text-center text-slate-300 italic text-sm">{t('admin_deletion.no_requests')}</div>
+          ) : (
+            deletionRequests.map(req => (
+              <div key={req.user_id} className="flex flex-col md:flex-row md:items-center justify-between p-6 border border-rose-100 bg-rose-50/30 rounded-2xl gap-6">
+                <div>
+                  <div className="font-black text-slate-800">{req.profiles?.display_name || req.profiles?.username}</div>
+                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">ID: {req.user_id}</div>
                 </div>
-              )
-            })}
-          </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => handleApproveDeletion(req.user_id)}
+                    className="px-6 py-3 bg-rose-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl shadow-lg shadow-rose-200 hover:scale-105 transition-all"
+                  >
+                    {t('admin_deletion.approve')}
+                  </button>
+                  <button
+                    onClick={() => handleRejectDeletion(req.user_id)}
+                    className="px-6 py-3 bg-white text-slate-400 font-black text-[10px] uppercase tracking-widest rounded-xl border border-slate-200 hover:bg-slate-50 transition-all"
+                  >
+                    {t('admin_deletion.reject')}
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
-      )}
+      </section>
     </div>
   )
 }

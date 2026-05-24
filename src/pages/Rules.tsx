@@ -1,118 +1,92 @@
-import React from 'react';
-import { useTranslation } from 'react-i18next';
+
+import React from 'react'
+import { useTranslation } from 'react-i18next'
 
 export default function RulesPage() {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   return (
-    <div className="glass-card p-6 md:p-10 bg-white/95 shadow-xl border-white">
-      {/* Main Title: Deep Navy */}
-      <h1 className="text-3xl md:text-5xl font-black text-center mb-12 tracking-tight uppercase italic">
-        <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#0a2647] via-blue-900 to-wc-accent">
+    <div className="max-w-3xl mx-auto space-y-12 pb-20 animate-in fade-in duration-500 overflow-hidden px-1">
+      {/* HEADER SECTION */}
+      <section className="text-center space-y-4">
+        <h1 className="text-4xl md:text-6xl font-black text-[#0a2647] uppercase tracking-tighter italic">
           {t('rules_screen.title')}
-        </span>
-      </h1>
+        </h1>
+        <div className="h-1.5 w-24 bg-gradient-to-r from-wc-accent via-wc-gold to-wc-canada mx-auto rounded-full"></div>
+      </section>
 
-      {/* Internal Only Notice */}
-      <div className="mb-10 grid gap-6 md:grid-cols-3">
-        <div className="p-5 bg-blue-50/50 border border-blue-100 rounded-2xl shadow-sm">
-          <h3 className="text-sm font-black text-blue-900 uppercase tracking-widest mb-2 flex items-center gap-2">
-            <span className="text-xl">🎯</span> {t('rules_screen.purpose_title')}
-          </h3>
-          <p className="text-xs text-blue-800 leading-relaxed font-medium">{t('rules_screen.purpose_content')}</p>
-        </div>
-        <div className="p-5 bg-emerald-50/50 border border-emerald-100 rounded-2xl shadow-sm">
-          <h3 className="text-sm font-black text-emerald-900 uppercase tracking-widest mb-2 flex items-center gap-2">
-            <span className="text-xl">⚙️</span> {t('rules_screen.mechanism_title')}
-          </h3>
-          <p className="text-xs text-emerald-800 leading-relaxed font-medium">{t('rules_screen.mechanism_content')}</p>
-        </div>
-        <div className="p-5 bg-amber-50/50 border border-amber-100 rounded-2xl shadow-sm">
-          <h3 className="text-sm font-black text-amber-900 uppercase tracking-widest mb-2 flex items-center gap-2">
-            <span className="text-xl">📜</span> {t('rules_screen.usage_title')}
-          </h3>
-          <p className="text-xs text-amber-800 leading-relaxed font-medium">{t('rules_screen.usage_content')}</p>
+      {/* SECTION 1: PARTICIPATION */}
+      <div className="glass-card bg-white p-6 md:p-10 shadow-xl border-none">
+        <h2 className="text-2xl font-black text-[#0a2647] uppercase tracking-tight mb-6 flex items-center gap-3">
+          <span className="text-xl">📅</span> {t('rules_screen.section_1_title')}
+        </h2>
+        <div className="space-y-4 text-slate-600 font-medium leading-relaxed">
+          <p className="flex gap-3"><span className="text-wc-accent font-black">●</span> {t('rules_screen.rule_deadline')}</p>
+          <p className="flex gap-3"><span className="text-wc-accent font-black">●</span> {t('rules_screen.rule_lock_time')}</p>
         </div>
       </div>
 
-      {/* Section 1: Timing and Lock */}
-      <section className="mb-10 bg-slate-50 p-6 rounded-2xl border border-slate-100 hover:border-blue-500/30 transition-all duration-300">
-        <h2 className="text-xl font-bold text-blue-800 mb-4 flex items-center gap-3">
-          <span className="h-3 w-3 bg-blue-600 rounded-full shadow-[0_0_10px_rgba(30,58,138,0.2)]"></span>
-          {t('rules_screen.section_1_title')}
+      {/* SECTION 2: SCORING */}
+      <div className="glass-card bg-white p-6 md:p-10 shadow-xl border-none">
+        <h2 className="text-2xl font-black text-[#0a2647] uppercase tracking-tight mb-8 flex items-center gap-3">
+          <span className="text-xl">⚽</span> {t('rules_screen.section_2_title')}
         </h2>
-        <div className="space-y-4">
-          <p className="text-[#0a2647] text-lg leading-relaxed font-semibold">📌 {t('rules_screen.rule_deadline')}</p>
-          <div className="inline-block px-4 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-full">
-            <p className="text-amber-700 font-bold text-sm uppercase tracking-wider">🔒 {t('rules_screen.rule_lock_time')}</p>
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="p-5 bg-emerald-50 rounded-2xl border border-emerald-100">
+            <span className="text-xs font-black text-emerald-600 uppercase tracking-widest block mb-2">+3 Points</span>
+            <p className="text-sm font-bold text-slate-700">{t('rules_screen.score_exact')}</p>
+          </div>
+          <div className="p-5 bg-blue-50 rounded-2xl border border-blue-100">
+            <span className="text-xs font-black text-blue-600 uppercase tracking-widest block mb-2">+2 Points</span>
+            <p className="text-sm font-bold text-slate-700">{t('rules_screen.score_difference')}</p>
+          </div>
+          <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
+            <span className="text-xs font-black text-slate-500 uppercase tracking-widest block mb-2">+1 Point</span>
+            <p className="text-sm font-bold text-slate-700">{t('rules_screen.score_outcome')}</p>
+          </div>
+          <div className="p-5 bg-rose-50 rounded-2xl border border-rose-100">
+            <span className="text-xs font-black text-rose-600 uppercase tracking-widest block mb-2">0 Points</span>
+            <p className="text-sm font-bold text-slate-700">{t('rules_screen.score_wrong')}</p>
           </div>
         </div>
-      </section>
 
-      {/* Section 2: Scoring */}
-      <section className="mb-10 bg-slate-50 p-6 rounded-2xl border border-slate-100 hover:border-emerald-500/30 transition-all duration-300">
-        <h2 className="text-xl font-bold text-emerald-700 mb-6 flex items-center gap-3">
-           <span className="h-3 w-3 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.2)]"></span>
-           {t('rules_screen.section_2_title')}
-        </h2>
-        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <li className="p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
-            <span className="text-2xl block mb-2">🟢</span>
-            <span className="font-bold text-[#0a2647] text-lg block leading-tight">{t('rules_screen.score_exact')}</span>
-          </li>
-          <li className="p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
-            <span className="text-2xl block mb-2">🔵</span>
-            <span className="text-slate-700 font-bold">{t('rules_screen.score_difference')}</span>
-          </li>
-          <li className="p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
-            <span className="text-2xl block mb-2">🟡</span>
-            <span className="text-slate-700 font-bold">{t('rules_screen.score_outcome')}</span>
-          </li>
-          <li className="p-4 bg-white rounded-xl border border-slate-100 shadow-sm">
-            <span className="text-2xl block mb-2">🔴</span>
-            <span className="text-slate-400 font-bold">{t('rules_screen.score_wrong')}</span>
-          </li>
-        </ul>
-
-        <h3 className="text-md font-black text-wc-gold mt-10 mb-5 uppercase tracking-[0.2em] text-center">{t('rules_screen.multipliers_title')}</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white p-5 rounded-2xl border border-slate-100 text-center transition-transform hover:scale-105 shadow-sm">
-            <p className="text-slate-400 text-xs font-bold uppercase mb-2 tracking-widest">Group Stage</p>
-            <p className="font-bold text-[#0a2647]">{t('rules_screen.mult_group')}</p>
-          </div>
-          <div className="bg-gradient-to-br from-amber-50 to-white p-5 rounded-2xl border border-amber-100 text-center transition-transform hover:scale-105 shadow-sm">
-            <p className="text-amber-500/70 text-xs font-bold uppercase mb-2 tracking-widest">Knockout</p>
-            <p className="font-bold text-amber-700">{t('rules_screen.mult_knockout')}</p>
-          </div>
-          <div className="bg-gradient-to-br from-rose-50 to-white p-5 rounded-2xl border border-rose-100 text-center transition-transform hover:scale-105 shadow-sm">
-            <p className="text-rose-500/70 text-xs font-bold uppercase mb-2 tracking-widest">Finals</p>
-            <p className="font-bold text-rose-700">{t('rules_screen.mult_final')}</p>
-          </div>
+        <div className="mt-10 pt-8 border-t border-slate-100">
+          <h3 className="font-black text-[#0a2647] uppercase tracking-widest text-sm mb-6">{t('rules_screen.multipliers_title')}</h3>
+          <ul className="space-y-4">
+            <li className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
+               <span className="w-10 h-10 flex items-center justify-center bg-white rounded-lg font-black text-[#0a2647] shadow-sm">x1</span>
+               <span className="text-sm font-bold text-slate-600">{t('rules_screen.mult_group')}</span>
+            </li>
+            <li className="flex items-center gap-4 p-4 bg-blue-50/50 rounded-xl">
+               <span className="w-10 h-10 flex items-center justify-center bg-[#0a2647] rounded-lg font-black text-white shadow-md">x2</span>
+               <span className="text-sm font-bold text-slate-600">{t('rules_screen.mult_knockout')}</span>
+            </li>
+            <li className="flex items-center gap-4 p-4 bg-amber-50/50 rounded-xl">
+               <span className="w-10 h-10 flex items-center justify-center bg-wc-gold rounded-lg font-black text-white shadow-md">x3</span>
+               <span className="text-sm font-bold text-slate-600">{t('rules_screen.mult_final')}</span>
+            </li>
+          </ul>
         </div>
-      </section>
+      </div>
 
-      {/* Section 3: Penalty Calculation */}
-      <section className="bg-slate-50 p-6 rounded-2xl border border-slate-100 hover:border-wc-gold/30 transition-all duration-300">
-        <h2 className="text-xl font-bold text-wc-gold mb-8 flex items-center gap-3">
-          <span className="h-3 w-3 bg-wc-gold rounded-full shadow-[0_0_10px_rgba(255,183,0,0.2)]"></span>
-          {t('rules_screen.section_3_title')}
+      {/* SECTION 3: PENALTY FORMULA */}
+      <div className="glass-card bg-white p-6 md:p-10 shadow-xl border-none">
+        <h2 className="text-2xl font-black text-[#0a2647] uppercase tracking-tight mb-8 flex items-center gap-3">
+          <span className="text-xl">⚖️</span> {t('rules_screen.section_3_title')}
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-10">
-          <div className="p-5 bg-emerald-50 border border-emerald-100 rounded-2xl shadow-sm">
-            <p className="text-emerald-700 font-black flex items-center gap-4 text-lg">
-              <span className="text-3xl">🎉</span> {t('rules_screen.penalty_free')}
-            </p>
-          </div>
-          <div className="p-5 bg-rose-50 border border-rose-100 rounded-2xl shadow-sm">
-            <p className="text-rose-700 font-black flex items-center gap-4 text-lg">
-              <span className="text-3xl">💀</span> {t('rules_screen.penalty_last')}
-            </p>
-          </div>
-          <div className="sm:col-span-2 p-5 bg-white border border-slate-100 rounded-2xl shadow-sm">
-            <p className="text-[#0a2647] font-bold flex items-start gap-4 leading-relaxed">
-              <span className="text-3xl">⚖️</span> {t('rules_screen.penalty_others')}
-            </p>
-          </div>
+
+        <div className="grid gap-4 mb-8">
+           <div className="flex items-start gap-4 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+              <span className="text-2xl">🍽️</span>
+              <p className="text-sm font-bold text-emerald-800 leading-relaxed">{t('rules_screen.penalty_free')}</p>
+           </div>
+           <div className="flex items-start gap-4 p-4 bg-rose-50 rounded-2xl border border-rose-100">
+              <span className="text-2xl">🛡️</span>
+              <p className="text-sm font-bold text-rose-800 leading-relaxed">{t('rules_screen.penalty_last')}</p>
+           </div>
+           <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+              <p className="text-xs font-medium text-slate-500 italic">{t('rules_screen.penalty_others')}</p>
+           </div>
         </div>
 
         {/* Display Mathematical Formula */}
@@ -128,35 +102,52 @@ export default function RulesPage() {
           </div>
         </div>
 
-        <p className="text-xs text-slate-500 italic mt-8 flex items-center justify-center gap-3 bg-white py-3 rounded-full border border-slate-100 shadow-sm font-medium">
-          <span className="text-lg">🛡️</span> {t('rules_screen.champion_privilege')}
-        </p>
+        <div className="mt-8 space-y-4">
+           <div className="p-5 bg-amber-50 rounded-2xl border border-amber-200">
+              <h4 className="font-black text-amber-900 uppercase tracking-widest text-[10px] mb-2">⭐ {t('rules_screen.champion_privilege')}</h4>
+              <p className="text-xs font-bold text-amber-800 leading-relaxed">{t('rules_screen.champion_privilege')}</p>
+           </div>
+           <div className="grid md:grid-cols-2 gap-4">
+              <div className="p-5 bg-white rounded-2xl border border-slate-100">
+                <h4 className="font-black text-slate-400 uppercase tracking-widest text-[10px] mb-2">{t('rules_screen.fund_handling_title')}</h4>
+                <p className="text-xs font-medium text-slate-600 leading-relaxed">{t('rules_screen.deficit_rule')}</p>
+              </div>
+              <div className="p-5 bg-white rounded-2xl border border-slate-100">
+                <h4 className="font-black text-slate-400 uppercase tracking-widest text-[10px] mb-2">{t('rules_screen.surplus_rule')}</h4>
+                <p className="text-xs font-medium text-slate-600 leading-relaxed">{t('rules_screen.surplus_rule')}</p>
+              </div>
+           </div>
+        </div>
+      </div>
 
-        {/* Surplus/Deficit Handling */}
-        <div className="mt-12 pt-10 border-t border-slate-100">
-          <h3 className="text-sm font-black text-[#0a2647] mb-6 uppercase tracking-[0.3em] text-center">{t('rules_screen.fund_handling_title')}</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <div className="flex items-start gap-4 p-5 bg-rose-50 rounded-2xl border border-rose-100 shadow-sm">
-              <span className="text-2xl text-rose-600">⚠️</span>
-              <span className="text-sm text-slate-700 font-bold leading-relaxed">{t('rules_screen.deficit_rule')}</span>
-            </div>
-            <div className="flex items-start gap-4 p-5 bg-emerald-50 rounded-2xl border border-emerald-100 shadow-sm">
-              <span className="text-2xl text-emerald-600">💰</span>
-              <span className="text-sm text-slate-600 font-bold leading-relaxed">{t('rules_screen.surplus_rule')}</span>
-            </div>
-          </div>
+      {/* DISCLAIMER SECTION */}
+      <section className="bg-[#0a2647] p-8 md:p-12 rounded-[3rem] text-white space-y-8 shadow-2xl relative overflow-hidden">
+        {/* Background elements */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-wc-accent/5 rounded-full -ml-32 -mb-32 blur-3xl"></div>
+
+        <div className="relative z-10 space-y-4 text-center">
+           <span className="text-wc-accent font-black uppercase tracking-[0.3em] text-[10px] block">{t('rules_screen.disclaimer_title')}</span>
+           <p className="text-sm font-bold text-slate-300 max-w-2xl mx-auto leading-relaxed italic opacity-80 uppercase tracking-tighter">
+             {t('rules_screen.disclaimer_content')}
+           </p>
         </div>
 
-        {/* Legal Disclaimer */}
-        <div className="mt-10 p-6 bg-amber-50/50 border border-amber-100 rounded-2xl shadow-inner">
-          <h4 className="text-xs font-black text-amber-700 uppercase tracking-widest mb-3 flex items-center gap-2">
-            <span className="text-lg">⚖️</span> {t('rules_screen.disclaimer_title')}
-          </h4>
-          <p className="text-xs text-amber-800/80 leading-relaxed italic font-medium">
-            {t('rules_screen.disclaimer_content')}
-          </p>
+        <div className="relative z-10 grid gap-6 md:grid-cols-3">
+          <div className="space-y-3 p-6 bg-white/5 rounded-3xl border border-white/10">
+            <h4 className="font-black text-wc-accent uppercase tracking-widest text-[10px]">{t('rules_screen.purpose_title')}</h4>
+            <p className="text-xs font-medium text-slate-300 leading-relaxed">{t('rules_screen.purpose_content')}</p>
+          </div>
+          <div className="space-y-3 p-6 bg-white/5 rounded-3xl border border-white/10">
+            <h4 className="font-black text-wc-accent uppercase tracking-widest text-[10px]">{t('rules_screen.mechanism_title')}</h4>
+            <p className="text-xs font-medium text-slate-300 leading-relaxed">{t('rules_screen.mechanism_content')}</p>
+          </div>
+          <div className="space-y-3 p-6 bg-white/5 rounded-3xl border border-white/10">
+            <h4 className="font-black text-wc-accent uppercase tracking-widest text-[10px]">{t('rules_screen.usage_title')}</h4>
+            <p className="text-xs font-medium text-slate-300 leading-relaxed">{t('rules_screen.usage_content')}</p>
+          </div>
         </div>
       </section>
     </div>
-  );
+  )
 }
