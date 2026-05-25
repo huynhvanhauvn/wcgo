@@ -26,7 +26,7 @@ type Prediction = {
   created_at?: string | null
 }
 
-type MatchTab = 'not_predicted' | 'predicted' | 'all' | 'pts_1' | 'pts_2' | 'pts_3'
+type MatchTab = 'not_predicted' | 'predicted' | 'all' | 'pts_0' | 'pts_1' | 'pts_2' | 'pts_3'
 
 export default function MatchesPage() {
   const { t } = useTranslation()
@@ -226,6 +226,7 @@ export default function MatchesPage() {
             <TabButton id="pts_3" label={t('match_tabs.pts_3')} count={countByBasePoints(3)} />
             <TabButton id="pts_2" label={t('match_tabs.pts_2')} count={countByBasePoints(2)} />
             <TabButton id="pts_1" label={t('match_tabs.pts_1')} count={countByBasePoints(1)} />
+            <TabButton id="pts_0" label={t('match_tabs.pts_0')} count={countByBasePoints(0)} />
           </div>
 
           <div className="p-4 md:p-8 bg-slate-100/40 space-y-6 animate-in fade-in duration-500 min-h-[400px]">

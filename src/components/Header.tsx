@@ -65,6 +65,8 @@ export default function Header() {
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center h-full gap-5 lg:gap-8">
             <Link to="/" className={getNavLinkClass('/')}>{t('tabs.dashboard')}</Link>
+            <Link to="/standings" className={getNavLinkClass('/standings')}>{t('tabs.standings')}</Link>
+            <Link to="/bracket" className={getNavLinkClass('/bracket')}>{t('tabs.bracket')}</Link>
             <Link to="/leaderboard" className={getNavLinkClass('/leaderboard')}>{t('tabs.leaderboard')}</Link>
             <Link to="/news" className={getNavLinkClass('/news')}>{t('tabs.news')}</Link>
             <Link to="/rules" className={getNavLinkClass('/rules')}>{t('tabs.rules')}</Link>
@@ -131,6 +133,8 @@ export default function Header() {
 
             <div className="flex flex-col gap-2">
               <Link to="/" className={getNavLinkClass('/', true)}><span className="text-xl">📅</span><span className="font-bold uppercase tracking-widest text-xs">{t('tabs.dashboard')}</span></Link>
+              <Link to="/standings" className={getNavLinkClass('/standings', true)}><span className="text-xl">📊</span><span className="font-bold uppercase tracking-widest text-xs">{t('tabs.standings')}</span></Link>
+              <Link to="/bracket" className={getNavLinkClass('/bracket', true)}><span className="text-xl">🌳</span><span className="font-bold uppercase tracking-widest text-xs">{t('tabs.bracket')}</span></Link>
               <Link to="/leaderboard" className={getNavLinkClass('/leaderboard', true)}><span className="text-xl">🏆</span><span className="font-bold uppercase tracking-widest text-xs">{t('tabs.leaderboard')}</span></Link>
               <Link to="/news" className={getNavLinkClass('/news', true)}><span className="text-xl">📰</span><span className="font-bold uppercase tracking-widest text-xs">{t('tabs.news')}</span></Link>
               <Link to="/rules" className={getNavLinkClass('/rules', true)}><span className="text-xl">📜</span><span className="font-bold uppercase tracking-widest text-xs">{t('tabs.rules')}</span></Link>

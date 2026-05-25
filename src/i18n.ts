@@ -72,6 +72,8 @@ const resources = {
       app_title: 'WORLD CUP 2026 PREDICTION TOURNAMENT',
       tabs: {
         dashboard: 'Schedule',
+        standings: 'Standings',
+        bracket: 'Bracket',
         leaderboard: 'Leaderboard',
         news: 'News',
         rules: 'Rules & FAQ'
@@ -80,9 +82,10 @@ const resources = {
         all: 'All',
         predicted: 'Predicted',
         not_predicted: 'Not Predicted',
-        pts_1: '1 Pt',
-        pts_2: '2 Pts',
         pts_3: '3 Pts',
+        pts_2: '2 Pts',
+        pts_1: '1 Pt',
+        pts_0: '0 Pts',
         matches_found: 'Matches Found',
         no_matches_found: 'No matches in this category'
       },
@@ -206,7 +209,7 @@ const resources = {
         btn_results: 'Results'
       },
       teams: {
-        "Argentina": "Argentina", "Brazil": "Brazil", "France": "France", "England": "England", "Germany": "Germany", "Spain": "Spain", "Portugal": "Portugal", "Netherlands": "Netherlands", "Belgium": "Belgium", "Italy": "Italy", "Croatia": "Croatia", "Uruguay": "Uruguay", "Morocco": "Morocco", "Senegal": "Senegal", "Japan": "Japan", "South Korea": "South Korea", "USA": "USA", "Mexico": "Mexico", "Canada": "Canada", "Australia": "Australia", "Switzerland": "Switzerland", "Denmark": "Denmark", "Colombia": "Colombia", "Ecuador": "Ecuador", "Paraguay": "Paraguay", "Peru": "Peru", "Chile": "Chile", "Nigeria": "Senegal", "Egypt": "Egypt", "Cameroon": "Cameroon", "Ghana": "Ghana", "Algeria": "Algeria", "Tunisia": "Tunisia", "Saudi Arabia": "Saudi Arabia", "IR Iran": "IR Iran", "Iraq": "Iraq", "Uzbekistan": "Uzbekistan", "Qatar": "Qatar", "Jordan": "Jordan", "Austria": "Austria", "Turkey": "Turkey", "Scotland": "Scotland", "Norway": "Norway", "Sweden": "Sweden", "Czech Rep.": "Czech Rep.", "Panama": "Panama", "Haiti": "Haiti", "New Zealand": "New Zealand", "South Africa": "South Africa", "DR Congo": "DR Congo", "Cape Verde": "Cape Verde"
+        "Argentina": "Argentina", "Brazil": "Brasil", "France": "Pháp", "England": "Anh", "Germany": "Đức", "Spain": "Tây Ban Nha", "Portugal": "Bồ Đào Nha", "Netherlands": "Hà Lan", "Belgium": "Bỉ", "Italy": "Ý", "Croatia": "Croatia", "Uruguay": "Uruguay", "Morocco": "Ma-rốc", "Senegal": "Senegal", "Japan": "Nhật Bản", "South Korea": "Hàn Quốc", "USA": "Mỹ", "Mexico": "Mexico", "Canada": "Canada", "Australia": "Úc", "Switzerland": "Thụy Sĩ", "Denmark": "Đan Mạch", "Colombia": "Colombia", "Ecuador": "Ecuador", "Paraguay": "Paraguay", "Peru": "Peru", "Chile": "Chile", "Nigeria": "Nigeria", "Egypt": "Ai Cập", "Cameroon": "Cameroon", "Ghana": "Ghana", "Algeria": "Algeria", "Tunisia": "Tunisia", "Saudi Arabia": "Ả Rập Xê-út", "IR Iran": "Iran", "Iraq": "Iraq", "Uzbekistan": "Uzbekistan", "Qatar": "Qatar", "Jordan": "Jordan", "Austria": "Áo", "Turkey": "Thổ Nhĩ Kỳ", "Scotland": "Scotland", "Norway": "Na Uy", "Sweden": "Thụy Điển", "Czechia": "Séc", "Panama": "Panama", "Haiti": "Haiti", "New Zealand": "New Zealand", "South Africa": "Nam Phi", "DR Congo": "CHDC Công-gô", "Cape Verde": "Cape Verde", "Bosnia/Herzegovina": "Bosnia & Herz.", "Ivory Coast": "Bờ Biển Ngà", "Curacao": "Curaçao", "Czech Rep.": "Séc"
       }
     }
   },
@@ -279,6 +282,8 @@ const resources = {
       app_title: 'GIẢI ĐẤU DỰ ĐOÁN WORLD CUP 2026',
       tabs: {
         dashboard: 'Lịch Thi Đấu',
+        standings: 'Xếp Hạng',
+        bracket: 'Sơ Đồ',
         leaderboard: 'Bảng Xếp Hạng',
         news: 'Tin tức',
         rules: 'Điều Lệ & FAQ'
@@ -287,9 +292,10 @@ const resources = {
         all: 'Tất cả',
         predicted: 'Đã dự đoán',
         not_predicted: 'Chưa dự đoán',
-        pts_1: '1 điểm',
-        pts_2: '2 điểm',
         pts_3: '3 điểm',
+        pts_2: '2 điểm',
+        pts_1: '1 điểm',
+        pts_0: '0 điểm',
         matches_found: 'Trận đấu được tìm thấy',
         no_matches_found: 'Không có trận đấu nào trong danh mục này'
       },

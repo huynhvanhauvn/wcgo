@@ -1,7 +1,13 @@
 import { supabase } from './supabaseClient'
 
 export async function fetchMatches() {
-  const { data, error } = await supabase.from('matches').select('*').order('start_time', { ascending: true })
+  const { data, error } = await supabase.from('matches').select('*, team_a_data:team_a_id(*), team_b_data:team_b_id(*)').order('start_time', { ascending: true })
+  if (error) throw error
+  return data
+}
+
+export async function fetchTeams() {
+  const { data, error } = await supabase.from('teams').select('*').order('group_label', { ascending: true })
   if (error) throw error
   return data
 }
@@ -200,6 +206,21 @@ export async function resetMatch(matchId: number) {
   const { data, error } = await supabase.rpc('reset_match', {
     p_match_id: matchId
   })
+  if (error) throw error
+  return data
+}
+
+export async function updateMatchTeam(matchId: number, side: 'a' | 'b', teamId: number | null, teamName?: string) {
+  const payload: any = {}
+  if (side === 'a') {
+    payload.team_a_id = teamId
+    if (teamName) payload.team_a = teamName
+  } else {
+    payload.team_b_id = teamId
+    if (teamName) payload.team_b = teamName
+  }
+
+  const { data, error } = await supabase.from('matches').update(payload).eq('id', matchId)
   if (error) throw error
   return data
 }

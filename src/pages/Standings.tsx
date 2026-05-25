@@ -1,0 +1,108 @@
+
+import React, { useEffect, useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
+import * as api from '../lib/api'
+import { calculateStandings, sortGroupStandings, TeamStanding } from '../lib/standings'
+import { getFlagUrl } from '../lib/flags'
+
+function StandingTable({ group, teams }: { group: string; teams: TeamStanding[] }) {
+  const { t } = useTranslation()
+  const sorted = useMemo(() => sortGroupStandings(teams), [teams])
+
+  return (
+    <div className="glass-card overflow-hidden bg-white shadow-lg border-slate-100">
+      <div className="bg-[#0a2647] p-4 flex items-center justify-between">
+        <h3 className="text-white font-black uppercase tracking-widest italic">Group {group}</h3>
+        <span className="text-[10px] text-white/50 font-bold uppercase tracking-[0.2em]">WC2026</span>
+      </div>
+      <div className="overflow-x-auto no-scrollbar">
+        <table className="w-full text-[10px] md:text-xs text-left min-w-[420px]">
+          <thead>
+            <tr className="text-slate-400 font-black uppercase tracking-widest border-b border-slate-100 bg-slate-50/50">
+              <th className="px-4 py-3 text-[#0a2647]">Team</th>
+              <th className="px-1 py-3 text-center w-6" title="Played">P</th>
+              <th className="px-1 py-3 text-center w-6 text-emerald-600" title="Won">W</th>
+              <th className="px-1 py-3 text-center w-6 text-slate-400" title="Drawn">D</th>
+              <th className="px-1 py-3 text-center w-6 text-rose-500" title="Lost">L</th>
+              <th className="px-1 py-3 text-center w-10" title="Goals For">GF</th>
+              <th className="px-1 py-3 text-center w-10" title="Goals Against">GA</th>
+              <th className="px-1 py-3 text-center w-10" title="Goal Difference">GD</th>
+              <th className="px-2 py-3 text-center w-10 font-black text-[#0a2647]" title="Points">Pts</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-50">
+            {sorted.map((s, idx) => (
+              <tr key={s.teamId} className={`hover:bg-slate-50/50 transition-colors ${idx < 2 ? 'bg-blue-50/20' : idx === 2 ? 'bg-amber-50/10' : ''}`}>
+                <td className="px-4 py-3 flex items-center gap-2 relative min-w-0">
+                  {idx < 2 && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>}
+                  {idx === 2 && <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400"></div>}
+                  <span className="text-[9px] text-slate-400 font-black w-3 shrink-0">{idx + 1}</span>
+                  <img src={getFlagUrl(s.name) || ''} alt="" className="w-4 h-3 md:w-5 md:h-3.5 object-cover rounded-sm shadow-sm shrink-0" />
+                  <span className="font-bold text-slate-800 truncate">{t(`teams.${s.name}`, { defaultValue: s.name })}</span>
+                </td>
+                <td className="px-1 py-3 text-center text-slate-500">{s.played}</td>
+                <td className="px-1 py-3 text-center text-emerald-600 font-bold">{s.won}</td>
+                <td className="px-1 py-3 text-center text-slate-400">{s.drawn}</td>
+                <td className="px-1 py-3 text-center text-rose-500">{s.lost}</td>
+                <td className="px-1 py-3 text-center text-slate-600">{s.goalsFor}</td>
+                <td className="px-1 py-3 text-center text-slate-600">{s.goalsAgainst}</td>
+                <td className={`px-1 py-3 text-center font-bold ${s.goalDifference > 0 ? 'text-blue-600' : s.goalDifference < 0 ? 'text-rose-600' : 'text-slate-400'}`}>
+                  {s.goalDifference > 0 ? `+${s.goalDifference}` : s.goalDifference}
+                </td>
+                <td className="px-2 py-3 text-center font-black text-[#0a2647] bg-slate-50/50">{s.points}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="p-3 bg-slate-50 text-[8px] font-bold text-slate-400 uppercase tracking-widest flex gap-3 border-t border-slate-100">
+        <div className="flex items-center gap-1"><div className="w-2 h-2 bg-blue-500 rounded-full"></div> Advance</div>
+        <div className="flex items-center gap-1"><div className="w-2 h-2 bg-amber-400 rounded-full"></div> Best 3rd</div>
+      </div>
+    </div>
+  )
+}
+
+export default function StandingsPage() {
+  const { t } = useTranslation()
+  const [matches, setMatches] = useState<any[]>([])
+  const [teams, setTeams] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    Promise.all([api.fetchMatches(), api.fetchTeams()])
+      .then(([m, tRows]) => {
+        setMatches(m || [])
+        setTeams(tRows || [])
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
+
+  const standings = useMemo(() => calculateStandings(matches, teams), [matches, teams])
+  const groups = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
+
+  if (loading) {
+    return (
+      <div className="glass-card p-10 flex flex-col items-center gap-4 bg-white">
+        <div className="animate-spin h-8 w-8 border-4 border-wc-accent border-t-transparent rounded-full"></div>
+        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('loading')}</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-10 animate-in fade-in duration-500">
+      <div className="flex flex-col gap-2 border-l-4 border-wc-accent pl-4">
+        <h2 className="text-3xl font-black text-[#0a2647] uppercase tracking-tight italic">{t('groupStandings')}</h2>
+        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Official World Cup 2026 Progression</p>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {groups.map(g => (
+          <StandingTable key={g} group={g} teams={standings.filter(s => s.group === g)} />
+        ))}
+      </div>
+    </div>
+  )
+}

@@ -1,27 +1,31 @@
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import * as api from '../lib/api'
 import { useAuth } from '../context/AuthProvider'
+import { calculateStandings, sortGroupStandings, KNOCKOUT_PROGRESSION_MAP, getMatchWinner, getMatchLoser } from '../lib/standings'
 
 export default function AdminPage() {
   const { t } = useTranslation()
   const { isAdmin } = useAuth()
   const [matches, setMatches] = useState<any[]>([])
+  const [teams, setTeams] = useState<any[]>([])
   const [settling, setSettling] = useState<Record<number, boolean>>({})
   const [results, setResults] = useState<Record<number, any>>({})
+  const [propagating, setPropagating] = useState(false)
   const [error, setError] = useState('')
 
   const [deletionRequests, setDeletionRequests] = useState<any[]>([])
 
   const loadData = async () => {
     try {
-      const all = await api.fetchMatches()
-      // Only show matches that need settling (have scores but not marked FINISHED)
-      // or are already finished for resetting.
-      setMatches(all || [])
-
-      const reqs = await api.fetchDeletionRequests()
+      const [m, tRows, reqs] = await Promise.all([
+        api.fetchMatches(),
+        api.fetchTeams(),
+        api.fetchDeletionRequests()
+      ])
+      setMatches(m || [])
+      setTeams(tRows || [])
       setDeletionRequests(reqs || [])
     } catch (e: any) {
       setError(e.message)
@@ -32,11 +36,32 @@ export default function AdminPage() {
     if (isAdmin) loadData()
   }, [isAdmin])
 
-  const handleSettle = async (matchId: number) => {
+  const handleSettle = async (matchId: number, scoreA: number, scoreB: number) => {
     setSettling(prev => ({ ...prev, [matchId]: true }))
     try {
-      const res = await api.settleMatch(matchId)
+      const res = await api.settleMatch(matchId, scoreA, scoreB)
       setResults(prev => ({ ...prev, [matchId]: res }))
+
+      // AUTO PROGRESSION LOGIC
+      const currentMatch = matches.find(m => m.id === matchId)
+      if (currentMatch) {
+        const finishedMatch = { ...currentMatch, status: 'FINISHED', score_a: scoreA, score_b: scoreB }
+        const winner = getMatchWinner(finishedMatch)
+        const loser = getMatchLoser(finishedMatch)
+
+        // Winner progression
+        const winnerDest = KNOCKOUT_PROGRESSION_MAP[`W${matchId}`]
+        if (winnerDest && winner) {
+          await api.updateMatchTeam(winnerDest.matchId, winnerDest.side, winner.id, winner.name)
+        }
+
+        // Loser progression (3rd place match)
+        const loserDest = KNOCKOUT_PROGRESSION_MAP[`L${matchId}`]
+        if (loserDest && loser) {
+          await api.updateMatchTeam(loserDest.matchId, loserDest.side, loser.id, loser.name)
+        }
+      }
+
       loadData()
     } catch (e: any) {
       alert(t('adminSettleFailed') + ': ' + e.message)
@@ -58,7 +83,7 @@ export default function AdminPage() {
   const handleApproveDeletion = async (userId: string) => {
     if (!window.confirm(t('admin_deletion.confirm_delete'))) return
     try {
-      await api.deleteUserAccount(userId)
+      await api.approveAccountDeletion(userId)
       loadData()
     } catch (e: any) {
       alert(e.message)
@@ -67,10 +92,46 @@ export default function AdminPage() {
 
   const handleRejectDeletion = async (userId: string) => {
     try {
-      await api.rejectDeletionRequest(userId)
+      await api.rejectAccountDeletionRequest(userId)
       loadData()
     } catch (e: any) {
       alert(e.message)
+    }
+  }
+
+  const handlePropagateKnockouts = async () => {
+    if (!window.confirm("Propagate group winners to knockout stage? This will update Round of 32 placeholders.")) return
+    setPropagating(true)
+    try {
+      const standings = calculateStandings(matches, teams)
+      const groupLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
+
+      for (const label of groupLabels) {
+        const sorted = sortGroupStandings(standings.filter(s => s.group === label))
+        if (sorted[0] && sorted[0].played === 3) {
+          // Winner of group (e.g., '1A')
+          const winnerMatch = matches.find(m => m.team_a === `1${label}` || m.team_b === `1${label}`)
+          if (winnerMatch) {
+             const side = winnerMatch.team_a === `1${label}` ? 'a' : 'b'
+             await api.updateMatchTeam(winnerMatch.id, side, sorted[0].teamId, sorted[0].name)
+          }
+
+          // Runner up (e.g., '2A')
+          if (sorted[1]) {
+            const runnerUpMatch = matches.find(m => m.team_a === `2${label}` || m.team_b === `2${label}`)
+            if (runnerUpMatch) {
+               const side = runnerUpMatch.team_a === `2${label}` ? 'a' : 'b'
+               await api.updateMatchTeam(runnerUpMatch.id, side, sorted[1].teamId, sorted[1].name)
+            }
+          }
+        }
+      }
+      alert("Propagation complete!")
+      loadData()
+    } catch (e: any) {
+      alert("Propagation failed: " + e.message)
+    } finally {
+      setPropagating(false)
     }
   }
 
@@ -80,6 +141,7 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-10 animate-in fade-in duration-500 pb-20">
+      {/* Settle Matches */}
       <section className="glass-card bg-white p-6 md:p-10 shadow-xl border-none">
         <h2 className="text-3xl font-black text-[#0a2647] uppercase tracking-tighter italic mb-8 flex items-center gap-3">
           <span className="p-2 bg-wc-accent/10 rounded-lg text-2xl">⚙️</span>
@@ -114,7 +176,7 @@ export default function AdminPage() {
                     </div>
                   ) : (
                     <button
-                      onClick={() => handleSettle(m.id)}
+                      onClick={() => handleSettle(m.id, m.score_a, m.score_b)}
                       disabled={settling[m.id]}
                       className="btn-primary min-w-[120px] py-3 text-xs uppercase tracking-widest shadow-lg"
                     >
@@ -134,6 +196,27 @@ export default function AdminPage() {
         </div>
       </section>
 
+      {/* Progression Management */}
+      <section className="glass-card bg-white p-6 md:p-10 shadow-xl border-none">
+        <h2 className="text-2xl font-black text-[#0a2647] uppercase tracking-tighter italic mb-8 flex items-center gap-3">
+          <span className="p-2 bg-wc-accent/10 rounded-lg text-2xl">🏆</span>
+          Progression Management
+        </h2>
+        <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-6">
+           <div className="max-w-md">
+             <p className="text-sm font-bold text-slate-600">Once all group matches are finished, use this button to push teams into the Round of 32 matches based on current standings.</p>
+           </div>
+           <button
+            onClick={handlePropagateKnockouts}
+            disabled={propagating}
+            className="btn-primary min-w-[200px] py-4 shadow-xl"
+           >
+             {propagating ? t('saving') : "Propagate to R32"}
+           </button>
+        </div>
+      </section>
+
+      {/* Account Deletion */}
       <section className="glass-card bg-white p-6 md:p-10 shadow-xl border-none">
         <h2 className="text-2xl font-black text-[#0a2647] uppercase tracking-tighter italic mb-8 flex items-center gap-3">
           <span className="p-2 bg-rose-50 rounded-lg text-2xl">⚠️</span>
