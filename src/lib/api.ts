@@ -336,3 +336,35 @@ export async function updateMatchTeam(matchId: number, side: 'a' | 'b', teamId: 
   if (error) throw error
   return data
 }
+
+export async function fetchComments(matchId: number) {
+  const { data, error } = await supabase
+    .from('comments')
+    .select('*, profiles:user_id(display_name, avatar_url, username)')
+    .eq('match_id', matchId)
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return data
+}
+
+export async function postComment(matchId: number, userId: string, content: string, type: 'CHAT' | 'REACT' = 'CHAT', emoji?: string) {
+  const { data, error } = await supabase
+    .from('comments')
+    .insert({ match_id: matchId, user_id: userId, content, type, emoji })
+  if (error) throw error
+  return data
+}
+
+export function subscribeToMatchHub(matchId: number, onEvent: (payload: any) => void) {
+  const channel = supabase.channel(`match_hub:${matchId}`)
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'comments',
+      filter: `match_id=eq.${matchId}`
+    }, (payload) => {
+      onEvent(payload)
+    })
+    .subscribe()
+  return channel
+}

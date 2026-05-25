@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { DateTime } from 'luxon'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthProvider'
 import * as api from '../lib/api'
 import { getFlagUrl } from '../lib/flags'
@@ -241,6 +242,7 @@ export default function MatchCard({
   onPredictionSaved?: (prediction: Prediction) => void
 }) {
   const { t, i18n } = useTranslation()
+  const navigate = useNavigate()
   const startLocal = useMemo(() => DateTime.fromISO(match.start_time).toLocal().setLocale(i18n.language), [match.start_time, i18n.language])
   const formattedStart = startLocal.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)
   const locked = match.status === 'FINISHED' || DateTime.now() > startLocal.minus({ minutes: 15 })
@@ -480,8 +482,16 @@ export default function MatchCard({
             )}
 
             {earnedPoints !== null && <div className="rounded-full bg-amber-100 px-3 py-1 text-[8px] md:text-[9px] font-black text-amber-700 border border-amber-200 uppercase tracking-widest">+{earnedPoints} {t('pointsShort')}</div>}
-          </div>
+
+          <button
+            onClick={(e) => { e.stopPropagation(); navigate(`/match/${match.id}`); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all shadow-sm group/btn"
+          >
+            <span className="animate-pulse">📺</span>
+            Xem chung
+          </button>
         </div>
+      </div>
 
         <div className="absolute bottom-0.5 right-3 opacity-20 group-hover:opacity-100 transition-opacity hidden sm:block">
           <span className="text-[7px] font-bold text-slate-400 uppercase tracking-tighter italic text-center">

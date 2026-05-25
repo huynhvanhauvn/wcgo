@@ -11,6 +11,7 @@ import RulesPage from './pages/Rules'
 import NewsPage from './pages/News'
 import StandingsPage from './pages/Standings'
 import BracketPage from './pages/Bracket'
+import MatchHubPage from './pages/MatchHub'
 import Header from './components/Header'
 
 export default function App() {
@@ -79,6 +80,7 @@ export default function App() {
           <Route path="/leaderboard" element={user ? <LeaderboardPage /> : <Navigate to="/login" />} />
           <Route path="/standings" element={user ? <StandingsPage /> : <Navigate to="/login" />} />
           <Route path="/bracket" element={user ? <BracketPage /> : <Navigate to="/login" />} />
+          <Route path="/match/:id" element={user ? <MatchHubPage /> : <Navigate to="/login" />} />
           <Route path="/news" element={user ? <NewsPage /> : <Navigate to="/login" />} />
           <Route path="/rules" element={user ? <RulesPage /> : <Navigate to="/login" />} />
           <Route path="/profile" element={user ? <ProfilePage /> : <Navigate to="/login" />} />
