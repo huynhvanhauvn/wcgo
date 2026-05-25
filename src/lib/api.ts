@@ -286,10 +286,21 @@ export async function createPasswordResetRequest(email: string) {
 export async function fetchPasswordResetRequests() {
   const { data, error } = await supabase
     .from('password_reset_requests')
-    .select('*, profiles:user_id(display_name, username, real_name)')
+    .select(`
+      *,
+      profiles:user_id (
+        display_name,
+        username,
+        real_name
+      )
+    `)
     .eq('status', 'PENDING')
     .order('created_at', { ascending: false })
-  if (error) throw error
+
+  if (error) {
+    console.error('Fetch reset requests error:', error)
+    throw error
+  }
   return data
 }
 
