@@ -5,7 +5,7 @@ import * as api from '../lib/api'
 import { useAuth } from '../context/AuthProvider'
 import { calculateStandings, sortGroupStandings, KNOCKOUT_PROGRESSION_MAP, getMatchWinner, getMatchLoser } from '../lib/standings'
 
-type AdminTab = 'matches' | 'players' | 'deletions'
+type AdminTab = 'matches' | 'players' | 'resets' | 'deletions'
 
 export default function AdminPage() {
   const { t } = useTranslation()
@@ -13,6 +13,7 @@ export default function AdminPage() {
   const [matches, setMatches] = useState<any[]>([])
   const [teams, setTeams] = useState<any[]>([])
   const [profiles, setAllProfiles] = useState<any[]>([])
+  const [resetRequests, setResetRequests] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState<AdminTab>('matches')
 
   const [settling, setSettling] = useState<Record<number, boolean>>({})
@@ -23,19 +24,22 @@ export default function AdminPage() {
   const [scoreInputs, setScoreInputs] = useState<Record<number, { a: number | ''; b: number | '' }>>({})
   // State for editing real names
   const [editingNames, setEditingNames] = useState<Record<string, string>>({})
+  // State for new passwords in reset tab
+  const [newPasswords, setNewPasswords] = useState<Record<string, string>>({})
 
   const loadData = async () => {
     try {
-      const [m, tRows, pRows] = await Promise.all([
+      const [m, tRows, pRows, rRows] = await Promise.all([
         api.fetchMatches(),
         api.fetchTeams(),
-        api.fetchAllProfiles()
+        api.fetchAllProfiles(),
+        api.fetchPasswordResetRequests()
       ])
       setMatches(m || [])
       setTeams(tRows || [])
       setAllProfiles(pRows || [])
+      setResetRequests(rRows || [])
 
-      // Initialize score inputs with existing values if any
       const inputs: Record<number, { a: number | ''; b: number | '' }> = {}
       m?.forEach((match: any) => {
         inputs[match.id] = {
@@ -45,7 +49,6 @@ export default function AdminPage() {
       })
       setScoreInputs(inputs)
 
-      // Sync local editing names
       const names: Record<string, string> = {}
       pRows.forEach((p: any) => {
         names[p.user_id] = p.real_name || ''
@@ -118,6 +121,23 @@ export default function AdminPage() {
     }
   }
 
+  const handleResetPassword = async (requestId: string, userId: string) => {
+    const newPass = newPasswords[requestId]
+    if (!newPass || newPass.length < 6) {
+      alert("Password must be at least 6 characters.")
+      return
+    }
+    if (!window.confirm("Are you sure you want to change this user's password?")) return
+
+    try {
+      await api.adminResetPassword(requestId, userId, newPass)
+      alert("Password changed successfully!")
+      loadData()
+    } catch (e: any) {
+      alert("Failed: " + e.message)
+    }
+  }
+
   const handleDelete = async (userId: string) => {
     if (!window.confirm(t('admin_deletion.confirm_delete'))) return
     try {
@@ -139,7 +159,6 @@ export default function AdminPage() {
 
   if (!isAdmin) return <div className="p-10 text-center font-bold text-rose-500">{t('authFailed')}</div>
 
-  // Show all unfinished matches so Admin can enter scores
   const pendingMatches = matches.filter(m => m.status !== 'FINISHED')
   const deletionRequests = profiles.filter(p => p.deletion_status === 'PENDING')
 
@@ -148,9 +167,11 @@ export default function AdminPage() {
       <div className="flex border-b border-slate-100 bg-white rounded-t-3xl overflow-hidden shadow-sm">
         <button onClick={() => setActiveTab('matches')} className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'matches' ? 'bg-[#0a2647] text-white' : 'text-slate-400 hover:bg-slate-50'}`}>{t('matches')}</button>
         <button onClick={() => setActiveTab('players')} className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'players' ? 'bg-[#0a2647] text-white' : 'text-slate-400 hover:bg-slate-50'}`}>{t('admin_panel.user_management')}</button>
+        <button onClick={() => setActiveTab('resets')} className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'resets' ? 'bg-[#0a2647] text-white' : 'text-slate-400 hover:bg-slate-50'}`}>
+           Reset Pass {resetRequests.length > 0 && <span className="ml-1 bg-amber-500 text-white px-2 py-0.5 rounded-full text-[8px]">{resetRequests.length}</span>}
+        </button>
         <button onClick={() => setActiveTab('deletions')} className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'deletions' ? 'bg-[#0a2647] text-white' : 'text-slate-400 hover:bg-slate-50'}`}>
-          {t('admin_deletion.title')}
-          {deletionRequests.length > 0 && <span className="ml-2 bg-rose-500 text-white px-2 py-0.5 rounded-full text-[8px]">{deletionRequests.length}</span>}
+          Xoá Acc {deletionRequests.length > 0 && <span className="ml-1 bg-rose-500 text-white px-2 py-0.5 rounded-full text-[8px]">{deletionRequests.length}</span>}
         </button>
       </div>
 
@@ -269,6 +290,47 @@ export default function AdminPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </section>
+        )}
+
+        {activeTab === 'resets' && (
+          <section className="glass-card bg-white p-6 md:p-10 shadow-xl border-none">
+            <h2 className="text-2xl font-black text-[#0a2647] uppercase tracking-tighter italic mb-8 flex items-center gap-3">
+              <span className="p-2 bg-amber-50 rounded-lg text-2xl">🔐</span>
+              Password Reset Requests
+            </h2>
+            <div className="space-y-4">
+              {resetRequests.length === 0 ? (
+                <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-3xl text-slate-300 italic text-sm">No pending reset requests.</div>
+              ) : (
+                resetRequests.map(req => (
+                  <div key={req.id} className="flex flex-col md:flex-row md:items-center justify-between p-6 border border-amber-100 bg-amber-50/20 rounded-2xl gap-6">
+                    <div className="flex-1">
+                      <div className="font-black text-slate-800">{req.profiles?.display_name || req.profiles?.username}</div>
+                      <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Real Name: {req.profiles?.real_name || '---'}</div>
+                      <div className="mt-4 p-4 bg-white border border-amber-200 rounded-xl inline-block">
+                         <span className="text-[9px] font-black text-slate-400 uppercase block mb-1">Mã OTP của họ là:</span>
+                         <span className="text-2xl font-black text-amber-600 tracking-[0.2em]">{req.otp}</span>
+                      </div>
+                    </div>
+                    <div className="w-full md:w-64 space-y-3">
+                      <input
+                        type="text"
+                        placeholder="Mật khẩu mới (6+ ký tự)"
+                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl outline-none text-sm font-bold"
+                        onChange={(e) => setNewPasswords({...newPasswords, [req.id]: e.target.value})}
+                      />
+                      <button
+                        onClick={() => handleResetPassword(req.id, req.user_id)}
+                        className="w-full py-3 bg-[#0a2647] text-white font-black uppercase text-[10px] tracking-widest rounded-xl shadow-lg hover:scale-[1.02] transition-all"
+                      >
+                        Đổi Mật Khẩu & Chốt
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </section>
         )}

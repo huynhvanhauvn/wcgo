@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -5,36 +6,39 @@ import * as auth from '../lib/auth'
 import * as api from '../lib/api'
 import WorldCupMark from '../components/WorldCupMark'
 
+type AuthMode = 'signin' | 'signup' | 'forgot'
+
 export default function AuthPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [isSignUp, setIsSignUp] = useState(false)
+  const [mode, setMode] = useState<AuthMode>('signin')
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setSuccess('')
     setLoading(true)
     try {
-      if (isSignUp) {
+      if (mode === 'signup') {
         const { data, error: err } = await auth.signUpWithUsername(username, password)
         if (err) {
           setError(err.message)
         } else if (data.session) {
           navigate('/')
         } else {
-          setError(t('accountCreated'))
-          setIsSignUp(false)
+          setSuccess(t('accountCreated'))
+          setMode('signin')
         }
-      } else {
+      } else if (mode === 'signin') {
         const { data, error: err } = await auth.signInWithUsername(username, password)
         if (err) {
           setError(err.message)
         } else if (data.user) {
-          // Check if profile is deleted before proceeding
           const profile = await api.fetchProfileById(data.user.id).catch(() => null)
           if (profile?.is_deleted) {
             await auth.signOut()
@@ -43,6 +47,9 @@ export default function AuthPage() {
             navigate('/')
           }
         }
+      } else if (mode === 'forgot') {
+        await api.createPasswordResetRequest(username)
+        setSuccess("Yêu cầu đã được gửi. Hãy liên hệ Admin để lấy mã OTP và đổi mật khẩu.")
       }
     } catch (e: any) {
       setError(e.message || t('authFailed'))
@@ -59,13 +66,19 @@ export default function AuthPage() {
         <div className="flex flex-col items-center gap-4 mb-8">
           <WorldCupMark size="md" className="drop-shadow-sm" />
           <h1 className="text-3xl font-black text-[#0a2647] uppercase tracking-tighter italic">
-            {isSignUp ? t('signUp') : t('signIn')}
+            {mode === 'signup' ? t('signUp') : mode === 'forgot' ? 'Quên mật khẩu' : t('signIn')}
           </h1>
         </div>
 
         {error && (
           <div className="mb-6 p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2">
             <span>⚠️</span> {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-6 p-4 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-xl text-xs font-bold flex items-start gap-2">
+            <span>✅</span> {success}
           </div>
         )}
 
@@ -83,34 +96,39 @@ export default function AuthPage() {
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('password')}</label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#0a2647] focus:ring-1 focus:ring-[#0a2647] outline-none transition-all font-medium"
-              autoComplete={isSignUp ? 'new-password' : 'current-password'}
-              required
-            />
-          </div>
+          {mode !== 'forgot' && (
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{t('password')}</label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-[#0a2647] focus:ring-1 focus:ring-[#0a2647] outline-none transition-all font-medium"
+                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                required
+              />
+            </div>
+          )}
 
           <button type="submit" className="btn-primary w-full py-4 uppercase tracking-[0.2em] text-sm mt-2" disabled={loading}>
-            {loading ? t('loading') : isSignUp ? t('signUp') : t('signIn')}
+            {loading ? t('loading') : mode === 'signup' ? t('signUp') : mode === 'forgot' ? 'Gửi yêu cầu' : t('signIn')}
           </button>
         </form>
 
-        <div className="mt-8 text-center border-t border-slate-100 pt-6">
-          <button
-            onClick={() => {
-              setIsSignUp(!isSignUp)
-              setError('')
-            }}
-            className="text-xs font-bold text-[#0a2647] hover:text-wc-accent transition-colors uppercase tracking-widest"
-          >
-            {isSignUp ? t('alreadyHaveAccount') : t('newHere')}
-          </button>
+        <div className="mt-8 text-center border-t border-slate-100 pt-6 flex flex-col gap-3">
+          {mode === 'signin' && (
+            <>
+              <button onClick={() => { setMode('signup'); setError(''); setSuccess(''); }} className="text-xs font-bold text-[#0a2647] hover:text-wc-accent transition-colors uppercase tracking-widest">{t('newHere')}</button>
+              <button onClick={() => { setMode('forgot'); setError(''); setSuccess(''); }} className="text-[10px] font-bold text-slate-400 hover:text-[#0a2647] transition-colors uppercase tracking-widest">Bạn quên mật khẩu?</button>
+            </>
+          )}
+          {mode === 'signup' && (
+            <button onClick={() => { setMode('signin'); setError(''); setSuccess(''); }} className="text-xs font-bold text-[#0a2647] hover:text-wc-accent transition-colors uppercase tracking-widest">{t('alreadyHaveAccount')}</button>
+          )}
+          {mode === 'forgot' && (
+            <button onClick={() => { setMode('signin'); setError(''); setSuccess(''); }} className="text-xs font-bold text-[#0a2647] hover:text-wc-accent transition-colors uppercase tracking-widest">Trở lại Đăng nhập</button>
+          )}
         </div>
       </div>
     </div>

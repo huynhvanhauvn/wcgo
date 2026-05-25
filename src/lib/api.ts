@@ -261,6 +261,56 @@ export async function deleteUserByAdmin(userId: string) {
   return data
 }
 
+export async function createPasswordResetRequest(email: string) {
+  // 1. Find user by email
+  const { data: userData, error: userError } = await supabase
+    .from('profiles')
+    .select('user_id')
+    .eq('username', email) // assuming username is used for login/email context
+    .single()
+
+  if (userError) throw new Error('User not found')
+
+  // 2. Generate random 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString()
+
+  // 3. Create request
+  const { data, error } = await supabase
+    .from('password_reset_requests')
+    .insert({ user_id: userData.user_id, otp, status: 'PENDING' })
+
+  if (error) throw error
+  return { success: true }
+}
+
+export async function fetchPasswordResetRequests() {
+  const { data, error } = await supabase
+    .from('password_reset_requests')
+    .select('*, profiles:user_id(display_name, username, real_name)')
+    .eq('status', 'PENDING')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+export async function adminResetPassword(requestId: string, userId: string, newPass: string) {
+  // 1. Call RPC to change password in auth.users
+  const { error: rpcError } = await supabase.rpc('admin_reset_user_password', {
+    p_user_id: userId,
+    p_new_password: newPass
+  })
+  if (rpcError) throw rpcError
+
+  // 2. Mark request as USED
+  const { error: updateError } = await supabase
+    .from('password_reset_requests')
+    .update({ status: 'USED' })
+    .eq('id', requestId)
+
+  if (updateError) throw updateError
+  return { success: true }
+}
+
 export async function updateMatchTeam(matchId: number, side: 'a' | 'b', teamId: number | null, teamName?: string) {
   const payload: any = {}
   if (side === 'a') {
