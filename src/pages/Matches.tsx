@@ -179,7 +179,7 @@ export default function MatchesPage() {
   }
 
   return (
-    <div className="space-y-12">
+    <div className="max-w-4xl mx-auto space-y-12">
       {/* NEXT MATCH COUNTDOWN */}
       {nextMatch && (
         <CountdownTimer

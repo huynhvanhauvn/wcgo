@@ -4,14 +4,58 @@ import { useTranslation } from 'react-i18next'
 import * as api from '../lib/api'
 import { getFlagUrl } from '../lib/flags'
 
+type StageType = 'R32' | 'R16' | 'QF' | 'SF' | 'FINAL'
+
 /**
- * MiniBracketCard: A compact representation of a match for the bracket view.
+ * High-visibility Stage Styling
  */
-function MiniBracketCard({ match, isFinal = false }: { match: any; isFinal?: boolean }) {
+const STAGE_STYLES: Record<StageType, { card: string, accent: string, header: string, placeholder: string }> = {
+  R32: {
+    card: 'bg-white border-slate-200',
+    accent: 'bg-slate-400',
+    header: 'bg-slate-100 text-slate-600',
+    placeholder: 'text-slate-400'
+  },
+  R16: {
+    card: 'bg-blue-50 border-blue-200',
+    accent: 'bg-blue-500',
+    header: 'bg-blue-600 text-white',
+    placeholder: 'text-blue-400'
+  },
+  QF: {
+    card: 'bg-indigo-50 border-indigo-200',
+    accent: 'bg-indigo-500',
+    header: 'bg-indigo-600 text-white',
+    placeholder: 'text-indigo-400'
+  },
+  SF: {
+    card: 'bg-emerald-50 border-emerald-200',
+    accent: 'bg-emerald-500',
+    header: 'bg-emerald-600 text-white',
+    placeholder: 'text-emerald-400'
+  },
+  FINAL: {
+    card: 'bg-amber-50 border-wc-gold',
+    accent: 'bg-wc-gold',
+    header: 'bg-amber-500 text-white',
+    placeholder: 'text-amber-600'
+  }
+}
+
+function CompactMatchCard({ match, isFinal = false }: { match: any; isFinal?: boolean }) {
   const { t } = useTranslation()
   const flagA = match.team_a_data ? getFlagUrl(match.team_a_data.name) : null
   const flagB = match.team_b_data ? getFlagUrl(match.team_b_data.name) : null
   const isFinished = match.status === 'FINISHED'
+
+  // Robust stage mapping
+  const stageCode = match.stage?.toUpperCase()
+  const stage: StageType = stageCode === 'FINAL' ? 'FINAL' :
+                         stageCode === 'SF' ? 'SF' :
+                         stageCode === 'QF' ? 'QF' :
+                         stageCode === 'R16' ? 'R16' : 'R32'
+
+  const style = STAGE_STYLES[stage]
 
   const getPlaceholder = (raw: string) => {
     if (!raw) return 'TBD'
@@ -26,32 +70,69 @@ function MiniBracketCard({ match, isFinal = false }: { match: any; isFinal?: boo
   const teamAName = match.team_a_data ? t(`teams.${match.team_a_data.name}`, { defaultValue: match.team_a_data.name }) : getPlaceholder(match.team_a)
   const teamBName = match.team_b_data ? t(`teams.${match.team_b_data.name}`, { defaultValue: match.team_b_data.name }) : getPlaceholder(match.team_b)
 
+  if (isFinal) {
+    return (
+      <div className="relative w-72 md:w-80 bg-[#0a2647] border-4 border-wc-gold rounded-[2.5rem] shadow-[0_0_60px_rgba(251,191,36,0.4)] p-8 flex flex-col items-center text-center group transition-all hover:scale-105 z-20">
+        <div className="absolute -top-6 bg-wc-gold text-[#0a2647] px-8 py-2 rounded-full font-black text-[10px] uppercase tracking-[0.4em] shadow-xl border-2 border-white/20">The Grand Final</div>
+        <div className="mb-6 animate-bounce-slow"><span className="text-6xl">🏆</span></div>
+        <div className="space-y-6 w-full relative">
+           <div className="flex flex-col items-center gap-2">
+              {flagA && <img src={flagA} className="h-8 w-12 rounded-sm shadow-2xl mb-1 ring-1 ring-white/10" alt="" />}
+              <span className={`text-xl font-black tracking-tight ${match.team_a_data ? 'text-white' : 'text-white/30 italic'}`}>{teamAName}</span>
+              {isFinished && <span className="text-4xl font-black text-wc-gold">{match.score_a}</span>}
+           </div>
+           <div className="text-wc-gold font-black italic text-sm">VS</div>
+           <div className="flex flex-col items-center gap-2">
+              {isFinished && <span className="text-4xl font-black text-wc-gold">{match.score_b}</span>}
+              <span className={`text-xl font-black tracking-tight ${match.team_b_data ? 'text-white' : 'text-white/30 italic'}`}>{teamBName}</span>
+              {flagB && <img src={flagB} className="h-8 w-12 rounded-sm shadow-2xl mt-1 ring-1 ring-white/10" alt="" />}
+           </div>
+        </div>
+        <div className="mt-8 pt-6 border-t border-white/10 w-full text-slate-400 font-bold uppercase tracking-widest text-[9px]">
+           MetLife Stadium · July 19, 2026
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className={`relative w-40 md:w-56 bg-white border border-slate-100 rounded-lg shadow-sm overflow-hidden flex flex-col z-10 hover:border-blue-200 transition-colors ${isFinal ? 'ring-2 ring-wc-gold/20 scale-110' : ''}`}>
-      <div className="bg-slate-50/80 px-2 py-0.5 border-b border-slate-50 flex justify-between items-center">
-        <span className="text-[7px] font-black text-slate-400 uppercase tracking-widest">Match #{match.id}</span>
-        {isFinished && <span className="text-[7px] font-black text-emerald-500 uppercase">FT</span>}
+    <div className={`w-40 md:w-48 ${style.card} border-2 rounded-2xl shadow-md overflow-hidden flex flex-col transition-all relative`}>
+      <div className={`${style.header} px-3 py-1.5 border-b border-black/5 flex justify-between items-center`}>
+        <span className="text-[9px] font-black uppercase tracking-widest">#{match.id}</span>
+        <span className="text-[9px] font-black uppercase">{isFinished ? 'FT' : stage}</span>
       </div>
-      <div className="p-1.5 space-y-1">
-        <div className="flex items-center justify-between gap-1.5">
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-             {flagA ? <img src={flagA} className="h-2.5 w-4 object-cover rounded-[1px] shadow-sm" alt="" /> : <div className="h-2.5 w-4 bg-slate-50 rounded-[1px] flex items-center justify-center text-[5px] text-slate-300 border border-slate-100">?</div>}
-             <span className={`text-[9px] font-bold truncate ${match.team_a_data ? 'text-slate-800' : 'text-slate-300 italic'}`}>
-                {teamAName}
-             </span>
+      <div className="p-3 space-y-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+             {flagA ? <img src={flagA} className="h-3 w-4.5 object-cover rounded-[1px] shadow-sm" alt="" /> : <div className="h-3 w-4.5 bg-black/5 rounded-[1px]"></div>}
+             <span className={`text-[10px] font-black truncate ${match.team_a_data ? 'text-slate-900' : style.placeholder + ' italic'}`}>{teamAName}</span>
           </div>
-          {isFinished && <span className="text-[9px] font-black text-[#0a2647]">{match.score_a}</span>}
+          {isFinished && <span className="text-[11px] font-black text-[#0a2647]">{match.score_a}</span>}
         </div>
-        <div className="flex items-center justify-between gap-1.5">
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-             {flagB ? <img src={flagB} className="h-2.5 w-4 object-cover rounded-[1px] shadow-sm" alt="" /> : <div className="h-2.5 w-4 bg-slate-50 rounded-[1px] flex items-center justify-center text-[5px] text-slate-300 border border-slate-100">?</div>}
-             <span className={`text-[9px] font-bold truncate ${match.team_b_data ? 'text-slate-800' : 'text-slate-300 italic'}`}>
-                {teamBName}
-             </span>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+             {flagB ? <img src={flagB} className="h-3 w-4.5 object-cover rounded-[1px] shadow-sm" alt="" /> : <div className="h-3 w-4.5 bg-black/5 rounded-[1px]"></div>}
+             <span className={`text-[10px] font-black truncate ${match.team_b_data ? 'text-slate-900' : style.placeholder + ' italic'}`}>{teamBName}</span>
           </div>
-          {isFinished && <span className="text-[9px] font-black text-[#0a2647]">{match.score_b}</span>}
+          {isFinished && <span className="text-[11px] font-black text-[#0a2647]">{match.score_b}</span>}
         </div>
       </div>
+    </div>
+  )
+}
+
+function BracketWing({ matchesByRound, side }: { matchesByRound: any[][]; side: 'left' | 'right' }) {
+  return (
+    <div className={`flex items-center gap-12 md:gap-20 ${side === 'right' ? 'flex-row-reverse' : 'flex-row'}`}>
+      {matchesByRound.map((roundMatches, rIdx) => (
+        <div key={rIdx} className="flex flex-col justify-around gap-12 h-full">
+           {roundMatches.map(m => (
+             <div key={m.id} className="py-4">
+               <CompactMatchCard match={m} />
+             </div>
+           ))}
+        </div>
+      ))}
     </div>
   )
 }
@@ -60,140 +141,78 @@ export default function BracketPage() {
   const { t } = useTranslation()
   const [matches, setMatches] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const finalRef = React.useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    api.fetchMatches().then(setMatches).finally(() => setLoading(false))
+    api.fetchMatches().then(setMatches).finally(() => {
+      setLoading(false)
+      setTimeout(() => {
+        finalRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' })
+      }, 300)
+    })
   }, [])
 
-  const r32 = useMemo(() => matches.filter(m => m.stage === 'R32'), [matches])
-  const r16 = useMemo(() => matches.filter(m => m.stage === 'R16'), [matches])
-  const qf = useMemo(() => matches.filter(m => m.stage === 'QF'), [matches])
-  const sf = useMemo(() => matches.filter(m => m.stage === 'SF'), [matches])
-  const finalMatch = useMemo(() => matches.find(m => m.stage === 'FINAL' && m.id === 104), [matches])
-  const thirdMatch = useMemo(() => matches.find(m => m.stage === 'FINAL' && m.id === 103), [matches])
+  const structure = useMemo(() => {
+    if (matches.length === 0) return null
+    const filterSide = (ids: number[]) => matches.filter(m => ids.includes(m.id))
+    return {
+      left: [
+        filterSide([73, 74, 75, 76, 77, 78, 79, 80]),
+        filterSide([89, 90, 91, 92]),
+        filterSide([97, 98]),
+        filterSide([101])
+      ],
+      right: [
+        filterSide([81, 82, 83, 84, 85, 86, 87, 88]),
+        filterSide([93, 94, 95, 96]),
+        filterSide([99, 100]),
+        filterSide([102])
+      ],
+      final: matches.find(m => m.id === 104),
+      third: matches.find(m => m.id === 103)
+    }
+  }, [matches])
 
   if (loading) {
     return (
-      <div className="p-20 flex flex-col items-center gap-4 bg-white/50 rounded-3xl">
-        <div className="h-10 w-10 border-4 border-[#0a2647] border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('loading')}</p>
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-[#f8fafc]">
+        <div className="h-12 w-12 border-4 border-[#0a2647] border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('loading')}</p>
       </div>
     )
   }
 
-  // Fallback in case no matches found for some stages
-  if (matches.length === 0) {
-    return (
-      <div className="p-20 text-center">
-        <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No bracket data found. Please run the migration scripts.</p>
-      </div>
-    )
-  }
+  if (!structure) return null
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-500 pb-32">
-       <div className="flex flex-col gap-2 border-l-4 border-wc-accent pl-4">
-        <h2 className="text-3xl font-black text-[#0a2647] uppercase tracking-tight italic">Tournament Roadmap</h2>
-        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Visual Progression to the 2026 World Cup Final</p>
-      </div>
+    <div className="fixed inset-0 z-0 overflow-x-auto no-scrollbar pb-32 pt-28 md:pt-36 bg-[#f8fafc]">
+      <div className="min-w-max flex flex-col items-center gap-16 px-[50vw]">
 
-      <div className="overflow-x-auto no-scrollbar cursor-grab active:cursor-grabbing pb-10">
-        <div className="inline-flex items-center gap-16 md:gap-24 p-8 min-w-max relative">
-
-          {/* ROUND OF 32 */}
-          <div className="flex flex-col gap-6">
-            <h4 className="text-[8px] font-black text-slate-400 uppercase tracking-[0.4em] text-center mb-4 py-2 bg-slate-50 rounded-md">Round of 32</h4>
-            <div className="grid grid-cols-2 gap-x-12 gap-y-6">
-               {r32.map(m => (
-                 <div key={m.id} className="relative">
-                    <MiniBracketCard match={m} />
-                    <div className="absolute top-1/2 -right-6 w-6 h-[1px] bg-slate-100 -z-10"></div>
-                 </div>
-               ))}
-            </div>
-          </div>
-
-          {/* ROUND OF 16 */}
-          <div className="flex flex-col h-full pt-10">
-            <h4 className="text-[8px] font-black text-slate-400 uppercase tracking-[0.4em] text-center mb-8 py-2 bg-slate-50 rounded-md">Round of 16</h4>
-            <div className="flex flex-col justify-between h-full gap-24">
-              {r16.map(m => (
-                <div key={m.id} className="relative">
-                  <MiniBracketCard match={m} />
-                  <div className="absolute top-1/2 -right-12 w-12 h-[2px] bg-slate-200/50 -z-10"></div>
-                  <div className="absolute top-1/2 -left-12 w-12 h-[2px] bg-slate-200/50 -z-10"></div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* QUARTER FINALS */}
-          <div className="flex flex-col h-full pt-20">
-            <h4 className="text-[8px] font-black text-slate-400 uppercase tracking-[0.4em] text-center mb-8 py-2 bg-slate-50 rounded-md">Quarter-Finals</h4>
-            <div className="flex flex-col justify-between h-full gap-48">
-              {qf.map(m => (
-                <div key={m.id} className="relative">
-                  <MiniBracketCard match={m} />
-                  <div className="absolute top-1/2 -right-12 w-12 h-[2px] bg-slate-200 -z-10"></div>
-                  <div className="absolute top-1/2 -left-12 w-12 h-[2px] bg-slate-200 -z-10"></div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* SEMI FINALS */}
-          <div className="flex flex-col h-full pt-32">
-            <h4 className="text-[8px] font-black text-slate-400 uppercase tracking-[0.4em] text-center mb-8 py-2 bg-slate-50 rounded-md">Semi-Finals</h4>
-            <div className="flex flex-col justify-around h-full gap-[32rem]">
-              {sf.map(m => (
-                <div key={m.id} className="relative">
-                  <MiniBracketCard match={m} />
-                  <div className="absolute top-1/2 -right-12 w-12 h-[2px] bg-blue-100 -z-10"></div>
-                  <div className="absolute top-1/2 -left-12 w-12 h-[2px] bg-blue-100 -z-10"></div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* FINAL & 3RD PLACE */}
-          <div className="flex flex-col gap-32 pt-48 items-center">
-            <div className="flex flex-col items-center gap-10 relative">
-              <h4 className="text-[8px] font-black text-wc-gold uppercase tracking-[0.5em] text-center py-2 px-8 bg-amber-50 rounded-full border border-amber-100 shadow-sm">The Final</h4>
-              {finalMatch && (
-                <div className="relative">
-                  <MiniBracketCard match={finalMatch} isFinal />
-                  <div className="absolute top-1/2 -left-12 w-12 h-[2px] bg-wc-gold/30 -z-10"></div>
-                </div>
-              )}
-              {finalMatch?.status === 'FINISHED' && (
-                <div className="absolute inset-0 bg-wc-gold/5 blur-3xl -z-20 animate-pulse"></div>
-              )}
-            </div>
-
-            {thirdMatch && (
-              <div className="flex flex-col items-center gap-4 mt-20 opacity-80">
-                <h4 className="text-[8px] font-black text-slate-400 uppercase tracking-[0.3em] text-center">3rd Place Play-off</h4>
-                <MiniBracketCard match={thirdMatch} />
-              </div>
-            )}
-          </div>
-
+        {/* Legend / Stage Indicator */}
+        <div className="flex gap-6 md:gap-10 bg-white shadow-2xl px-12 py-6 rounded-[2.5rem] border border-slate-100 mb-8 sticky top-0 z-30">
+           {(Object.keys(STAGE_STYLES) as StageType[]).map((s) => (
+             <div key={s} className="flex items-center gap-3">
+                <div className={`w-5 h-5 rounded-lg ${STAGE_STYLES[s].accent} shadow-md`}></div>
+                <span className="text-[11px] font-black text-[#0a2647] uppercase tracking-widest">{s === 'FINAL' ? 'Final' : s}</span>
+             </div>
+           ))}
         </div>
-      </div>
 
-      {/* Legend */}
-      <div className="flex justify-center">
-         <div className="bg-white/80 backdrop-blur-sm border border-slate-100 px-6 py-3 rounded-2xl shadow-sm flex gap-8">
-            <div className="flex items-center gap-2 text-[8px] font-black uppercase tracking-widest text-slate-400">
-               <div className="w-3 h-0.5 bg-slate-200"></div> Connection
+        {/* Symmetrical Bracket (No lines) */}
+        <div className="flex items-center justify-center gap-20 md:gap-32 relative">
+          <BracketWing matchesByRound={structure.left} side="left" />
+
+          <div ref={finalRef} className="flex flex-col items-center justify-center gap-16">
+            <CompactMatchCard match={structure.final} isFinal />
+
+            <div className="mt-4 opacity-80 hover:opacity-100 transition-all transform hover:scale-105">
+               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] text-center mb-4 italic">3rd Place Play-off</h4>
+               <CompactMatchCard match={structure.third} />
             </div>
-            <div className="flex items-center gap-2 text-[8px] font-black uppercase tracking-widest text-wc-gold">
-               <div className="w-3 h-0.5 bg-wc-gold/30"></div> Final Path
-            </div>
-            <div className="flex items-center gap-2 text-[8px] font-black uppercase tracking-widest text-blue-400">
-               <div className="w-3 h-0.5 bg-blue-100"></div> SF Path
-            </div>
-         </div>
+          </div>
+
+          <BracketWing matchesByRound={structure.right} side="right" />
+        </div>
       </div>
     </div>
   )
