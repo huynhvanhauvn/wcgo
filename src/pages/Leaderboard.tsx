@@ -74,7 +74,10 @@ export default function LeaderboardPage() {
   const [activePopupTab, setActivePopupTab] = useState<'stats' | 'history'>('stats')
 
   const fetchLeaderboard = () => {
-    api.fetchLeaderboardWithProfiles().then((rows: any[]) => setTotals(rows || [])).catch(console.error)
+    api.fetchLeaderboardWithProfiles().then((rows: any[]) => {
+      const verifiedRows = rows.filter(r => r.profile?.is_verified === true)
+      setTotals(verifiedRows)
+    }).catch(console.error)
   }
 
   const fetchStatsForUser = async (userId: string) => {
@@ -148,7 +151,6 @@ export default function LeaderboardPage() {
     fetchLeaderboard()
     const chan = api.subscribeUserTotals((payload: any) => {
       fetchLeaderboard()
-      // Refresh personal stats if the update belongs to current user
       if (payload.new?.user_id === user?.id) {
         loadPersonalData()
       }
@@ -199,7 +201,7 @@ export default function LeaderboardPage() {
   const myRow = rankedRows.find(r => r.user_id === user?.id)
 
   const renderHistoryTable = (history: any[]) => (
-    <div className="overflow-hidden rounded-xl border border-slate-100 shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-slate-100 shadow-sm mb-4">
       <table className="w-full text-left border-collapse bg-white">
         <thead>
           <tr className="bg-slate-50/80 text-[8px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
@@ -262,7 +264,7 @@ export default function LeaderboardPage() {
                         {displayName}
                       </div>
                       <div className="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-widest absolute top-full left-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                        ID: {row.user_id.substring(0, 8)}
+                        {row.profile?.real_name || 'ID: ' + row.user_id.substring(0, 8)}
                       </div>
                     </div>
                   </div>
@@ -289,7 +291,7 @@ export default function LeaderboardPage() {
 
       {/* RIGHT COLUMN */}
       <aside className="hidden lg:block flex-[3] sticky top-24 w-full space-y-6 pb-10">
-        <div className="glass-card bg-white p-6 shadow-xl border-none overflow-hidden relative">
+        <div className="glass-card bg-white shadow-xl border-none overflow-hidden relative">
           <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-wc-accent to-wc-gold"></div>
           {loadingPersonal ? (
             <div className="py-20 flex flex-col items-center gap-4"><div className="animate-spin h-8 w-8 border-2 border-[#0a2647] border-t-transparent rounded-full"></div></div>
@@ -301,6 +303,7 @@ export default function LeaderboardPage() {
                   <div className="absolute -bottom-1 -right-1 bg-[#0a2647] text-white font-black text-[10px] h-7 w-7 flex items-center justify-center rounded-xl shadow-lg border-2 border-white italic">#{myRow?.rank || '?'}</div>
                 </div>
                 <h3 className="text-lg font-black text-[#0a2647] uppercase tracking-tighter italic truncate w-full">{myRow?.profile?.display_name || user?.email?.split('@')[0]}</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 mb-2">{myRow?.profile?.real_name}</p>
                 {(() => { const badge = getBadge(personalStats); return <div className={`mt-2 px-3 py-1 rounded-full border border-current font-black text-[8px] uppercase tracking-widest ${badge.color}`}>{badge.icon} {badge.label}</div> })()}
               </div>
               <div className="flex bg-slate-50/50">
@@ -323,46 +326,60 @@ export default function LeaderboardPage() {
 
       {/* PLAYER STATS MODAL */}
       {selectedUser && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-transparent animate-in fade-in duration-300" onClick={() => setSelectedUser(null)}></div>
-          <div className="relative glass-card w-full max-w-lg bg-white p-6 md:p-10 overflow-hidden animate-in zoom-in-95 duration-300 border-slate-200 shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-wc-accent via-wc-gold to-wc-canada"></div>
-            <button onClick={() => setSelectedUser(null)} className="absolute top-4 right-4 text-slate-300 hover:text-[#0a2647] transition-all p-2 bg-slate-50 rounded-full z-30"><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg></button>
-            {loadingStats ? (
-              <div className="py-20 flex flex-col items-center gap-4"><div className="animate-spin h-12 w-12 border-4 border-[#0a2647] border-t-transparent rounded-full"></div><p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">{t('stats.analyzing')}</p></div>
-            ) : userStats && (
-              <div className="space-y-8">
-                <div className="flex items-center space-x-6 md:space-x-8">
-                  <div className="relative shrink-0">
-                    <UserAvatar name={selectedUser.profile?.display_name || selectedUser.profile?.username} avatarUrl={selectedUser.profile?.avatar_url} className="h-20 w-20 md:h-28 md:w-28 text-3xl ring-4 ring-slate-50 shadow-xl" />
-                    <div className="absolute -bottom-1 -right-1 bg-gradient-to-br from-wc-gold to-orange-500 text-white font-black text-[10px] h-7 w-7 md:h-9 md:w-9 flex items-center justify-center rounded-xl shadow-lg border-2 border-white italic">#{selectedUser.rank}</div>
-                  </div>
-                  <div className="flex flex-col justify-center min-w-0 flex-1">
-                    <h3 className="text-xl md:text-3xl font-black text-[#0a2647] uppercase tracking-tighter italic leading-none truncate">
-                      {selectedUser.profile?.display_name || selectedUser.profile?.username}
-                    </h3>
-                    {(() => { const badge = getBadge(userStats); return <div className={`mt-2 px-3 py-1 rounded-full border border-current font-black text-[9px] uppercase tracking-widest w-fit ${badge.color}`}>{badge.icon} {badge.label}</div> })()}
-                  </div>
-                </div>
-                <div className="flex bg-slate-50/50 rounded-xl overflow-hidden p-1">
-                  <button onClick={() => setActivePopupTab('stats')} className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${activePopupTab === 'stats' ? 'bg-white text-[#0a2647] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>{t('stats.tabs.stats')}</button>
-                  <button onClick={() => setActivePopupTab('history')} className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${activePopupTab === 'history' ? 'bg-white text-[#0a2647] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>{t('stats.tabs.history')}</button>
-                </div>
-                <div className="animate-in fade-in duration-300">
-                  {activePopupTab === 'stats' ? (
-                    <div className="space-y-8">
-                      <div className="bg-slate-50 p-6 md:p-8 rounded-[2.5rem] border border-slate-100 shadow-inner">
-                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] text-center mb-6">{t('stats.current_form')}</h4>
-                        <div className="flex justify-center items-center gap-4 overflow-x-auto no-scrollbar pb-2">{userStats.lastFive.length > 0 ? userStats.lastFive.map((f, i) => (<div key={i} className="group relative flex flex-col items-center"><div className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center text-lg font-black shadow-lg transition-transform hover:scale-110 ${f.points > 0 ? 'bg-emerald-500 text-white shadow-emerald-200' : 'bg-rose-500 text-white shadow-rose-200'}`}>{f.points}</div><span className="absolute -bottom-6 text-[8px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-[#0a2647] text-white px-2 py-1 rounded border border-white/10 shadow-sm z-20">{f.label}</span></div>)) : <p className="text-xs text-slate-400 italic">{t('stats.no_data')}</p>}</div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 md:gap-6"><div className="bg-emerald-50/50 p-5 rounded-3xl border border-emerald-100 flex flex-col items-center text-center"><span className="text-3xl mb-2">🎯</span><span className="text-[10px] font-black text-emerald-800 uppercase tracking-widest mb-1">{t('stats.bullseye')}</span><span className="text-3xl font-black text-emerald-700">{userStats.exact}</span></div><div className="bg-orange-50/50 p-5 rounded-3xl border border-orange-100 flex flex-col items-center text-center"><span className="text-3xl mb-2">🔥</span><span className="text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1">{t('stats.streak')}</span><span className="text-3xl font-black text-orange-700">{userStats.currentStreak}</span></div></div>
-                      <div className="space-y-3"><div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400"><span>{t('stats.overall_accuracy')}</span><span className="text-[#0a2647]">{userStats.totalMatches > 0 ? Math.round(((userStats.totalMatches - userStats.wrong) / userStats.totalMatches) * 100) : 0}%</span></div><div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner"><div style={{ width: `${userStats.totalMatches > 0 ? Math.round(((userStats.totalMatches - userStats.wrong) / userStats.totalMatches) * 100) : 0}%` }} className="bg-gradient-to-r from-emerald-400 to-emerald-600 h-full transition-all duration-1000"></div></div></div>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 md:p-10">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setSelectedUser(null)}></div>
+          <div className="relative glass-card w-full max-w-md bg-white overflow-hidden animate-in zoom-in-95 duration-300 border-slate-200 shadow-[0_20px_60px_rgba(0,0,0,0.3)] max-h-[70vh] flex flex-col rounded-[2.5rem] mt-10">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-wc-accent via-wc-gold to-wc-canada z-30"></div>
+            <button onClick={() => setSelectedUser(null)} className="absolute top-4 right-4 text-slate-300 hover:text-[#0a2647] transition-all p-2 bg-white/80 rounded-full z-40 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg></button>
+
+            <div className="overflow-y-auto no-scrollbar flex-1">
+              {loadingStats ? (
+                <div className="py-20 flex flex-col items-center gap-4"><div className="animate-spin h-10 w-10 border-4 border-[#0a2647] border-t-transparent rounded-full"></div><p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">{t('stats.analyzing')}</p></div>
+              ) : userStats && (
+                <div className="p-6 md:p-8 space-y-6">
+                  <div className="flex flex-col items-center text-center gap-3">
+                    <div className="relative shrink-0">
+                      <UserAvatar name={selectedUser.profile?.display_name || selectedUser.profile?.username} avatarUrl={selectedUser.profile?.avatar_url} className="h-20 w-20 md:h-24 md:w-24 text-3xl ring-4 ring-slate-50 shadow-xl" />
+                      <div className="absolute -bottom-1 -right-1 bg-gradient-to-br from-wc-gold to-orange-500 text-white font-black text-[10px] h-7 w-7 md:h-8 md:w-8 flex items-center justify-center rounded-xl shadow-lg border-2 border-white italic">#{selectedUser.rank}</div>
                     </div>
-                  ) : renderHistoryTable(userStats.history)}
+                    <div className="flex flex-col items-center min-w-0">
+                      <h3 className="text-xl md:text-2xl font-black text-[#0a2647] uppercase tracking-tighter italic leading-none truncate max-w-full px-2">
+                        {selectedUser.profile?.display_name || selectedUser.profile?.username}
+                      </h3>
+                      {selectedUser.profile?.real_name && (
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
+                          {selectedUser.profile?.real_name}
+                        </p>
+                      )}
+                      {(() => { const badge = getBadge(userStats); return <div className={`mt-3 px-3 py-1 rounded-full border border-current font-black text-[8px] uppercase tracking-widest w-fit ${badge.color}`}>{badge.icon} {badge.label}</div> })()}
+                    </div>
+                  </div>
+
+                  <div className="flex bg-slate-50/50 rounded-2xl overflow-hidden p-1 border border-slate-100">
+                    <button onClick={() => setActivePopupTab('stats')} className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${activePopupTab === 'stats' ? 'bg-white text-[#0a2647] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>{t('stats.tabs.stats')}</button>
+                    <button onClick={() => setActivePopupTab('history')} className={`flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all ${activePopupTab === 'history' ? 'bg-white text-[#0a2647] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>{t('stats.tabs.history')}</button>
+                  </div>
+
+                  <div className="animate-in fade-in duration-300">
+                    {activePopupTab === 'stats' ? (
+                      <div className="space-y-6">
+                        <div className="bg-slate-50/50 p-4 md:p-6 rounded-[2rem] border border-slate-100 shadow-inner">
+                          <h4 className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] text-center mb-4 italic">{t('stats.current_form')}</h4>
+                          <div className="flex justify-center items-center gap-3 overflow-x-auto no-scrollbar pb-1">{userStats.lastFive.length > 0 ? userStats.lastFive.map((f, i) => (<div key={i} className="group relative flex flex-col items-center"><div className={`w-9 h-9 md:w-11 md:h-11 rounded-xl flex items-center justify-center text-base font-black shadow-lg transition-transform hover:scale-110 ${f.points > 0 ? 'bg-emerald-500 text-white shadow-emerald-200' : 'bg-rose-500 text-white shadow-rose-200'}`}>{f.points}</div><span className="absolute -bottom-6 text-[7px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap bg-[#0a2647] text-white px-2 py-1 rounded border border-white/10 shadow-sm z-50">{f.label}</span></div>)) : <p className="text-xs text-slate-400 italic">{t('stats.no_data')}</p>}</div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 md:gap-4"><div className="bg-emerald-50/30 p-4 rounded-[1.5rem] border border-emerald-100 flex flex-col items-center text-center"><span className="text-2xl mb-1">🎯</span><span className="text-[8px] font-black text-emerald-800 uppercase tracking-widest mb-1">{t('stats.bullseye')}</span><span className="text-2xl font-black text-emerald-700">{userStats.exact}</span></div><div className="bg-orange-50/30 p-4 rounded-[1.5rem] border border-orange-100 flex flex-col items-center text-center"><span className="text-2xl mb-1">🔥</span><span className="text-[8px] font-black text-orange-800 uppercase tracking-widest mb-1">{t('stats.streak')}</span><span className="text-2xl font-black text-orange-700">{userStats.currentStreak}</span></div></div>
+                        <div className="space-y-2"><div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-slate-400"><span>{t('stats.overall_accuracy')}</span><span className="text-[#0a2647]">{userStats.totalMatches > 0 ? Math.round(((userStats.totalMatches - userStats.wrong) / userStats.totalMatches) * 100) : 0}%</span></div><div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner"><div style={{ width: `${userStats.totalMatches > 0 ? Math.round(((userStats.totalMatches - userStats.wrong) / userStats.totalMatches) * 100) : 0}%` }} className="bg-gradient-to-r from-emerald-400 to-emerald-600 h-full transition-all duration-1000"></div></div></div>
+                      </div>
+                    ) : renderHistoryTable(userStats.history)}
+                  </div>
+
+                  <div className="flex flex-col items-center gap-2 pt-4 border-t border-slate-100 pb-4">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t('stats.since')} {DateTime.fromISO(selectedUser.profile?.created_at).setLocale(i18n.language).toLocaleString(DateTime.DATE_MED)}</p>
+                    <div className="px-4 py-1.5 bg-slate-900 rounded-full text-[9px] font-black text-white uppercase tracking-[0.2em] flex items-center gap-2 shadow-xl"><span className="text-wc-accent animate-pulse">●</span> {userStats.totalMatches} {t('stats.predicted_count')}</div>
+                  </div>
                 </div>
-                <div className="flex flex-col items-center gap-3 pt-6 border-t border-slate-100"><p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{t('stats.since')} {DateTime.fromISO(selectedUser.profile?.created_at).setLocale(i18n.language).toLocaleString(DateTime.DATE_MED)}</p><div className="px-6 py-2 bg-slate-900 rounded-full text-[10px] font-black text-white uppercase tracking-[0.3em] flex items-center gap-3"><span className="text-wc-accent animate-pulse">●</span> {userStats.totalMatches} {t('stats.predicted_count')}</div></div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}

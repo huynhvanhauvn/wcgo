@@ -7,9 +7,10 @@ import UserAvatar from '../components/UserAvatar'
 
 export default function ProfilePage() {
   const { t } = useTranslation()
-  const { user, profile, refreshProfile } = useAuth()
+  const { user, profile, updateProfile } = useAuth()
 
   const [displayName, setDisplayName] = useState('')
+  const [realName, setRealName] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState({ text: '', type: '' })
@@ -19,6 +20,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (profile) {
       setDisplayName(profile.display_name || '')
+      setRealName(profile.real_name || '')
       setAvatarUrl(profile.avatar_url || '')
     }
   }, [profile])
@@ -28,11 +30,11 @@ export default function ProfilePage() {
     setSaving(true)
     setMessage({ text: '', type: '' })
     try {
-      await api.updateProfile(user.id, {
-        display_name: displayName,
-        avatar_url: avatarUrl
+      await updateProfile({
+        displayName: displayName,
+        avatarUrl: avatarUrl,
+        realName: realName
       })
-      await refreshProfile()
       setMessage({ text: t('profileSaved'), type: 'success' })
     } catch (e: any) {
       setMessage({ text: t('profileSaveFailed'), type: 'error' })
@@ -45,7 +47,7 @@ export default function ProfilePage() {
     setRequestingDeletion(true)
     try {
       await api.requestAccountDeletion(user.id)
-      await refreshProfile()
+      window.location.reload() // Refresh to update profile state from DB
     } catch (e: any) {
       alert(e.message)
     } finally {
@@ -55,8 +57,8 @@ export default function ProfilePage() {
 
   const handleCancelDeletion = async () => {
     try {
-      await api.cancelDeletionRequest(user.id)
-      await refreshProfile()
+      await api.cancelAccountDeletionRequest(user.id)
+      window.location.reload()
     } catch (e: any) {
       alert(e.message)
     }
@@ -72,16 +74,18 @@ export default function ProfilePage() {
         <div className="flex flex-col md:flex-row items-center gap-8">
            <div className="relative">
               <UserAvatar name={displayName || user.email} avatarUrl={avatarUrl} className="h-24 w-24 md:h-32 md:w-32 text-4xl ring-8 ring-slate-50 shadow-2xl" />
-              <div className="absolute -bottom-2 -right-2 bg-[#0a2647] text-white p-2 rounded-xl shadow-lg border-4 border-white">
-                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
-              </div>
+              {profile?.is_verified && (
+                <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-2 rounded-xl shadow-lg border-4 border-white" title={t('verificationVerified')}>
+                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zM10 12a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>
+                </div>
+              )}
            </div>
            <div className="text-center md:text-left flex-1 min-w-0">
               <h2 className="text-3xl font-black text-[#0a2647] uppercase tracking-tighter italic truncate">{displayName || t('welcome')}</h2>
               <p className="text-slate-400 font-bold text-sm mt-1 uppercase tracking-widest">{user.email}</p>
-              <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                 <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                 Active Member
+              <div className={`mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${profile?.is_verified ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
+                 <span className={`w-2 h-2 rounded-full ${profile?.is_verified ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`}></span>
+                 {profile?.is_verified ? t('verificationVerified') : t('verificationPending')}
               </div>
            </div>
         </div>
@@ -90,6 +94,20 @@ export default function ProfilePage() {
       {/* SETTINGS FORM */}
       <section className="glass-card bg-white p-6 md:p-10 shadow-xl border-none">
         <form onSubmit={handleSave} className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t('realName')}</label>
+            <input
+              type="text"
+              required
+              value={realName}
+              onChange={(e) => setRealName(e.target.value)}
+              placeholder="E.g. Nguyễn Văn A"
+              disabled={profile?.is_verified}
+              className={`w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-[#0a2647] focus:bg-white transition-all outline-none font-bold text-[#0a2647] ${profile?.is_verified ? 'opacity-50 cursor-not-allowed' : ''}`}
+            />
+            {profile?.is_verified && <p className="text-[9px] text-emerald-600 font-bold ml-1 uppercase tracking-widest italic">Identity verified. Contact Admin to change.</p>}
+          </div>
+
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t('displayName')}</label>

@@ -72,7 +72,7 @@ export default function App() {
 
       <Header />
 
-      <main className="relative z-10 max-w-4xl mx-auto p-4 md:py-8 pt-28 md:pt-36">
+      <main className="relative z-10 max-w-7xl mx-auto p-4 md:p-8 pt-28 md:pt-40">
         <Routes>
           <Route path="/login" element={<AuthPage />} />
           <Route path="/" element={user ? <MatchesPage /> : <Navigate to="/login" />} />

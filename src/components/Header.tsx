@@ -53,8 +53,8 @@ export default function Header() {
 
   return (
     <>
-      <header className={`fixed top-0 left-0 right-0 z-[60] transition-all duration-300 ${scrolled ? 'py-2 bg-[#0a2647]/95 backdrop-blur-md shadow-lg' : 'py-4 bg-[#0a2647]'}`}>
-        <div className="max-w-4xl mx-auto px-4 flex items-center justify-between h-10">
+      <header className={`fixed top-0 left-0 right-0 z-[60] transition-all duration-300 ${scrolled ? 'py-2 bg-[#0a2647]/95 backdrop-blur-md shadow-lg' : 'py-5 bg-[#0a2647]'}`}>
+        <div className="max-w-7xl mx-auto px-6 md:px-8 flex items-center justify-between h-12">
           <Link to="/" className="flex items-center gap-3 font-black text-2xl tracking-tighter italic group shrink-0">
             <WorldCupMark size="sm" className={`transition-transform duration-300 ${scrolled ? 'scale-90' : 'scale-100'}`} />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-300 pr-2">
@@ -63,7 +63,7 @@ export default function Header() {
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center h-full gap-5 lg:gap-8">
+          <nav className="hidden md:flex items-center h-full gap-6 lg:gap-10">
             <Link to="/" className={getNavLinkClass('/')}>{t('tabs.dashboard')}</Link>
             <Link to="/standings" className={getNavLinkClass('/standings')}>{t('tabs.standings')}</Link>
             <Link to="/bracket" className={getNavLinkClass('/bracket')}>{t('tabs.bracket')}</Link>

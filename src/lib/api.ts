@@ -54,11 +54,12 @@ export function subscribeMatches(onChange: (payload: any) => void) {
   return channel
 }
 
-export async function upsertProfile(userId: string, username?: string | null, avatarUrl?: string | null, displayName?: string | null) {
+export async function upsertProfile(userId: string, username?: string | null, avatarUrl?: string | null, displayName?: string | null, realName?: string | null) {
   const payload: any = { user_id: userId }
   if (username !== undefined) payload.username = username
   if (avatarUrl !== undefined) payload.avatar_url = avatarUrl
   if (displayName !== undefined) payload.display_name = displayName
+  if (realName !== undefined) payload.real_name = realName
   const { data, error } = await supabase.from('profiles').upsert(payload, { onConflict: ['user_id'] })
   if (error) throw error
   return data
@@ -119,6 +120,23 @@ export async function uploadAvatar(userId: string, file: File) {
 }
 
 export async function savePrediction(userId: string, matchId: number, predictedA: number, predictedB: number) {
+  // SECURITY PRE-CHECK: Ensure match is not locked (kickoff - 15 mins)
+  const { data: match, error: matchError } = await supabase
+    .from('matches')
+    .select('start_time, status')
+    .eq('id', matchId)
+    .single()
+
+  if (matchError) throw matchError
+
+  const startTime = new Date(match.start_time).getTime()
+  const now = new Date().getTime()
+  const lockTime = startTime - (15 * 60 * 1000)
+
+  if (match.status === 'FINISHED' || now > lockTime) {
+    throw new Error('MATCH_LOCKED')
+  }
+
   const payload = { user_id: userId, match_id: matchId, predicted_a: predictedA, predicted_b: predictedB }
   const { data, error } = await supabase.from('predictions').upsert(payload, { onConflict: ['user_id', 'match_id'] })
   if (error) throw error
@@ -206,6 +224,24 @@ export async function resetMatch(matchId: number) {
   const { data, error } = await supabase.rpc('reset_match', {
     p_match_id: matchId
   })
+  if (error) throw error
+  return data
+}
+
+export async function verifyUserProfile(userId: string, verified: boolean, realName?: string) {
+  const payload: any = { is_verified: verified }
+  if (realName !== undefined) payload.real_name = realName
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .update(payload)
+    .eq('user_id', userId)
+  if (error) throw error
+  return data
+}
+
+export async function deleteUserByAdmin(userId: string) {
+  const { data, error } = await supabase.rpc('delete_user_by_admin', { p_user_id: userId })
   if (error) throw error
   return data
 }

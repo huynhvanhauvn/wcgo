@@ -25,7 +25,7 @@ const AuthContext = createContext<{
   profile: Profile | null
   isAdmin: boolean
   loading: boolean
-  updateProfile: (values: { username?: string; displayName?: string; avatarUrl?: string }) => Promise<void>
+  updateProfile: (values: { username?: string; displayName?: string; avatarUrl?: string; realName?: string }) => Promise<void>
   signOut: () => Promise<void>
 } | null>(null)
 
@@ -84,8 +84,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         setProfile(currentProfile)
-        const username = (currentProfile?.username || getUserDisplayName(u)).toLowerCase()
-        setIsAdmin(username === 'hvhau' || currentProfile?.is_admin === true)
+        // Primary Admin check: database flag. Fallback: hardcoded superuser.
+        setIsAdmin(currentProfile?.is_admin === true || getUserDisplayName(u).toLowerCase() === 'hvhau')
       }
 
       await fetchAndSetProfile()
@@ -127,16 +127,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const updateProfile = async ({ username, displayName, avatarUrl }: { username?: string; displayName?: string; avatarUrl?: string }) => {
+  const updateProfile = async ({ username, displayName, avatarUrl, realName }: { username?: string; displayName?: string; avatarUrl?: string; realName?: string }) => {
     if (!user) return
     const nextUsername = username?.trim() ?? profile?.username ?? getUserDisplayName(user)
     const nextDisplayName = displayName?.trim() ?? profile?.display_name ?? null
     const nextAvatar = avatarUrl?.trim() ?? profile?.avatar_url ?? null
+    const nextRealName = realName?.trim() ?? profile?.real_name ?? null
 
-    await api.upsertProfile(user.id, nextUsername, nextAvatar, nextDisplayName)
+    await api.upsertProfile(user.id, nextUsername, nextAvatar, nextDisplayName, nextRealName)
     const nextProfile = await api.fetchProfileById(user.id)
     setProfile(nextProfile)
-    setIsAdmin(getUserDisplayName(user).toLowerCase() === 'hvhau' || nextProfile?.is_admin === true)
+    // Synchronize Admin state on profile update
+    setIsAdmin(nextProfile?.is_admin === true || getUserDisplayName(user).toLowerCase() === 'hvhau')
   }
 
   const doSignOut = async () => {
