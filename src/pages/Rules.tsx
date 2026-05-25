@@ -69,57 +69,6 @@ export default function RulesPage() {
         </div>
       </div>
 
-      {/* SECTION 3: PENALTY FORMULA */}
-      <div className="glass-card bg-white p-6 md:p-10 shadow-xl border-none">
-        <h2 className="text-2xl font-black text-[#0a2647] uppercase tracking-tight mb-8 flex items-center gap-3">
-          <span className="text-xl">⚖️</span> {t('rules_screen.section_3_title')}
-        </h2>
-
-        <div className="grid gap-4 mb-8">
-           <div className="flex items-start gap-4 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-              <span className="text-2xl">🍽️</span>
-              <p className="text-sm font-bold text-emerald-800 leading-relaxed">{t('rules_screen.penalty_free')}</p>
-           </div>
-           <div className="flex items-start gap-4 p-4 bg-rose-50 rounded-2xl border border-rose-100">
-              <span className="text-2xl">🛡️</span>
-              <p className="text-sm font-bold text-rose-800 leading-relaxed">{t('rules_screen.penalty_last')}</p>
-           </div>
-           <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
-              <p className="text-xs font-medium text-slate-500 italic">{t('rules_screen.penalty_others')}</p>
-           </div>
-        </div>
-
-        {/* Display Mathematical Formula */}
-        <div className="relative group">
-          <div className="absolute -inset-1 bg-gradient-to-r from-[#0a2647] to-wc-gold rounded-3xl blur opacity-10 group-hover:opacity-20 transition duration-1000"></div>
-          <div className="relative bg-[#0a2647] p-10 rounded-2xl text-center border border-white/10 shadow-xl overflow-hidden">
-            <span className="text-[10px] text-slate-400 block mb-6 uppercase tracking-[0.4em] font-black">{t('rules_screen.penalty_formula_label')}</span>
-            <div className="overflow-x-auto no-scrollbar py-4">
-              <p className="text-[#00d4ff] font-mono text-2xl md:text-4xl whitespace-nowrap tracking-tighter">
-                Penalty = 500k × <span className="text-white">(</span>P<span className="text-[0.6em] align-sub">Top3</span> - P<span className="text-[0.6em] align-sub">User</span><span className="text-white">)</span> / <span className="text-white">(</span>P<span className="text-[0.6em] align-sub">Top3</span> - P<span className="text-[0.6em] align-sub">Last</span><span className="text-white">)</span>
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-8 space-y-4">
-           <div className="p-5 bg-amber-50 rounded-2xl border border-amber-200">
-              <h4 className="font-black text-amber-900 uppercase tracking-widest text-[10px] mb-2">⭐ {t('rules_screen.champion_privilege')}</h4>
-              <p className="text-xs font-bold text-amber-800 leading-relaxed">{t('rules_screen.champion_privilege')}</p>
-           </div>
-           <div className="grid md:grid-cols-2 gap-4">
-              <div className="p-5 bg-white rounded-2xl border border-slate-100">
-                <h4 className="font-black text-slate-400 uppercase tracking-widest text-[10px] mb-2">{t('rules_screen.fund_handling_title')}</h4>
-                <p className="text-xs font-medium text-slate-600 leading-relaxed">{t('rules_screen.deficit_rule')}</p>
-              </div>
-              <div className="p-5 bg-white rounded-2xl border border-slate-100">
-                <h4 className="font-black text-slate-400 uppercase tracking-widest text-[10px] mb-2">{t('rules_screen.surplus_rule')}</h4>
-                <p className="text-xs font-medium text-slate-600 leading-relaxed">{t('rules_screen.surplus_rule')}</p>
-              </div>
-           </div>
-        </div>
-      </div>
-
       {/* DISCLAIMER SECTION */}
       <section className="bg-[#0a2647] p-8 md:p-12 rounded-[3rem] text-white space-y-8 shadow-2xl relative overflow-hidden">
         {/* Background elements */}

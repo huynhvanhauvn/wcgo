@@ -27,8 +27,9 @@ type UserStats = {
   history: any[]
 }
 
-function currency(amount: number) {
-  return new Intl.NumberFormat('vi-VN').format(amount)
+function formatPenalty(amount: number) {
+  if (amount === 0) return '0'
+  return `-${Math.round(amount / 1000)}`
 }
 
 function getRankedRows(rows: LeaderboardRow[]) {
@@ -276,7 +277,7 @@ export default function LeaderboardPage() {
                       {row.total} <span className="text-[8px] md:text-[10px] uppercase ml-0.5 opacity-60 font-bold">{t('pts')}</span>
                     </div>
                     <div className={`text-[10px] md:text-sm font-black uppercase tracking-widest mt-2 ${penalty > 0 ? 'text-rose-600 animate-pulse-slow' : 'text-[#0a2647]/30'}`}>
-                      {penalty > 0 ? `- ${currency(penalty)}` : `0 VND`}
+                      {formatPenalty(penalty)}
                     </div>
                   </div>
                   {isAdmin && (

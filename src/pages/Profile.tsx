@@ -13,6 +13,7 @@ export default function ProfilePage() {
   const [realName, setRealName] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [message, setMessage] = useState({ text: '', type: '' })
 
   const [requestingDeletion, setRequestingDeletion] = useState(false)
@@ -24,6 +25,23 @@ export default function ProfilePage() {
       setAvatarUrl(profile.avatar_url || '')
     }
   }, [profile])
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+
+    setUploading(true)
+    setMessage({ text: '', type: '' })
+    try {
+      const publicUrl = await api.uploadAvatar(user.id, file)
+      setAvatarUrl(publicUrl)
+      setMessage({ text: 'Avatar uploaded successfully!', type: 'success' })
+    } catch (e: any) {
+      setMessage({ text: 'Upload failed: ' + e.message, type: 'error' })
+    } finally {
+      setUploading(false)
+    }
+  }
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -47,7 +65,7 @@ export default function ProfilePage() {
     setRequestingDeletion(true)
     try {
       await api.requestAccountDeletion(user.id)
-      window.location.reload() // Refresh to update profile state from DB
+      window.location.reload()
     } catch (e: any) {
       alert(e.message)
     } finally {
@@ -72,8 +90,18 @@ export default function ProfilePage() {
       <section className="glass-card bg-white p-8 md:p-10 shadow-2xl border-none overflow-hidden relative">
         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#0a2647] via-wc-gold to-wc-canada"></div>
         <div className="flex flex-col md:flex-row items-center gap-8">
-           <div className="relative">
+           <div className="relative group">
               <UserAvatar name={displayName || user.email} avatarUrl={avatarUrl} className="h-24 w-24 md:h-32 md:w-32 text-4xl ring-8 ring-slate-50 shadow-2xl" />
+
+              <label className="absolute inset-0 flex items-center justify-center bg-black/40 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer border-4 border-transparent">
+                 <input type="file" className="hidden" accept="image/*" onChange={handleAvatarUpload} disabled={uploading} />
+                 {uploading ? (
+                   <div className="animate-spin h-6 w-6 border-2 border-white border-t-transparent rounded-full"></div>
+                 ) : (
+                   <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                 )}
+              </label>
+
               {profile?.is_verified && (
                 <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-2 rounded-xl shadow-lg border-4 border-white" title={t('verificationVerified')}>
                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zM10 12a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>
@@ -139,8 +167,8 @@ export default function ProfilePage() {
 
           <button
             type="submit"
-            disabled={saving}
-            className="btn-primary w-full py-4 uppercase tracking-widest text-sm shadow-xl"
+            disabled={saving || uploading}
+            className="btn-primary w-full py-4 uppercase tracking-widest text-sm shadow-xl disabled:opacity-50"
           >
             {saving ? t('saving') : t('saveProfile')}
           </button>
