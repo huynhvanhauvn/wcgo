@@ -7,6 +7,113 @@ import * as api from '../lib/api'
 import { getFlagUrl } from '../lib/flags'
 import { calculateMatchPoints } from '../lib/scoring'
 import WorldCupMark from './WorldCupMark'
+import UserAvatar from './UserAvatar'
+
+/**
+ * MatchVarModal: Full disclosure of all predictions for locked matches
+ */
+function MatchVarModal({ match, stats, onClose }: { match: any; stats: any; onClose: () => void }) {
+  const { t, i18n } = useTranslation()
+  const [predictions, setPredictions] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    api.fetchPredictionsByMatch(match.id)
+      .then(setPredictions)
+      .finally(() => setLoading(false))
+  }, [match.id])
+
+  const startLocal = DateTime.fromISO(match.start_time).toLocal().setLocale(i18n.language)
+  const formattedStart = startLocal.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)
+
+  return (
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 md:p-10">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose}></div>
+      <div className="relative glass-card w-full max-w-2xl bg-white overflow-hidden animate-in zoom-in-95 duration-300 border-slate-200 shadow-[0_20px_60px_rgba(0,0,0,0.4)] max-h-[85vh] flex flex-col rounded-[2.5rem]">
+        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#0a2647] via-wc-gold to-wc-canada z-30"></div>
+
+        {/* Header */}
+        <div className="p-6 border-b border-slate-100 flex flex-col items-center text-center relative">
+           <button onClick={onClose} className="absolute top-4 right-4 text-slate-300 hover:text-[#0a2647] p-2 bg-slate-50 rounded-full transition-all">
+             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+           </button>
+           <h3 className="text-2xl font-black text-[#0a2647] uppercase tracking-tighter italic mb-1">{t('match_card.var_center')}</h3>
+           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{formattedStart} · {match.venue}</p>
+
+           <div className="flex items-center gap-6 mt-6">
+              <div className="flex flex-col items-center gap-2">
+                 <img src={getFlagUrl(match.team_a) || ''} className="h-8 w-12 rounded-sm shadow-md" alt="" />
+                 <span className="text-xs font-black text-slate-800 uppercase">{t(`teams.${match.team_a}`, { defaultValue: match.team_a })}</span>
+              </div>
+              <div className="text-2xl font-black text-slate-200 italic">VS</div>
+              <div className="flex flex-col items-center gap-2">
+                 <img src={getFlagUrl(match.team_b) || ''} className="h-8 w-12 rounded-sm shadow-md" alt="" />
+                 <span className="text-xs font-black text-slate-800 uppercase">{t(`teams.${match.team_b}`, { defaultValue: match.team_b })}</span>
+              </div>
+           </div>
+        </div>
+
+        <div className="overflow-y-auto no-scrollbar flex-1 p-6 md:p-8 space-y-8">
+          {/* Summary Stats */}
+          {stats && (
+            <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 shadow-inner">
+               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] text-center mb-6">{t('match_card.community_predictions')}</h4>
+               <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden flex shadow-inner mb-4">
+                  <div style={{ width: `${stats.winA}%` }} className="bg-emerald-500 h-full"></div>
+                  <div style={{ width: `${stats.draw}%` }} className="bg-slate-400 h-full border-x border-white/20"></div>
+                  <div style={{ width: `${stats.winB}%` }} className="bg-rose-500 h-full"></div>
+               </div>
+               <div className="grid grid-cols-3 text-[9px] font-black uppercase tracking-widest gap-2">
+                  <div className="text-emerald-600 text-left">WIN A: {stats.winA}%</div>
+                  <div className="text-slate-400 text-center">DRAW: {stats.draw}%</div>
+                  <div className="text-rose-600 text-right">WIN B: {stats.winB}%</div>
+               </div>
+            </div>
+          )}
+
+          {/* User List */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-black text-[#0a2647] uppercase tracking-tight italic border-l-4 border-wc-accent pl-4 mb-6">
+              {t('match_card.predicted_score')}
+            </h4>
+
+            {loading ? (
+              <div className="py-10 flex justify-center"><div className="animate-spin h-8 w-8 border-4 border-[#0a2647] border-t-transparent rounded-full"></div></div>
+            ) : (
+              <div className="grid gap-3">
+                {predictions.map((p, idx) => {
+                  const profile = p.profiles || {}
+                  const displayName = profile.display_name || profile.username || "User"
+                  return (
+                    <div key={idx} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 hover:shadow-md transition-all">
+                      <div className="flex items-center gap-3">
+                        <UserAvatar name={displayName} avatarUrl={profile.avatar_url} className="h-10 w-10 ring-2 ring-slate-100" />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-black text-[#0a2647]">{displayName}</span>
+                          <span className="text-[10px] text-slate-400 font-bold uppercase">{profile.real_name || 'Anonymous'}</span>
+                        </div>
+                      </div>
+                      <div className="px-4 py-2 bg-slate-50 text-[#0a2647] rounded-xl font-black text-lg border border-slate-100">
+                        {p.predicted_a} - {p.predicted_b}
+                      </div>
+                    </div>
+                  )
+                })}
+                {predictions.length === 0 && (
+                   <div className="py-10 text-center text-slate-300 font-bold uppercase tracking-widest text-xs italic">No predictions submitted.</div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="p-4 bg-slate-900 text-center">
+           <p className="text-[9px] font-black text-white uppercase tracking-[0.3em]">Official WC2026 VAR Center · {predictions.length} Participants</p>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 interface ScoreStepperProps {
   value: number | ''
@@ -146,6 +253,7 @@ export default function MatchCard({
   const [savedAt, setSavedAt] = useState<string | null>(null)
 
   const [showStats, setShowStats] = useState(false)
+  const [showVarModal, setShowVarModal] = useState(false)
   const [stats, setStats] = useState<{ winA: number; draw: number; winB: number; total: number } | null>(null)
   const [loadingStats, setLoadingStats] = useState(false)
 
@@ -217,10 +325,17 @@ export default function MatchCard({
     }
   }
 
-  const toggleStats = () => {
-    const nextShow = !showStats
-    setShowStats(nextShow)
-    if (nextShow) fetchStats()
+  const handleCardClick = () => {
+    if (locked) {
+      // If locked, open the full VAR Center modal
+      setShowVarModal(true)
+      fetchStats()
+    } else {
+      // If open, just toggle simple inline stats
+      const nextShow = !showStats
+      setShowStats(nextShow)
+      if (nextShow) fetchStats()
+    }
   }
 
   const handleSave = async () => {
@@ -242,7 +357,11 @@ export default function MatchCard({
         setStats(null)
         fetchStats()
       }
-    } catch (e) {
+    } catch (e: any) {
+      if (e.message === 'MATCH_LOCKED') {
+        alert("This match is locked! You cannot save predictions anymore.")
+        window.location.reload()
+      }
       console.error(e)
     } finally {
       setSaving(false)
@@ -269,105 +388,115 @@ export default function MatchCard({
   }
 
   return (
-    <div
-      className={`bg-white rounded-2xl md:rounded-[2rem] border border-[#0a2647]/5 shadow-sm transition-all duration-300 hover:shadow-xl w-full p-3 md:p-6 pt-5 md:pt-8 relative overflow-hidden group cursor-pointer flex flex-col min-w-0`}
-      onClick={toggleStats}
-    >
-      {renderTopIndicator()}
+    <>
+      <div
+        className={`bg-white rounded-2xl md:rounded-[2rem] border border-[#0a2647]/5 shadow-sm transition-all duration-300 hover:shadow-xl w-full p-3 md:p-6 pt-5 md:pt-8 relative overflow-hidden group cursor-pointer flex flex-col min-w-0`}
+        onClick={handleCardClick}
+      >
+        {renderTopIndicator()}
 
-      {matchNumber && (
-        <div className="absolute top-2 left-3 z-30">
-          <span className="text-[10px] md:text-xs font-black text-[#0a2647]/20 uppercase tracking-tighter italic">
-            #{String(matchNumber).padStart(2, '0')}
+        {matchNumber && (
+          <div className="absolute top-2 left-3 z-30">
+            <span className="text-[10px] md:text-xs font-black text-[#0a2647]/20 uppercase tracking-tighter italic">
+              #{String(matchNumber).padStart(2, '0')}
+            </span>
+          </div>
+        )}
+
+        <div className="w-full flex flex-col items-center text-center mb-3 md:mb-6 px-4">
+          <span className="text-[8px] md:text-[10px] font-black text-[#0a2647] opacity-60 uppercase tracking-[0.2em] mb-0.5">
+            {formattedStart}
+          </span>
+          <span className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate max-w-[85%] block">
+            {match.venue}
+          </span>
+          {renderFinalScore()}
+        </div>
+
+        <div className="w-full flex items-center gap-2 md:gap-4 min-w-0 px-1 mb-2">
+          <TeamName name={match.team_a} teamData={match.team_a_data} align="right" />
+          <div className="shrink-0 flex items-center h-full">
+            <div className="bg-slate-50/50 p-1 md:p-3 rounded-lg md:rounded-xl border border-slate-100 shadow-inner">
+               <div className="flex items-center justify-center gap-1 md:gap-2">
+                  <ScoreStepper value={predA} onChange={setPredA} disabled={locked} result={teamAResult} />
+                  <span className="font-black text-slate-300 text-[8px] md:text-xs tracking-tighter italic shrink-0 px-0.5">VS</span>
+                  <ScoreStepper value={predB} onChange={setPredB} disabled={locked} result={teamBResult} />
+               </div>
+            </div>
+          </div>
+          <TeamName name={match.team_b} teamData={match.team_b_data} align="left" />
+        </div>
+
+        {showStats && !locked && (
+          <div className="mt-3 pt-3 border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-300 w-full overflow-hidden">
+            <div className="flex justify-between items-center mb-2 px-1 text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <h4 className="truncate">{t('match_card.community_predictions')}</h4>
+              <span className="whitespace-nowrap">{stats?.total || 0} {t('stats.participants')}</span>
+            </div>
+
+            {loadingStats ? (
+              <div className="flex justify-center py-2"><div className="animate-pulse flex gap-1"><div className="w-1 h-1 bg-slate-200 rounded-full"></div><div className="w-1 h-1 bg-slate-200 rounded-full"></div><div className="w-1 h-1 bg-slate-200 rounded-full"></div></div></div>
+            ) : stats && (
+              <div className="space-y-2">
+                <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
+                  <div style={{ width: `${stats.winA}%` }} className="bg-emerald-500 h-full"></div>
+                  <div style={{ width: `${stats.draw}%` }} className="bg-slate-300 h-full border-x border-white/20"></div>
+                  <div style={{ width: `${stats.winB}%` }} className="bg-rose-500 h-full"></div>
+                </div>
+                <div className="grid grid-cols-3 text-[7px] md:text-[9px] font-black uppercase tracking-wider gap-1">
+                  <div className="text-emerald-600 flex flex-col items-start min-w-0">
+                     <span className="truncate w-full">{match.team_a_data ? t(`teams.${match.team_a_data.name}`, { defaultValue: match.team_a_data.name }) : t(`teams.${match.team_a}`, { defaultValue: match.team_a })}</span>
+                     <span>{stats.winA}%</span>
+                  </div>
+                  <div className="text-slate-400 flex flex-col items-center min-w-0"><span>{t('stats.draw_label')}</span><span>{stats.draw}%</span></div>
+                  <div className="text-rose-600 flex flex-col items-end min-w-0">
+                     <span className="truncate w-full text-right">{match.team_b_data ? t(`teams.${match.team_b_data.name}`, { defaultValue: match.team_b_data.name }) : t(`teams.${match.team_b}`, { defaultValue: match.team_b })}</span>
+                     <span>{stats.winB}%</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="mt-3 flex justify-center w-full">
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {canSave && (
+              <button
+                className="btn-primary min-w-[100px] md:min-w-[140px] py-3 uppercase tracking-widest text-[8px] md:text-xs shadow-xl"
+                disabled={predA === '' || predB === ''}
+                onClick={(e) => { e.stopPropagation(); handleSave(); }}
+              >
+                {saving ? t('saving') : t('save')}
+              </button>
+            )}
+            {locked && <div className="rounded-full bg-slate-100 px-3 py-1 text-[8px] font-black text-slate-500 border border-slate-200 uppercase tracking-widest">{t('closed')}</div>}
+
+            {hasSavedPrediction && !predictionChanged && earnedPoints === null && (
+              <div className="rounded-full bg-transparent px-3 py-1 text-[8px] md:text-[9px] font-black text-emerald-600 border border-emerald-500 uppercase tracking-widest flex items-center gap-1">
+                <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span>
+                {t('saved')}
+              </div>
+            )}
+
+            {earnedPoints !== null && <div className="rounded-full bg-amber-100 px-3 py-1 text-[8px] md:text-[9px] font-black text-amber-700 border border-amber-200 uppercase tracking-widest">+{earnedPoints} {t('pointsShort')}</div>}
+          </div>
+        </div>
+
+        <div className="absolute bottom-0.5 right-3 opacity-20 group-hover:opacity-100 transition-opacity hidden sm:block">
+          <span className="text-[7px] font-bold text-slate-400 uppercase tracking-tighter italic text-center">
+            {locked ? t('match_card.check_var') : (showStats ? t('match_card.click_to_hide') : t('match_card.click_to_see'))}
           </span>
         </div>
+      </div>
+
+      {showVarModal && (
+        <MatchVarModal
+          match={match}
+          stats={stats}
+          onClose={() => setShowVarModal(false)}
+        />
       )}
-
-      <div className="w-full flex flex-col items-center text-center mb-3 md:mb-6 px-4">
-        <span className="text-[8px] md:text-[10px] font-black text-[#0a2647] opacity-60 uppercase tracking-[0.2em] mb-0.5">
-          {formattedStart}
-        </span>
-        <span className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate max-w-[85%] block">
-          {match.venue}
-        </span>
-        {renderFinalScore()}
-      </div>
-
-      <div className="w-full flex items-center gap-2 md:gap-4 min-w-0 px-1 mb-2">
-        <TeamName name={match.team_a} teamData={match.team_a_data} align="right" />
-        <div className="shrink-0 flex items-center h-full">
-          <div className="bg-slate-50/50 p-1 md:p-3 rounded-lg md:rounded-xl border border-slate-100 shadow-inner">
-             <div className="flex items-center justify-center gap-1 md:gap-2">
-                <ScoreStepper value={predA} onChange={setPredA} disabled={locked} result={teamAResult} />
-                <span className="font-black text-slate-300 text-[8px] md:text-xs tracking-tighter italic shrink-0 px-0.5">VS</span>
-                <ScoreStepper value={predB} onChange={setPredB} disabled={locked} result={teamBResult} />
-             </div>
-          </div>
-        </div>
-        <TeamName name={match.team_b} teamData={match.team_b_data} align="left" />
-      </div>
-
-      {showStats && (
-        <div className="mt-3 pt-3 border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-300 w-full overflow-hidden">
-          <div className="flex justify-between items-center mb-2 px-1 text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">
-            <h4 className="truncate">{t('match_card.community_predictions')}</h4>
-            <span className="whitespace-nowrap">{stats?.total || 0} {t('stats.participants')}</span>
-          </div>
-
-          {loadingStats ? (
-            <div className="flex justify-center py-2"><div className="animate-pulse flex gap-1"><div className="w-1 h-1 bg-slate-200 rounded-full"></div><div className="w-1 h-1 bg-slate-200 rounded-full"></div><div className="w-1 h-1 bg-slate-200 rounded-full"></div></div></div>
-          ) : stats && (
-            <div className="space-y-2">
-              <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden flex shadow-inner">
-                <div style={{ width: `${stats.winA}%` }} className="bg-emerald-500 h-full"></div>
-                <div style={{ width: `${stats.draw}%` }} className="bg-slate-300 h-full border-x border-white/20"></div>
-                <div style={{ width: `${stats.winB}%` }} className="bg-rose-500 h-full"></div>
-              </div>
-              <div className="grid grid-cols-3 text-[7px] md:text-[9px] font-black uppercase tracking-wider gap-1">
-                <div className="text-emerald-600 flex flex-col items-start min-w-0">
-                   <span className="truncate w-full">{match.team_a_data ? t(`teams.${match.team_a_data.name}`, { defaultValue: match.team_a_data.name }) : t(`teams.${match.team_a}`, { defaultValue: match.team_a })}</span>
-                   <span>{stats.winA}%</span>
-                </div>
-                <div className="text-slate-400 flex flex-col items-center min-w-0"><span>{t('stats.draw_label')}</span><span>{stats.draw}%</span></div>
-                <div className="text-rose-600 flex flex-col items-end min-w-0">
-                   <span className="truncate w-full text-right">{match.team_b_data ? t(`teams.${match.team_b_data.name}`, { defaultValue: match.team_b_data.name }) : t(`teams.${match.team_b}`, { defaultValue: match.team_b })}</span>
-                   <span>{stats.winB}%</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      <div className="mt-3 flex justify-center w-full">
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {canSave && (
-            <button
-              className="btn-primary min-w-[100px] md:min-w-[140px] py-3 uppercase tracking-widest text-[8px] md:text-xs shadow-xl"
-              disabled={predA === '' || predB === ''}
-              onClick={(e) => { e.stopPropagation(); handleSave(); }}
-            >
-              {saving ? t('saving') : t('save')}
-            </button>
-          )}
-          {locked && <div className="rounded-full bg-slate-100 px-3 py-1 text-[8px] font-black text-slate-500 border border-slate-200 uppercase tracking-widest">{t('closed')}</div>}
-
-          {hasSavedPrediction && !predictionChanged && earnedPoints === null && (
-            <div className="rounded-full bg-transparent px-3 py-1 text-[8px] md:text-[9px] font-black text-emerald-600 border border-emerald-500 uppercase tracking-widest flex items-center gap-1">
-              <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span>
-              {t('saved')}
-            </div>
-          )}
-
-          {earnedPoints !== null && <div className="rounded-full bg-amber-100 px-3 py-1 text-[8px] md:text-[9px] font-black text-amber-700 border border-amber-200 uppercase tracking-widest">+{earnedPoints} {t('pointsShort')}</div>}
-        </div>
-      </div>
-
-      <div className="absolute bottom-0.5 right-3 opacity-20 group-hover:opacity-100 transition-opacity hidden sm:block">
-        <span className="text-[7px] font-bold text-slate-400 uppercase tracking-tighter italic text-center">
-          {showStats ? t('match_card.click_to_hide') : t('match_card.click_to_see')}
-        </span>
-      </div>
-    </div>
+    </>
   )
 }

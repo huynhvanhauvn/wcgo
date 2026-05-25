@@ -13,8 +13,23 @@ export async function fetchTeams() {
 }
 
 export async function fetchPredictionsByMatch(matchId: number) {
-  const { data, error } = await supabase.from('predictions').select('*').eq('match_id', matchId)
-  if (error) throw error
+  const { data, error } = await supabase
+    .from('predictions')
+    .select(`
+      *,
+      profiles:user_id (
+        display_name,
+        username,
+        avatar_url,
+        real_name
+      )
+    `)
+    .eq('match_id', matchId)
+
+  if (error) {
+    console.error('Error fetching predictions:', error)
+    throw error
+  }
   return data
 }
 

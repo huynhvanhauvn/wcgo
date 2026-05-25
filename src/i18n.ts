@@ -154,7 +154,10 @@ const resources = {
         community_predictions: 'Community Predictions',
         click_to_hide: 'Click to hide stats',
         click_to_see: 'Click to see community stats',
-        score_prediction: 'Score Prediction'
+        score_prediction: 'Score Prediction',
+        check_var: 'Check VAR (Details)',
+        var_center: 'VAR Center',
+        predicted_score: 'Predicted Score'
       },
       rules_screen: {
         title: 'GAME RULES & REGULATIONS',
@@ -370,7 +373,10 @@ const resources = {
         community_predictions: 'Dự đoán của cộng đồng',
         click_to_hide: 'Nhấn để ẩn thống kê',
         click_to_see: 'Nhấn để xem thống kê cộng đồng',
-        score_prediction: 'Dự đoán tỉ số'
+        score_prediction: 'Dự đoán tỉ số',
+        check_var: 'Check VAR (Chi tiết)',
+        var_center: 'Trung tâm VAR',
+        predicted_score: 'Tỉ số dự đoán'
       },
       rules_screen: {
         title: 'ĐIỀU LỆ VÀ QUY TẮC TRÒ CHƠI',
