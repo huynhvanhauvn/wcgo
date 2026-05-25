@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from 'react'
 import { DateTime } from 'luxon'
 import { useTranslation } from 'react-i18next'
@@ -27,6 +28,22 @@ type Prediction = {
 }
 
 type MatchTab = 'not_predicted' | 'predicted' | 'all' | 'pts_0' | 'pts_1' | 'pts_2' | 'pts_3'
+
+function MatchesSkeleton() {
+  return (
+    <div className="space-y-12 animate-pulse">
+      <div className="h-64 bg-slate-200 rounded-[2.5rem]"></div>
+      <div className="space-y-6">
+        <div className="h-20 bg-slate-100 rounded-3xl w-1/3"></div>
+        <div className="grid gap-6">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-32 bg-white border border-slate-100 rounded-[2rem]"></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function MatchesPage() {
   const { t } = useTranslation()
@@ -121,7 +138,6 @@ export default function MatchesPage() {
     })
   }, [upcomingMatchesList])
 
-  // Improved filter logic based on BASE points (before multiplier)
   const filteredMatches = useMemo(() => {
     return matches.filter((m) => {
       const pred = predictionsByMatch[m.id]
@@ -146,14 +162,7 @@ export default function MatchesPage() {
     })
   }, [matches, predictionsByMatch, activeTab, user])
 
-  if (loading) {
-    return (
-      <div className="glass-card p-10 flex flex-col items-center gap-4 bg-white shadow-xl">
-        <div className="animate-spin h-8 w-8 border-4 border-wc-accent border-t-transparent rounded-full"></div>
-        <div className="text-sm font-bold text-wc-accent uppercase tracking-widest">{t('loadingMatches')}</div>
-      </div>
-    )
-  }
+  if (loading) return <div className="max-w-4xl mx-auto"><MatchesSkeleton /></div>
 
   const TabButton = ({ id, label, count }: { id: MatchTab; label: string, count: number }) => (
     <button
@@ -179,7 +188,7 @@ export default function MatchesPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12">
+    <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in duration-700">
       {/* NEXT MATCH COUNTDOWN */}
       {nextMatch && (
         <CountdownTimer
@@ -200,7 +209,6 @@ export default function MatchesPage() {
           </div>
           <div className="space-y-6">
             {highlightedMatches.map((m) => {
-              // Find global index in full matches list
               const globalIndex = matches.findIndex(match => match.id === m.id) + 1;
               return (
                 <MatchCard
@@ -218,7 +226,7 @@ export default function MatchesPage() {
       )}
 
       <section className="space-y-0 pb-20">
-        <div className="glass-card bg-white shadow-2xl overflow-hidden border-none">
+        <div className="glass-card bg-white shadow-2xl overflow-hidden border-none rounded-[2.5rem]">
           <div className="flex border-b border-slate-100 overflow-x-auto no-scrollbar bg-slate-50/50">
             <TabButton id="not_predicted" label={t('match_tabs.not_predicted')} count={matches.filter(m => !predictionsByMatch[m.id] && m.status !== 'FINISHED').length} />
             <TabButton id="predicted" label={t('match_tabs.predicted')} count={Object.keys(predictionsByMatch).length} />
@@ -255,7 +263,7 @@ export default function MatchesPage() {
                 })}
               </div>
             ) : (
-              <div className="py-24 text-center border-2 border-dashed border-slate-200 rounded-[2rem] bg-white/50">
+              <div className="py-24 text-center border-2 border-dashed border-slate-200 rounded-[2.5rem] bg-white/50">
                 <span className="text-5xl block mb-6 grayscale opacity-20">⚽</span>
                 <p className="text-slate-400 font-black uppercase tracking-[0.2em] text-xs">{t('match_tabs.no_matches_found')}</p>
               </div>

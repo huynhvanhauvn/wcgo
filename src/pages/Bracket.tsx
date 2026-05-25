@@ -3,6 +3,7 @@ import React, { useEffect, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import * as api from '../lib/api'
 import { getFlagUrl } from '../lib/flags'
+import LoadingScreen from '../components/LoadingScreen'
 
 type StageType = 'R32' | 'R16' | 'QF' | 'SF' | 'FINAL'
 
@@ -48,7 +49,6 @@ function CompactMatchCard({ match, isFinal = false }: { match: any; isFinal?: bo
   const flagB = match.team_b_data ? getFlagUrl(match.team_b_data.name) : null
   const isFinished = match.status === 'FINISHED'
 
-  // Robust stage mapping
   const stageCode = match.stage?.toUpperCase()
   const stage: StageType = stageCode === 'FINAL' ? 'FINAL' :
                          stageCode === 'SF' ? 'SF' :
@@ -74,7 +74,7 @@ function CompactMatchCard({ match, isFinal = false }: { match: any; isFinal?: bo
     return (
       <div className="relative w-72 md:w-80 bg-[#0a2647] border-4 border-wc-gold rounded-[2.5rem] shadow-[0_0_60px_rgba(251,191,36,0.4)] p-8 flex flex-col items-center text-center group transition-all hover:scale-105 z-20">
         <div className="absolute -top-6 bg-wc-gold text-[#0a2647] px-8 py-2 rounded-full font-black text-[10px] uppercase tracking-[0.4em] shadow-xl border-2 border-white/20">The Grand Final</div>
-        <div className="mb-6 animate-bounce-slow"><span className="text-6xl">🏆</span></div>
+        <div className="mb-6 animate-bounce-slow"><span className="text-6xl text-white">🏆</span></div>
         <div className="space-y-6 w-full relative">
            <div className="flex flex-col items-center gap-2">
               {flagA && <img src={flagA} className="h-8 w-12 rounded-sm shadow-2xl mb-1 ring-1 ring-white/10" alt="" />}
@@ -173,20 +173,22 @@ export default function BracketPage() {
     }
   }, [matches])
 
-  if (loading) {
-    return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center bg-[#f8fafc]">
-        <div className="h-12 w-12 border-4 border-[#0a2647] border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('loading')}</p>
-      </div>
-    )
-  }
+  if (loading) return <LoadingScreen message="Building Tournament Roadmap..." />
 
   if (!structure) return null
 
   return (
     <div className="fixed inset-0 z-0 overflow-x-auto no-scrollbar pb-32 pt-28 md:pt-36 bg-[#f8fafc]">
       <div className="min-w-max flex flex-col items-center gap-16 px-[50vw]">
+
+        {/* Localized Header Title */}
+        <div className="text-center space-y-3 mb-4">
+           <h1 className="text-3xl md:text-5xl font-black text-[#0a2647] uppercase tracking-tighter italic">
+             {t('bracket_screen.title')}
+           </h1>
+           <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-[0.3em]">{t('bracket_screen.subtitle')}</p>
+           <div className="h-1 w-24 bg-wc-accent mx-auto rounded-full mt-4"></div>
+        </div>
 
         {/* Legend / Stage Indicator */}
         <div className="flex gap-6 md:gap-10 bg-white shadow-2xl px-12 py-6 rounded-[2.5rem] border border-slate-100 mb-8 sticky top-0 z-30">
@@ -198,7 +200,7 @@ export default function BracketPage() {
            ))}
         </div>
 
-        {/* Symmetrical Bracket (No lines) */}
+        {/* Symmetrical Bracket */}
         <div className="flex items-center justify-center gap-20 md:gap-32 relative">
           <BracketWing matchesByRound={structure.left} side="left" />
 
@@ -206,7 +208,7 @@ export default function BracketPage() {
             <CompactMatchCard match={structure.final} isFinal />
 
             <div className="mt-4 opacity-80 hover:opacity-100 transition-all transform hover:scale-105">
-               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] text-center mb-4 italic">3rd Place Play-off</h4>
+               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em] text-center mb-4 italic">{t('bracket_screen.third_place')}</h4>
                <CompactMatchCard match={structure.third} />
             </div>
           </div>

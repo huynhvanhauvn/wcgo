@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import * as api from '../lib/api'
 import { calculateStandings, sortGroupStandings, TeamStanding } from '../lib/standings'
 import { getFlagUrl } from '../lib/flags'
+import LoadingScreen from '../components/LoadingScreen'
 
 function StandingTable({ group, teams }: { group: string; teams: TeamStanding[] }) {
   const { t } = useTranslation()
@@ -12,14 +13,14 @@ function StandingTable({ group, teams }: { group: string; teams: TeamStanding[] 
   return (
     <div className="glass-card overflow-hidden bg-white shadow-lg border-slate-100">
       <div className="bg-[#0a2647] p-4 flex items-center justify-between">
-        <h3 className="text-white font-black uppercase tracking-widest italic">Group {group}</h3>
-        <span className="text-[10px] text-white/50 font-bold uppercase tracking-[0.2em]">WC2026</span>
+        <h3 className="text-white font-black uppercase tracking-widest italic text-[13px]">Group {group}</h3>
+        <span className="text-[9px] text-white/50 font-bold uppercase tracking-[0.2em]">WC2026</span>
       </div>
       <div className="overflow-x-auto no-scrollbar">
         <table className="w-full text-[10px] md:text-xs text-left min-w-[420px]">
           <thead>
             <tr className="text-slate-400 font-black uppercase tracking-widest border-b border-slate-100 bg-slate-50/50">
-              <th className="px-4 py-3 text-[#0a2647]">Team</th>
+              <th className="px-4 py-3 text-[#0a2647]">{t('news_screen.team')}</th>
               <th className="px-1 py-3 text-center w-6" title="Played">P</th>
               <th className="px-1 py-3 text-center w-6 text-emerald-600" title="Won">W</th>
               <th className="px-1 py-3 text-center w-6 text-slate-400" title="Drawn">D</th>
@@ -55,10 +56,6 @@ function StandingTable({ group, teams }: { group: string; teams: TeamStanding[] 
           </tbody>
         </table>
       </div>
-      <div className="p-3 bg-slate-50 text-[8px] font-bold text-slate-400 uppercase tracking-widest flex gap-3 border-t border-slate-100">
-        <div className="flex items-center gap-1"><div className="w-2 h-2 bg-blue-500 rounded-full"></div> Advance</div>
-        <div className="flex items-center gap-1"><div className="w-2 h-2 bg-amber-400 rounded-full"></div> Best 3rd</div>
-      </div>
     </div>
   )
 }
@@ -82,19 +79,12 @@ export default function StandingsPage() {
   const standings = useMemo(() => calculateStandings(matches, teams), [matches, teams])
   const groups = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
 
-  if (loading) {
-    return (
-      <div className="glass-card p-10 flex flex-col items-center gap-4 bg-white">
-        <div className="animate-spin h-8 w-8 border-4 border-wc-accent border-t-transparent rounded-full"></div>
-        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('loading')}</p>
-      </div>
-    )
-  }
+  if (loading) return <LoadingScreen message="Updating Group Data..." />
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-500">
+    <div className="space-y-10 animate-in fade-in duration-500 max-w-7xl mx-auto px-4">
       <div className="flex flex-col gap-2 border-l-4 border-wc-accent pl-4">
-        <h2 className="text-3xl font-black text-[#0a2647] uppercase tracking-tight italic">{t('groupStandings')}</h2>
+        <h2 className="text-3xl font-black text-[#0a2647] uppercase tracking-tight italic leading-none">{t('groupStandings')}</h2>
         <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Official World Cup 2026 Progression</p>
       </div>
 
