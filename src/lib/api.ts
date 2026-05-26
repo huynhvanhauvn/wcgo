@@ -340,7 +340,14 @@ export async function updateMatchTeam(matchId: number, side: 'a' | 'b', teamId: 
 export async function fetchComments(matchId: number) {
   const { data, error } = await supabase
     .from('comments')
-    .select('*, profiles:user_id(display_name, avatar_url, username)')
+    .select(`
+      *,
+      profiles:user_id (
+        display_name,
+        avatar_url,
+        username
+      )
+    `)
     .eq('match_id', matchId)
     .order('created_at', { ascending: true })
   if (error) throw error
@@ -358,7 +365,7 @@ export async function postComment(matchId: number, userId: string, content: stri
 export function subscribeToMatchHub(matchId: number, onEvent: (payload: any) => void) {
   const channel = supabase.channel(`match_hub:${matchId}`)
     .on('postgres_changes', {
-      event: 'INSERT',
+      event: '*', // Listen for all changes including DELETE
       schema: 'public',
       table: 'comments',
       filter: `match_id=eq.${matchId}`
@@ -367,4 +374,13 @@ export function subscribeToMatchHub(matchId: number, onEvent: (payload: any) => 
     })
     .subscribe()
   return channel
+}
+
+export async function deleteComment(commentId: string) {
+  const { data, error } = await supabase
+    .from('comments')
+    .delete()
+    .eq('id', commentId)
+  if (error) throw error
+  return data
 }
