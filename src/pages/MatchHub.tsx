@@ -24,7 +24,7 @@ const EMOJI_CATEGORIES = {
     '🇨🇭', '🇩🇰', '🇺🇦', '🇵🇱', '🇸🇦', '🇶🇦', '🇮🇶', '🇺🇿', '🇦🇪', '🇯🇴', '🇦🇺', '🇳🇿',
     '🇨🇱', '🇵🇾', '🇪🇨', '🇵🇪', '🇨🇷', '🇵🇦', '🇯🇲', '🇭🇹', '🇬🇭', '🇨🇲', '🇹🇳', '🇿🇦',
     '🇸🇪', '🇳🇴', '🇹🇷', '🇷🇴', '🇮🇪', '🏴󠁧󠁢󠁳󠁣󠁴󠁿', '🏴󠁧󠁢󠁷󠁬󠁳󠁿', '🇮🇸', '🇦🇹', '🇨🇿', '🇭🇺', '🇷🇸',
-    '🇨🇮', '🇲🇱', '🇬🇳', '🇧🇫', '🇦🇴', '🇿🇲', '🇮🇷', '🇰🇵', '🇹🇭', '🇮🇩', '🇲🇾', '🇵🇭',
+    '🇨🇮', '🇲🇱', '🇬🇳', '🇧 earth_africa:', '🇦🇴', '🇿🇲', '🇮🇷', '🇰🇵', '🇹🇭', '🇮🇩', '🇲🇾', '🇵🇭',
     '🇸🇬', '🇱🇦', '🇰🇭', '🇲🇲', '🇧🇳', '🇹🇱', '🇮🇳', '🇵🇰', '🇧🇩', '🇱🇰', '🇳🇵', '🇰🇿',
     '🇬🇪', '🇬🇷', '🇸🇮', '🇸🇰', '🇦🇱', '🇱🇺', '🇫🇮', '🇧🇴', '🇻🇪', '🇬🇺'
   ]
@@ -190,7 +190,7 @@ export default function MatchHubPage() {
   const isLive = isStarted && !isFinished
 
   return (
-    <div className="max-w-4xl mx-auto flex flex-col h-[calc(100dvh-100px)] md:h-[calc(100vh-120px)] animate-in fade-in duration-500 overflow-hidden relative md:rounded-[3rem] my-0 md:my-4 bg-white md:shadow-2xl">
+    <div className="max-w-4xl mx-auto flex flex-col h-[calc(100dvh-100px)] md:h-[calc(100vh-120px)] animate-in fade-in duration-500 overflow-hidden relative border-x border-slate-100 shadow-2xl bg-white md:rounded-[3rem] my-0 md:my-4">
 
       {/* 1. FULL-WIDTH SCORE HEADER */}
       <header className="bg-[#0a2647] p-4 md:p-8 shadow-xl relative overflow-hidden shrink-0 z-50">
@@ -231,8 +231,11 @@ export default function MatchHubPage() {
 
              return (
                <div key={c.id || idx} className={`flex ${isMe ? 'flex-row-reverse' : 'flex-row'} items-start gap-2 animate-in slide-in-from-bottom-1 duration-300 group`}>
+                  {/* Avatar with Side-Popup Tooltip - Avoids top clipping */}
                   <div className="relative shrink-0 group/avatar z-10">
                     <UserAvatar name={profile.display_name} avatarUrl={profile.avatar_url} className="h-7 w-7 md:h-8 md:w-8 shrink-0 ring-2 ring-slate-100 transition-transform hover:scale-110 active:scale-95 cursor-pointer" />
+
+                    {/* The Side Name Tag */}
                     <div className={`absolute top-1/2 -translate-y-1/2 ${isMe ? 'right-full mr-2' : 'left-full ml-2'} px-3 py-1 bg-slate-900/95 backdrop-blur-md text-white text-[10px] font-black rounded-full opacity-0 group-hover/avatar:opacity-100 transition-all duration-200 whitespace-nowrap pointer-events-none shadow-xl border border-wc-gold/30 flex items-center gap-2`}>
                        <div className={`w-1.5 h-1.5 rounded-full ${isMe ? 'bg-wc-accent' : 'bg-emerald-400'}`}></div>
                        {profile.display_name || profile.username}
@@ -247,6 +250,7 @@ export default function MatchHubPage() {
                           <p className="text-xs md:text-sm font-bold leading-relaxed">{c.content}</p>
                         )}
                      </div>
+
                      <div className="flex items-center gap-1.5 mt-1 px-1 min-h-[12px]">
                         <span className="text-[7px] font-bold text-slate-300 uppercase tracking-tighter">
                            {DateTime.fromISO(c.created_at).toRelative()}
@@ -262,6 +266,7 @@ export default function MatchHubPage() {
            <div ref={chatEndRef} />
         </div>
 
+        {/* MEDIA PICKER (Positioned relative to feed, not absolute bottom) */}
         {showPicker && (
           <div className="absolute inset-0 bg-white/95 backdrop-blur-xl z-[60] flex flex-col animate-in slide-in-from-bottom-full duration-300 shadow-2xl">
             <div className="flex p-2 bg-slate-50/80 border-b border-slate-100 items-center justify-between shrink-0">
@@ -272,7 +277,7 @@ export default function MatchHubPage() {
                <button onClick={() => setShowPicker(null)} className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-rose-500 font-black text-xl">✕</button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 md:p-6 no-scrollbar bg-white">
+            <div className="flex-1 overflow-y-auto no-scrollbar bg-white">
                {showPicker === 'emoji' ? (
                   <div className="p-4 md:p-6 space-y-8 pb-10">
                     {Object.entries(EMOJI_CATEGORIES).map(([cat, list]) => (
@@ -280,7 +285,7 @@ export default function MatchHubPage() {
                         <h6 className="text-[9px] font-black text-slate-300 uppercase tracking-[0.3em] mb-4 text-center">{cat === 'banter' ? 'TRASH TALK' : cat === 'reaction' ? 'STADIUM VIBES' : 'COUNTRIES'}</h6>
                         <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2 md:gap-4">
                            {list.map(e => (
-                             <button key={e} onClick={() => { setNewComment(prev => prev + e); }} className="h-12 md:h-14 flex items-center justify-center bg-slate-50 rounded-2xl text-2xl md:text-3xl hover:scale-125 transition-all active:scale-90">{e}</button>
+                             <button key={e} onClick={() => { setNewComment(prev => prev + e); }} className="h-12 flex items-center justify-center bg-slate-50 rounded-2xl text-2xl md:text-3xl hover:scale-125 transition-all active:scale-90">{e}</button>
                            ))}
                         </div>
                       </div>
@@ -294,7 +299,7 @@ export default function MatchHubPage() {
                             <input
                               type="text" placeholder="Giphy search..." value={giphySearch}
                               onChange={e => handleGiphySearchChange(e.target.value)}
-                              className="w-full px-5 py-3 bg-slate-100 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:border-[#0a2647] focus:bg-white transition-all pr-10 shadow-inner"
+                              className="w-full px-5 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:border-[#0a2647] focus:bg-white transition-all pr-10 shadow-inner"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 opacity-30 text-sm">🔍</span>
                           </div>
@@ -306,6 +311,7 @@ export default function MatchHubPage() {
                           ))}
                        </div>
                     </div>
+
                     <div className="p-4 md:p-6 pt-5">
                       {loadingGiphy ? (
                          <div className="flex flex-col items-center py-20 gap-4">
