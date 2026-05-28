@@ -384,3 +384,13 @@ export async function deleteComment(commentId: string) {
   if (error) throw error
   return data
 }
+
+export async function deleteComments(commentIds: string[]) {
+  if (!commentIds || commentIds.length === 0) return
+  const { data, error } = await supabase
+    .from('comments')
+    .delete()
+    .in('id', commentIds)
+  if (error) throw error
+  return data
+}

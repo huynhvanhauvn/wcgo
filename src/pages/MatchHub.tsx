@@ -29,11 +29,6 @@ const EMOJI_CATEGORIES = {
 
 const SUGGESTED_TAGS = ['Soccer', 'Goal', 'Messi', 'Ronaldo', 'Funny', 'Cry', 'Siuuu', 'Celebrate']
 
-const CHAT_HINTS = [
-  "Định gáy gì mà căng thế?", "Gáy một câu xem ai trầm trồ?", "VAR đang check, gõ nhanh kẻo lỡ!",
-  "Phun câu nào, chất câu nấy!", "Sút một phát vào khung chat đi...", "Messi hay Ronaldo đây?"
-]
-
 function FloatingEmoji({ emoji, onComplete }: { emoji: string; onComplete: () => void }) {
   const left = useMemo(() => Math.random() * 80 + 10, [])
   useEffect(() => {
@@ -51,11 +46,21 @@ export default function MatchHubPage() {
   const { t } = useTranslation()
   const { user, isAdmin } = useAuth()
 
+  const CHAT_HINTS = useMemo(() => [
+    t('match_hub.hints.hint_1'),
+    t('match_hub.hints.hint_2'),
+    t('match_hub.hints.hint_3'),
+    t('match_hub.hints.hint_4'),
+    t('match_hub.hints.hint_5'),
+    t('match_hub.hints.hint_6')
+  ], [t])
+
   const [match, setMatch] = useState<any>(null)
   const [comments, setComments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [newComment, setNewComment] = useState('')
   const [activeReacts, setActiveReacts] = useState<{ id: number; emoji: string }[]>([])
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
 
   const [showPicker, setShowPicker] = useState<boolean>(false)
   const [pickerTab, setPickerTab] = useState<'emoji' | 'giphy'>('emoji')
@@ -65,7 +70,7 @@ export default function MatchHubPage() {
   const [activeGiphyType, setActiveGiphyType] = useState<'gifs' | 'stickers'>('gifs')
   const [isInputCollapsed, setIsInputCollapsed] = useState(false)
 
-  const randomHint = useMemo(() => CHAT_HINTS[Math.floor(Math.random() * CHAT_HINTS.length)], [])
+  const randomHint = useMemo(() => CHAT_HINTS[Math.floor(Math.random() * CHAT_HINTS.length)], [CHAT_HINTS])
   const chatEndRef = useRef<HTMLDivElement>(null)
   const searchTimeoutRef = useRef<any>(null)
 
@@ -84,7 +89,7 @@ export default function MatchHubPage() {
       const endpoint = `https://api.giphy.com/v1/${type}/search`
       const res = await axios.get(endpoint, { params: { api_key: GIPHY_API_KEY, q: searchTerm, limit: 20, rating: 'g' } })
       setGiphyResults(res.data.data || [])
-    } catch (e) { console.error(e) } finally { setLoadingGiphy(false) }
+    } catch (e) { console.error(e) } finally { setLoading(false) }
   }, [])
 
   useEffect(() => {
@@ -113,13 +118,27 @@ export default function MatchHubPage() {
     const content = newComment.trim()
     setNewComment('')
     setShowPicker(false)
-    try { await api.postComment(matchId, user.id, content, 'CHAT') } catch (e) { console.error(e) }
+    try {
+      await api.postComment(matchId, user.id, content, 'CHAT')
+    } catch (e: any) {
+      console.error(e)
+      if (e.message?.includes('THAO TÁC QUÁ NHANH')) {
+        alert(e.message)
+      }
+    }
   }
 
   const handleSendMedia = async (url: string) => {
     if (!user) return
     setShowPicker(false)
-    try { await api.postComment(matchId, user.id, url, 'CHAT') } catch (e) { console.error(e) }
+    try {
+      await api.postComment(matchId, user.id, url, 'CHAT')
+    } catch (e: any) {
+      console.error(e)
+      if (e.message?.includes('THAO TÁC QUÁ NHANH')) {
+        alert(e.message)
+      }
+    }
   }
 
   const handleSendReact = async (emoji: string) => {
@@ -127,8 +146,36 @@ export default function MatchHubPage() {
     try { await api.postComment(matchId, user.id, `Reacted ${emoji}`, 'REACT', emoji) } catch (e) { console.error(e) }
   }
 
-  if (loading) return <LoadingScreen message="Connecting to Stadium..." />
-  if (!match) return <div className="p-20 text-center font-black uppercase text-slate-400">Match not found.</div>
+  const handleDeleteMessage = async (commentId: string) => {
+    if (!window.confirm(t('match_hub.confirm_delete'))) return
+    try {
+      await api.deleteComment(commentId)
+      loadData()
+    } catch (e: any) {
+      console.error(e)
+      alert(t('match_hub.delete_error') + (e.message || t('match_hub.permission_denied')))
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return
+    if (!window.confirm(t('match_hub.bulk_delete_confirm', { count: selectedIds.length }))) return
+    try {
+      await api.deleteComments(selectedIds)
+      setSelectedIds([])
+      loadData()
+    } catch (e: any) {
+      console.error(e)
+      alert(t('match_hub.delete_error') + (e.message || t('match_hub.permission_denied')))
+    }
+  }
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
+  }
+
+  if (loading) return <LoadingScreen message={t('match_hub.connecting')} />
+  if (!match) return <div className="p-20 text-center font-black uppercase text-slate-400">{t('match_hub.not_found')}</div>
 
   const isLive = DateTime.now() > DateTime.fromISO(match.start_time) && match.status !== 'FINISHED'
 
@@ -140,12 +187,12 @@ export default function MatchHubPage() {
          <div className="flex flex-col items-center gap-2">
             <div className="flex items-center gap-2 px-3 py-0.5 bg-white/10 rounded-full">
                <span className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-rose-500 animate-pulse' : 'bg-slate-400'}`}></span>
-               <span className="text-[9px] font-black text-white uppercase tracking-widest">{match.status === 'FINISHED' ? 'Kết thúc' : 'Live'}</span>
+               <span className="text-[9px] font-black text-white uppercase tracking-widest">{match.status === 'FINISHED' ? t('match_hub.finished') : t('match_hub.live')}</span>
             </div>
             <div className="w-full flex items-center justify-between px-4">
                <div className="flex-1 flex flex-col items-center gap-1 min-w-0">
                   <img src={getFlagUrl(match.team_a) || ''} className="h-7 w-10 md:h-10 md:w-15 object-cover rounded-sm" alt="" />
-                  <h3 className="text-[10px] font-black text-white uppercase truncate w-full text-center">{match.team_a}</h3>
+                  <h3 className="text-[10px] font-black text-white uppercase truncate w-full text-center">{t(`teams.${match.team_a}`, { defaultValue: match.team_a })}</h3>
                </div>
                <div className="flex items-center gap-4 md:gap-8 mx-4">
                   <span className="text-4xl md:text-5xl font-black text-white">{match.score_a ?? 0}</span>
@@ -154,7 +201,7 @@ export default function MatchHubPage() {
                </div>
                <div className="flex-1 flex flex-col items-center gap-1 min-w-0">
                   <img src={getFlagUrl(match.team_b) || ''} className="h-7 w-10 md:h-10 md:w-15 object-cover rounded-sm" alt="" />
-                  <h3 className="text-[10px] font-black text-white uppercase truncate w-full text-center">{match.team_b}</h3>
+                  <h3 className="text-[10px] font-black text-white uppercase truncate w-full text-center">{t(`teams.${match.team_b}`, { defaultValue: match.team_b })}</h3>
                </div>
             </div>
          </div>
@@ -168,15 +215,34 @@ export default function MatchHubPage() {
              const profile = c.profiles || {}
              if (c.type === 'REACT') return null
              const isMedia = c.content.startsWith('http') && (c.content.includes('giphy.com') || c.content.includes('.gif'))
+             const isSelected = selectedIds.includes(c.id)
 
              return (
-               <div key={c.id || idx} className={`flex ${isMe ? 'flex-row-reverse' : 'flex-row'} items-end gap-2 group`}>
+               <div key={c.id || idx} className={`flex ${isMe ? 'flex-row-reverse' : 'flex-row'} items-end gap-2 group relative`}>
+                  {isAdmin && (
+                    <button
+                      onClick={() => toggleSelect(c.id)}
+                      className={`shrink-0 w-4 h-4 rounded-full border-2 transition-all flex items-center justify-center ${isSelected ? 'bg-wc-gold border-wc-gold text-white' : 'border-slate-200 bg-white group-hover:border-slate-300'}`}
+                    >
+                      {isSelected && <span className="text-[8px]">✓</span>}
+                    </button>
+                  )}
                   <UserAvatar name={profile.display_name} avatarUrl={profile.avatar_url} className="h-6 w-6 shrink-0 rounded-full border border-slate-100" />
                   <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[80%]`}>
-                     <div className={`px-4 py-2 text-sm font-medium transition-all duration-300 ${isMedia ? '' : isMe ? 'bg-[#0a2647] text-white rounded-2xl rounded-br-none shadow-sm' : 'bg-white text-slate-700 rounded-2xl rounded-bl-none border border-slate-100'}`}>
+                     <div className={`px-4 py-2 text-sm font-medium transition-all duration-300 ${isSelected ? 'ring-2 ring-wc-gold shadow-lg' : ''} ${isMedia ? '' : isMe ? 'bg-[#0a2647] text-white rounded-2xl rounded-br-none shadow-sm' : 'bg-white text-slate-700 rounded-2xl rounded-bl-none border border-slate-100'}`}>
                         {isMedia ? <img src={c.content} className="rounded-xl max-w-[200px]" alt="gif" /> : c.content}
                      </div>
-                     <span className="text-[8px] text-slate-300 font-bold uppercase mt-1 px-1">{profile.display_name || 'User'} • {DateTime.fromISO(c.created_at).toRelative()}</span>
+                     <div className={`flex items-center gap-1.5 mt-1 px-1`}>
+                        <span className="text-[8px] text-slate-300 font-bold uppercase">{profile.display_name || 'User'} • {DateTime.fromISO(c.created_at).toRelative()}</span>
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleDeleteMessage(c.id)}
+                            className="opacity-0 group-hover:opacity-100 text-[7px] font-black text-rose-400 hover:text-rose-600 transition-all uppercase"
+                          >
+                            • {t('admin_panel.btn_settle').toLowerCase() === 'chốt' ? 'Xoá' : 'Delete'}
+                          </button>
+                        )}
+                     </div>
                   </div>
                </div>
              )
@@ -184,13 +250,23 @@ export default function MatchHubPage() {
            <div ref={chatEndRef} />
         </div>
 
+        {/* BULK ACTION BAR */}
+        {isAdmin && selectedIds.length > 0 && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[100] bg-[#0a2647] text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 animate-in slide-in-from-bottom-5">
+            <span className="text-xs font-black uppercase tracking-widest">{selectedIds.length} {t('match_tabs.matches_found').toLowerCase().includes('trận') ? 'đã chọn' : 'selected'}</span>
+            <div className="w-[1px] h-4 bg-white/20"></div>
+            <button onClick={handleBulkDelete} className="text-xs font-black uppercase tracking-widest text-rose-400 hover:text-rose-300 transition-colors">{t('match_hub.bulk_delete')}</button>
+            <button onClick={() => setSelectedIds([])} className="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-white transition-colors">{t('match_hub.cancel_selection')}</button>
+          </div>
+        )}
+
         {/* MODERN UNIFIED PICKER */}
         {showPicker && (
           <div className="absolute inset-0 bg-white/98 backdrop-blur-xl z-[60] flex flex-col animate-in slide-in-from-bottom-5 duration-300">
             <div className="p-3 border-b border-slate-100 flex items-center gap-2">
                <div className="relative flex-1">
                  <input
-                   type="text" placeholder="Tìm biểu tượng hoặc GIF..." value={giphySearch} onChange={e => handleGiphySearchChange(e.target.value)}
+                   type="text" placeholder={t('match_hub.picker_placeholder')} value={giphySearch} onChange={e => handleGiphySearchChange(e.target.value)}
                    className="w-full pl-10 pr-10 py-2.5 bg-slate-100/50 rounded-xl text-sm font-bold outline-none focus:bg-white border border-transparent focus:border-slate-200 transition-all"
                  />
                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
@@ -207,7 +283,7 @@ export default function MatchHubPage() {
                   <div className="space-y-6 pb-10">
                     {Object.entries(EMOJI_CATEGORIES).map(([cat, list]) => (
                       <div key={cat}>
-                        <h6 className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-3">{cat}</h6>
+                        <h6 className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-3">{t(`match_hub.emoji_categories.${cat}`)}</h6>
                         <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-3">
                            {list.map(e => (
                              <button key={e} onClick={() => { setNewComment(prev => prev + e); }} className="aspect-square flex items-center justify-center bg-slate-50 rounded-xl text-2xl hover:bg-slate-100 active:scale-90 transition-all">{e}</button>
@@ -224,7 +300,7 @@ export default function MatchHubPage() {
                        ))}
                     </div>
                     {loadingGiphy ? (
-                      <div className="py-20 text-center animate-pulse text-slate-300 font-black uppercase text-[10px] tracking-widest">Searching Giphy...</div>
+                      <div className="py-20 text-center animate-pulse text-slate-300 font-black uppercase text-[10px] tracking-widest">{t('match_hub.searching_giphy')}</div>
                     ) : (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pb-10">
                          {giphyResults.map(g => (
@@ -265,14 +341,14 @@ export default function MatchHubPage() {
          <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
            <input
             type="text"
-            placeholder={user ? randomHint : "Đăng nhập để chat..."}
+            placeholder={user ? randomHint : t('match_hub.login_to_chat')}
             value={newComment}
             onChange={e => setNewComment(e.target.value)}
             className={`flex-1 bg-slate-100/50 border border-transparent font-bold text-[#0a2647] focus:bg-white focus:border-slate-200 outline-none transition-all duration-300 text-sm ${isInputCollapsed ? 'py-2 px-5 rounded-full' : 'py-3.5 px-6 rounded-2xl'}`}
            />
            <button
              type="submit"
-             disabled={!newComment.trim()}
+             disabled={!newComment.trim() || !user}
              className={`bg-[#0a2647] text-white flex items-center justify-center shadow-lg active:scale-90 disabled:opacity-20 shrink-0 transition-all duration-500 ease-in-out ${isInputCollapsed ? 'w-10 h-10 rounded-full' : 'w-12 h-12 md:w-14 md:h-14 rounded-2xl'}`}
            >
               <svg
@@ -288,7 +364,7 @@ export default function MatchHubPage() {
       </footer>
 
       <div className="bg-[#0a2647] px-8 py-2 shrink-0 flex items-center justify-between z-[90] border-t border-white/5">
-         <Link to="/" className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] hover:text-white transition-colors flex items-center gap-2"><span>←</span> Thoát Arena</Link>
+         <Link to="/" className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] hover:text-white transition-colors flex items-center gap-2"><span>←</span> {t('match_hub.exit_arena')}</Link>
          <div className="text-wc-gold/40 font-black italic tracking-widest text-[7px] uppercase animate-pulse">Stadium Arena v4.0 Pro</div>
       </div>
     </div>

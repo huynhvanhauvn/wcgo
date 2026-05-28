@@ -363,6 +363,8 @@ export default function MatchCard({
       if (e.message === 'MATCH_LOCKED') {
         alert("This match is locked! You cannot save predictions anymore.")
         window.location.reload()
+      } else if (e.message?.includes('THAO TÁC QUÁ NHANH')) {
+        alert(e.message)
       }
       console.error(e)
     } finally {

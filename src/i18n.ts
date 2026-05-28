@@ -217,6 +217,35 @@ const resources = {
         col_status: 'Status',
         col_actions: 'Actions'
       },
+      match_hub: {
+        not_found: 'Match not found.',
+        finished: 'Finished',
+        live: 'Live',
+        connecting: 'Connecting to Stadium...',
+        picker_placeholder: 'Find emojis or GIFs...',
+        searching_giphy: 'Searching Giphy...',
+        confirm_delete: 'Delete this message?',
+        delete_error: 'Error deleting message: ',
+        permission_denied: 'You do not have permission.',
+        login_to_chat: 'Login to chat...',
+        exit_arena: 'Exit Arena',
+        bulk_delete: 'Delete selected',
+        bulk_delete_confirm: 'Delete {{count}} selected messages?',
+        cancel_selection: 'Cancel',
+        hints: {
+          hint_1: 'Got something sharp to say?',
+          hint_2: 'Say something to impress everyone?',
+          hint_3: 'VAR checking, type fast!',
+          hint_4: 'Quality over quantity!',
+          hint_5: 'Shoot a message into the chat...',
+          hint_6: 'Messi or Ronaldo?'
+        },
+        emoji_categories: {
+          banter: 'Banter',
+          reaction: 'Reaction',
+          flags: 'Flags'
+        }
+      },
       teams: {
         "Algeria": "Algeria", "Argentina": "Argentina", "Australia": "Australia", "Austria": "Austria", "Belgium": "Belgium", "Bosnia/Herzegovina": "Bosnia/Herz.", "Brazil": "Brazil", "Canada": "Canada", "Cape Verde": "Cape Verde", "Colombia": "Colombia", "Croatia": "Croatia", "Curacao": "Curacao", "Czechia": "Czechia", "DR Congo": "DR Congo", "Ecuador": "Ecuador", "Egypt": "Egypt", "England": "England", "France": "France", "Germany": "Germany", "Ghana": "Ghana", "Haiti": "Haiti", "Iran": "Iran", "Iraq": "Iraq", "Ivory Coast": "Ivory Coast", "Japan": "Japan", "Jordan": "Jordan", "Mexico": "Mexico", "Morocco": "Morocco", "Netherlands": "Netherlands", "New Zealand": "New Zealand", "Norway": "Norway", "Panama": "Panama", "Paraguay": "Paraguay", "Portugal": "Portugal", "Qatar": "Qatar", "South Korea": "South Korea", "Saudi Arabia": "Saudi Arabia", "Scotland": "Scotland", "Senegal": "Senegal", "South Africa": "South Africa", "Spain": "Spain", "Sweden": "Sweden", "Switzerland": "Switzerland", "Tunisia": "Tunisia", "Turkey": "Turkey", "USA": "USA", "Uruguay": "Uruguay", "Uzbekistan": "Uzbekistan", "Vietnam": "Vietnam"
       }
@@ -435,6 +464,35 @@ const resources = {
         col_real_name: 'Tên thật',
         col_status: 'Trạng thái',
         col_actions: 'Hành động'
+      },
+      match_hub: {
+        not_found: 'Không tìm thấy trận đấu.',
+        finished: 'Kết thúc',
+        live: 'Trực tiếp',
+        connecting: 'Đang kết nối tới sân vận động...',
+        picker_placeholder: 'Tìm biểu tượng hoặc GIF...',
+        searching_giphy: 'Đang tìm trên Giphy...',
+        confirm_delete: 'Xoá tin nhắn này?',
+        delete_error: 'Lỗi xoá tin nhắn: ',
+        permission_denied: 'Bạn không có quyền thực hiện.',
+        login_to_chat: 'Đăng nhập để chat...',
+        exit_arena: 'Thoát Arena',
+        bulk_delete: 'Xoá đã chọn',
+        bulk_delete_confirm: 'Xoá {{count}} tin nhắn đã chọn?',
+        cancel_selection: 'Huỷ',
+        hints: {
+          hint_1: 'Định gáy gì mà căng thế?',
+          hint_2: 'Gáy một câu xem ai trầm trồ?',
+          hint_3: 'VAR đang check, gõ nhanh kẻo lỡ!',
+          hint_4: 'Phun câu nào, chất câu nấy!',
+          hint_5: 'Sút một phát vào khung chat đi...',
+          hint_6: 'Messi hay Ronaldo đây?'
+        },
+        emoji_categories: {
+          banter: 'Khịa',
+          reaction: 'Cảm xúc',
+          flags: 'Quốc kỳ'
+        }
       },
       teams: {
         "Algeria": "Algeria", "Argentina": "Argentina", "Australia": "Úc", "Austria": "Áo", "Belgium": "Bỉ", "Bosnia/Herzegovina": "Bosnia & Herzegovina", "Bosnia/Herzeg.": "Bosnia & Herzegovina", "Brazil": "Brasil", "Canada": "Canada", "Cape Verde": "Cape Verde", "Colombia": "Colombia", "Croatia": "Croatia", "Curacao": "Curaçao", "Curaçao": "Curaçao", "Czechia": "CH Séc", "Czech Rep.": "CH Séc", "DR Congo": "CHDC Congo", "Ecuador": "Ecuador", "Egypt": "Ai Cập", "England": "Anh", "France": "Pháp", "Germany": "Đức", "Ghana": "Ghana", "Haiti": "Haiti", "Iran": "Iran", "IR Iran": "Iran", "Iraq": "Iraq", "Ivory Coast": "Bờ Biển Ngà", "Japan": "Nhật Bản", "Jordan": "Jordan", "Mexico": "Mexico", "Morocco": "Ma-rốc", "Netherlands": "Hà Lan", "New Zealand": "New Zealand", "Norway": "Na Uy", "Panama": "Panama", "Paraguay": "Paraguay", "Portugal": "Bồ Đào Nha", "Qatar": "Qatar", "South Korea": "Hàn Quốc", "Rep. of Korea": "Hàn Quốc", "Saudi Arabia": "Ả Rập Xê-út", "Scotland": "Scotland", "Senegal": "Senegal", "South Africa": "Nam Phi", "Spain": "Tây Ban Nha", "Sweden": "Thụy Điển", "Switzerland": "Thụy Sĩ", "Tunisia": "Tunisia", "Turkey": "Thổ Nhĩ Kỳ", "Türkiye": "Thổ Nhĩ Kỳ", "USA": "Mỹ", "Uruguay": "Uruguay", "Uzbekistan": "Uzbekistan", "Vietnam": "Việt Nam"
