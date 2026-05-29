@@ -1,12 +1,39 @@
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { DateTime } from 'luxon'
 import { useTranslation } from 'react-i18next'
 import { getFlagUrl } from '../lib/flags'
 
+interface ConfettiData {
+  id: number;
+  color: string;
+  left: string;
+  delay: string;
+  xSpread: string;
+}
+
+function ConfettiPiece({ color, left, delay, xSpread }: Omit<ConfettiData, 'id'>) {
+  return (
+    <div
+      className="absolute bottom-[-10px] w-2 h-2 rounded-sm animate-confetti-burst z-[5] pointer-events-none"
+      style={{
+        backgroundColor: color,
+        left: left,
+        animationDelay: delay,
+        '--x-spread': xSpread,
+        transition: 'none'
+      } as React.CSSProperties}
+    />
+  )
+}
+
 export default function CountdownTimer({ targetDate, teamA, teamB }: { targetDate: string; teamA: string; teamB: string }) {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const [timeLeft, setTimeLeft] = useState<{ d: number; h: number; m: number; s: number } | null>(null)
+  const [confettiList, setConfettiList] = useState<ConfettiData[]>([])
+  const lastFiredMinute = useRef<number | null>(null)
+
+  const confettiColors = ['#f59e0b', '#00d4ff', '#ef3340', '#006341', '#ffffff']
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -18,12 +45,27 @@ export default function CountdownTimer({ targetDate, teamA, teamB }: { targetDat
         setTimeLeft(null)
         clearInterval(timer)
       } else {
-        setTimeLeft({
-          d: Math.floor(diff.days || 0),
-          h: Math.floor(diff.hours || 0),
-          m: Math.floor(diff.minutes || 0),
-          s: Math.floor(diff.seconds || 0)
-        })
+        const m = Math.floor(diff.minutes || 0)
+        const s = Math.floor(diff.seconds || 0)
+
+        setTimeLeft({ d: Math.floor(diff.days || 0), h: Math.floor(diff.hours || 0), m, s })
+
+        // Trigger confetti burst with STABLE data
+        if (s === 0 && lastFiredMinute.current !== m) {
+          lastFiredMinute.current = m
+
+          // Generate particles centered at 50%
+          const newParticles: ConfettiData[] = Array.from({ length: 40 }).map((_, i) => ({
+            id: Date.now() + i,
+            color: confettiColors[i % confettiColors.length],
+            left: `50%`, // Always start from center
+            delay: `${Math.random() * 0.4}s`,
+            xSpread: `${(Math.random() - 0.5) * 350}px` // Wider spread for the burst
+          }))
+
+          setConfettiList(newParticles)
+          setTimeout(() => setConfettiList([]), 5000)
+        }
       }
     }, 1000)
     return () => clearInterval(timer)
@@ -31,7 +73,6 @@ export default function CountdownTimer({ targetDate, teamA, teamB }: { targetDat
 
   if (!timeLeft) return null
 
-  // Localize team names
   const localizedTeamA = t(`teams.${teamA}`, { defaultValue: teamA })
   const localizedTeamB = t(`teams.${teamB}`, { defaultValue: teamB })
 
@@ -43,9 +84,21 @@ export default function CountdownTimer({ targetDate, teamA, teamB }: { targetDat
   )
 
   return (
-    <div className="relative overflow-hidden bg-[#0a2647] rounded-[2.5rem] p-6 md:p-10 shadow-2xl border border-white/5 group">
-      {/* Dynamic Background Pattern */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
+    <div className="relative bg-[#0a2647] rounded-[2.5rem] p-6 md:p-10 shadow-2xl border border-white/5 group overflow-hidden">
+
+      {/* Stable Gravity Confetti Burst */}
+      {confettiList.map((p) => (
+        <ConfettiPiece
+          key={p.id}
+          color={p.color}
+          left={p.left}
+          delay={p.delay}
+          xSpread={p.xSpread}
+        />
+      ))}
+
+      {/* Internal Content */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden rounded-[2.5rem]">
          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-wc-accent/20 via-transparent to-transparent"></div>
       </div>
 
