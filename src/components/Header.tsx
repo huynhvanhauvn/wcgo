@@ -77,19 +77,25 @@ export default function Header() {
             {/* Language Switcher Desktop */}
             <button
               onClick={toggleLanguage}
-              className="px-3 py-1.5 rounded-full border border-white/10 text-[10px] font-black text-white hover:bg-white/5 transition-all flex items-center gap-2 uppercase tracking-widest"
+              className="px-3 py-1.5 rounded-full border border-white/10 text-[10px] font-black text-white hover:bg-white/5 transition-all flex items-center gap-2 uppercase tracking-widest ml-2"
             >
               {i18n.language === 'vi' ? 'VN 🇻🇳' : 'EN 🇺🇸'}
             </button>
 
             {user && (
-              <div className="flex items-center h-full gap-2 pl-4 border-l border-white/10">
-                <Link to="/profile" className={getNavLinkClass('/profile')}>
-                  <UserAvatar name={displayName} avatarUrl={profile?.avatar_url} className="h-7 w-7 ring-2 ring-white/10 group-hover:ring-wc-accent transition-all shadow-sm shrink-0" />
-                  <span className="truncate max-w-[90px] inline-block">{displayName}</span>
+              <div className="flex items-center h-full gap-3 pl-4 border-l border-white/10">
+                <Link to="/profile" className={`${getNavLinkClass('/profile')} !p-0`}>
+                  <div className="flex items-center gap-2 group">
+                    <UserAvatar name={displayName} avatarUrl={profile?.avatar_url} className="h-8 w-8 ring-2 ring-white/20 group-hover:ring-wc-accent transition-all shadow-md shrink-0" />
+                    <span className="truncate max-w-[80px] text-white font-bold text-xs">{displayName}</span>
+                  </div>
                 </Link>
-                <button onClick={handleSignOut} className="p-2 text-slate-400 hover:text-rose-400 transition-colors shrink-0" title={t('signOut')}>
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center justify-center w-10 h-10 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition-all border border-rose-500/20 shadow-lg group"
+                  title={t('signOut')}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
                 </button>
