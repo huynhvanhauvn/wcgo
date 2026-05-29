@@ -62,6 +62,7 @@ export default function MatchHubPage() {
   const [newComment, setNewComment] = useState('')
   const [activeReacts, setActiveReacts] = useState<{ id: number; emoji: string }[]>([])
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [showScrollButton, setShowScrollButton] = useState(false)
 
   const [showPicker, setShowPicker] = useState<boolean>(false)
   const [pickerTab, setPickerTab] = useState<'emoji' | 'giphy'>('emoji')
@@ -72,13 +73,25 @@ export default function MatchHubPage() {
   const [isInputCollapsed, setIsInputCollapsed] = useState(false)
 
   const randomHint = useMemo(() => CHAT_HINTS[Math.floor(Math.random() * CHAT_HINTS.length)], [CHAT_HINTS])
+  const chatContainerRef = useRef<HTMLDivElement>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const searchTimeoutRef = useRef<any>(null)
+  const isAutoScrolling = useRef(false)
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    if (chatEndRef.current) {
+      isAutoScrolling.current = true
+      chatEndRef.current.scrollIntoView({ behavior })
+      setShowScrollButton(false)
+      setTimeout(() => { isAutoScrolling.current = false }, 500)
+    }
+  }, [])
 
   const loadData = useCallback(async () => {
     try {
       const [mRows, cRows] = await Promise.all([api.fetchMatches(), api.fetchComments(matchId)])
-      setMatch(mRows.find((m: any) => m.id === matchId))
+      const currentMatch = mRows.find((m: any) => m.id === matchId)
+      setMatch(currentMatch)
       setComments(cRows || [])
     } catch (e) { console.error(e) } finally { setLoading(false) }
   }, [matchId])
@@ -93,19 +106,48 @@ export default function MatchHubPage() {
     } catch (e) { console.error(e) } finally { setLoadingGiphy(false) }
   }, [])
 
+  // Handle Scroll Events to detect if user is at bottom
+  const handleScroll = () => {
+    if (!chatContainerRef.current || isAutoScrolling.current) return
+    const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current
+    // If user is more than 150px away from bottom, show scroll button if new messages arrive
+    const atBottom = scrollHeight - scrollTop - clientHeight < 150
+    if (atBottom) {
+      setShowScrollButton(false)
+    }
+  }
+
   useEffect(() => {
     loadData()
     const channel = api.subscribeToMatchHub(matchId, (payload: any) => {
       if (payload.eventType === 'INSERT') {
         if (payload.new.type === 'REACT') {
            setActiveReacts(prev => [...prev, { id: Date.now() + Math.random(), emoji: payload.new.emoji }])
-        } else loadData()
+        } else {
+          // Check if we should auto-scroll or show button
+          const container = chatContainerRef.current
+          const isAtBottom = container ? (container.scrollHeight - container.scrollTop - container.clientHeight < 150) : true
+
+          api.fetchComments(matchId).then(rows => {
+            setComments(rows || [])
+            if (isAtBottom) {
+              setTimeout(() => scrollToBottom('smooth'), 100)
+            } else {
+              setShowScrollButton(true)
+            }
+          })
+        }
       } else if (payload.eventType === 'DELETE') loadData()
     })
     return () => { channel?.unsubscribe() }
-  }, [matchId, loadData])
+  }, [matchId, loadData, scrollToBottom])
 
-  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [comments])
+  // Initial scroll to bottom on load
+  useEffect(() => {
+    if (!loading && comments.length > 0) {
+      setTimeout(() => scrollToBottom('auto'), 100)
+    }
+  }, [loading, scrollToBottom, comments.length === 0]) // length check for first load
 
   const handleGiphySearchChange = (val: string) => {
     setGiphySearch(val)
@@ -131,7 +173,6 @@ export default function MatchHubPage() {
 
   const handleSendReact = async (emoji: string) => {
     if (!user) return
-    // Immediate local feedback
     setActiveReacts(prev => [...prev, { id: Date.now() + Math.random(), emoji }])
     try { await api.postComment(matchId, user.id, `Reacted ${emoji}`, 'REACT', emoji) } catch (e) { console.error(e) }
   }
@@ -154,7 +195,6 @@ export default function MatchHubPage() {
 
   return (
     <>
-      {/* Floating Reacts - Rendered outside to bypass overflow constraints */}
       {activeReacts.map(r => (
         <FloatingEmoji key={r.id} emoji={r.emoji} onComplete={() => setActiveReacts(prev => prev.filter(x => x.id !== r.id))} />
       ))}
@@ -185,7 +225,11 @@ export default function MatchHubPage() {
         </header>
 
         <main className="flex-1 flex flex-col overflow-hidden relative bg-slate-50/20">
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 no-scrollbar">
+          <div
+            ref={chatContainerRef}
+            onScroll={handleScroll}
+            className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 no-scrollbar scrolling-touch"
+          >
              {comments.map((c, idx) => {
                const isMe = c.user_id === user?.id
                const profile = c.profiles || {}
@@ -216,8 +260,18 @@ export default function MatchHubPage() {
                  </div>
                )
              })}
-             <div ref={chatEndRef} />
+             <div ref={chatEndRef} className="h-1" />
           </div>
+
+          {/* New Messages / Scroll to Bottom Button */}
+          {showScrollButton && (
+            <button
+              onClick={() => scrollToBottom('smooth')}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[55] bg-wc-accent text-[#0a2647] px-4 py-2 rounded-full shadow-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 animate-bounce border-2 border-white/20"
+            >
+              <span>⬇</span> Tin nhắn mới
+            </button>
+          )}
 
           {isAdmin && selectedIds.length > 0 && (
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[100] bg-[#0a2647] text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-4 animate-in slide-in-from-bottom-5">
