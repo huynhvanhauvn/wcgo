@@ -13,6 +13,7 @@ import RulesPage from './pages/Rules'
 import ProfilePage from './pages/Profile'
 import AdminPage from './pages/Admin'
 import MatchHubPage from './pages/MatchHub'
+import FloatingMusicPlayer from './components/FloatingMusicPlayer'
 
 export default function App() {
   const { user, loading, isAdmin } = useAuth()
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="/admin" element={user && isAdmin ? <AdminPage /> : <Navigate to="/" />} />
         </Routes>
       </main>
+      <FloatingMusicPlayer />
     </div>
   )
 }
