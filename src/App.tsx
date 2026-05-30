@@ -42,6 +42,18 @@ export default function App() {
         <div className="absolute bottom-[20%] left-[5%] opacity-[0.06]">
           <WorldCupBall size={220} animate="bounce" />
         </div>
+        <div className="absolute top-[40%] left-[15%] opacity-[0.04] hidden md:block">
+          <WorldCupBall size={80} animate="spin" />
+        </div>
+        <div className="absolute top-[60%] right-[15%] opacity-[0.03] hidden md:block">
+          <WorldCupBall size={120} animate="bounce" />
+        </div>
+        <div className="absolute bottom-[10%] right-[5%] opacity-[0.05]">
+          <WorldCupBall size={100} animate="spin" />
+        </div>
+        <div className="absolute top-[5%] left-[25%] opacity-[0.02] hidden lg:block">
+          <WorldCupBall size={60} animate="bounce" />
+        </div>
 
         {/* Subtle center light */}
         <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-white/20"></div>
