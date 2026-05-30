@@ -13,7 +13,10 @@ import LoadingScreen from '../components/LoadingScreen'
 const GIPHY_API_KEY = import.meta.env.VITE_GIPHY_API_KEY || 'dc6zaTOxFJmzC'
 
 const EMOJI_CATEGORIES = {
-  banter: ['🤡', '🤮', '🤫', '💸', '👀', '🤐', '🥱', '🤷‍♂️', '🤣', '🥶', '🧐', '🤨', '💩', '🔥', '👺', '💀', '👻', '🖕', '👎', '🤞', '🤕', '🤒', '🤐', '🙄', '😤', '🤬'],
+  banter: [
+    '🤡', '🤮', '🤫', '💸', '👀', '🤐', '🥱', '🤷‍♂️', '🤣', '🥶', '🧐', '🤨', '💩', '🔥', '👺', '💀', '👻', '🖕', '👎', '🤞', '🤕', '🤒', '🙄', '😤', '🤬',
+    '🧂', '🌶️', '🧱', '🚌', '🧼', '🦽', '⚰️', '🐸', '🐔', '🥔', '🥥', '🩴', '💨', '🤏', '🐢', '🦖', '🍌', '🦴', '🔨', '🧨', '💣'
+  ],
   reaction: ['🔥', '⚽', '😱', '🧤', '👏', '💔', '🏆', '🍺', '✅', '❌', '💯', '🙌', '⭐', '🧿', '🔊', '📣', '📢', '🥅', '🏃', '🦶', '⚡', '🌈', '🧨', '💣', '🪄', '🎩'],
   flags: [
     '🇻🇳', '🇦🇷', '🇧🇷', '🇫🇷', '🇵🇹', '🇩🇪', '🏴󠁧󠁢󠁥󠁮󠁧󠁿', '🇯🇵', '🇰🇷', '🇺🇸', '🇲🇽', '🇨🇦',
@@ -195,6 +198,14 @@ export default function MatchHubPage() {
 
   return (
     <>
+      {/* Decorative Floating Balls for WC26 Vibes */}
+      <div className="fixed top-20 left-10 opacity-10 pointer-events-none z-0 hidden lg:block animate-in fade-in duration-1000">
+        <img src="/images/ball.png" className="w-24 h-24 animate-spin-slow" alt="" />
+      </div>
+      <div className="fixed bottom-40 left-1/4 opacity-5 pointer-events-none z-0 hidden lg:block animate-in fade-in duration-1000">
+        <img src="/images/ball.png" className="w-32 h-32 animate-bounce-slow" alt="" />
+      </div>
+
       {activeReacts.map(r => (
         <FloatingEmoji key={r.id} emoji={r.emoji} onComplete={() => setActiveReacts(prev => prev.filter(x => x.id !== r.id))} />
       ))}
@@ -335,9 +346,9 @@ export default function MatchHubPage() {
                 <button onClick={() => { setShowPicker(true); setPickerTab('emoji'); }} className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-xl hover:bg-slate-100 hover:scale-105 active:scale-95 transition-all">😃</button>
                 <button onClick={() => { setShowPicker(true); setPickerTab('giphy'); fetchGiphy('', 'gifs'); }} className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-xl hover:bg-slate-100 hover:scale-105 active:scale-95 transition-all">🎬</button>
                 <div className="w-[1px] h-6 bg-slate-100 mx-1"></div>
-                {EMOJI_CATEGORIES.banter.slice(0, 10).map(e => (
-                  <button key={e} onClick={() => handleSendReact(e)} className="shrink-0 w-9 h-9 flex items-center justify-center bg-slate-50 rounded-lg text-xl hover:bg-white hover:scale-125 transition-all active:scale-90">{e}</button>
-                ))}
+                {EMOJI_CATEGORIES.banter.slice(0, 15).map(e => (
+                <button key={e} onClick={() => handleSendReact(e)} className="shrink-0 w-9 h-9 flex items-center justify-center bg-slate-50 rounded-lg text-xl hover:bg-white hover:scale-125 transition-all active:scale-90">{e}</button>
+              ))}
              </div>
            )}
 

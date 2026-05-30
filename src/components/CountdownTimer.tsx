@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { DateTime } from 'luxon'
 import { useTranslation } from 'react-i18next'
 import { getFlagUrl } from '../lib/flags'
+import WorldCupBall from './WorldCupBall'
 
 interface ConfettiData {
   id: number;
@@ -100,6 +101,8 @@ export default function CountdownTimer({ targetDate, teamA, teamB }: { targetDat
       {/* Internal Content */}
       <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden rounded-[2.5rem]">
          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-wc-accent/20 via-transparent to-transparent"></div>
+         {/* Official Tri-Onda Ball Illustration */}
+         <WorldCupBall size={180} animate="spin" className="absolute -right-10 -bottom-10 opacity-30" />
       </div>
 
       <div className="relative z-10 flex flex-col items-center">

@@ -263,8 +263,8 @@ export default function MatchesPage() {
                 })}
               </div>
             ) : (
-              <div className="py-24 text-center border-2 border-dashed border-slate-200 rounded-[2.5rem] bg-white/50">
-                <span className="text-5xl block mb-6 grayscale opacity-20">⚽</span>
+              <div className="py-24 text-center border-2 border-dashed border-slate-200 rounded-[2.5rem] bg-white/50 flex flex-col items-center justify-center">
+                <img src="/images/ball.png" className="w-16 h-16 md:w-20 md:h-20 object-contain mb-6 grayscale opacity-20 animate-spin-slow" alt="" />
                 <p className="text-slate-400 font-black uppercase tracking-[0.2em] text-xs">{t('match_tabs.no_matches_found')}</p>
               </div>
             )}

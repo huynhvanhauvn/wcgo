@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthProvider'
 import { getUserDisplayName } from '../lib/auth'
 import WorldCupMark from './WorldCupMark'
 import UserAvatar from './UserAvatar'
+import WorldCupBall from './WorldCupBall'
 
 export default function Header() {
   const { t, i18n } = useTranslation()
@@ -55,8 +56,11 @@ export default function Header() {
     <>
       <header className={`fixed top-0 left-0 right-0 z-[60] transition-all duration-300 ${scrolled ? 'py-2 bg-[#0a2647]/95 backdrop-blur-md shadow-lg' : 'py-5 bg-[#0a2647]'}`}>
         <div className="max-w-7xl mx-auto px-6 md:px-8 flex items-center justify-between h-12">
-          <Link to="/" className="flex items-center gap-3 font-black text-2xl tracking-tighter italic group shrink-0">
-            <WorldCupMark size="sm" className={`transition-transform duration-300 ${scrolled ? 'scale-90' : 'scale-100'}`} />
+          <Link to="/" className="flex items-center gap-2 font-black text-2xl tracking-tighter italic group shrink-0">
+            <div className="relative">
+              <WorldCupMark size="sm" className={`transition-transform duration-300 ${scrolled ? 'scale-90' : 'scale-100'}`} />
+              <WorldCupBall size={20} animate="spin" className="absolute -bottom-1 -right-1 drop-shadow-md" />
+            </div>
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-300 pr-2">
               WCGO
             </span>
