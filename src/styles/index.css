@@ -122,6 +122,15 @@ input[type=number] {
   animation: bounce-slow 3s infinite ease-in-out;
 }
 
+@keyframes vs-pulse {
+  0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 0px rgba(0,212,255,0)); }
+  50% { transform: scale(1.2) rotate(180deg); filter: drop-shadow(0 0 10px rgba(0,212,255,0.4)); }
+}
+
+.animate-vs-pulse {
+  animation: vs-pulse 3s infinite ease-in-out;
+}
+
 @keyframes magic-aura {
   0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.5), 0 0 40px rgba(0, 212, 255, 0.3); transform: scale(1); }
   50% { box-shadow: 0 0 40px rgba(245, 158, 11, 0.8), 0 0 70px rgba(0, 212, 255, 0.5); transform: scale(1.05); }

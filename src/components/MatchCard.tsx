@@ -9,6 +9,7 @@ import { getFlagUrl } from '../lib/flags'
 import { calculateMatchPoints } from '../lib/scoring'
 import WorldCupMark from './WorldCupMark'
 import UserAvatar from './UserAvatar'
+import WorldCupBall from './WorldCupBall'
 
 /**
  * MatchVarModal: Full disclosure of all predictions for locked matches
@@ -423,7 +424,9 @@ export default function MatchCard({
             <div className="bg-slate-50/50 p-1 md:p-3 rounded-lg md:rounded-xl border border-slate-100 shadow-inner">
                <div className="flex items-center justify-center gap-1 md:gap-2">
                   <ScoreStepper value={predA} onChange={setPredA} disabled={locked} result={teamAResult} />
-                  <span className="font-black text-slate-300 text-[8px] md:text-xs tracking-tighter italic shrink-0 px-0.5">VS</span>
+                  <div className="flex flex-col items-center justify-center px-1 md:px-2">
+                    <WorldCupBall size={20} animate="vs-pulse" className="md:w-7 md:h-7 opacity-80" />
+                  </div>
                   <ScoreStepper value={predB} onChange={setPredB} disabled={locked} result={teamBResult} />
                </div>
             </div>
