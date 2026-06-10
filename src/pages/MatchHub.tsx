@@ -77,6 +77,7 @@ export default function MatchHubPage() {
   const [isInputCollapsed, setIsInputCollapsed] = useState(false)
   const [syncLogs, setSyncLogs] = useState<{ time: string; msg: string; type: 'info' | 'warn' | 'err' }[]>([])
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null)
+  const [showVarDetails, setShowVarDetails] = useState(false)
 
   const randomHint = useMemo(() => CHAT_HINTS[Math.floor(Math.random() * CHAT_HINTS.length)], [CHAT_HINTS])
   const chatContainerRef = useRef<HTMLDivElement>(null)
@@ -316,29 +317,66 @@ export default function MatchHubPage() {
               </div>
            </div>
 
-           {/* ADMIN SYNC VISUALIZER */}
+           {/* ADMIN VAR MONITOR (Visible only to Admin) */}
            {isAdmin && (
-             <div className="mt-4 w-full max-w-lg bg-black/30 backdrop-blur-md rounded-2xl p-3 border border-white/10 animate-in zoom-in-95">
-                <div className="flex items-center justify-between mb-2">
-                   <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${lastSyncTime ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,1)]' : 'bg-slate-400'}`}></div>
-                      <span className="text-[9px] font-black text-white/70 uppercase tracking-widest">Auto-Sync Engine</span>
+             <div className="mt-4 w-full max-w-lg mx-auto">
+                <button
+                  onClick={() => setShowVarDetails(!showVarDetails)}
+                  className={`w-full flex items-center justify-between p-3 rounded-2xl border transition-all duration-300 ${showVarDetails ? 'bg-slate-900/90 border-wc-gold/50 shadow-lg' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+                >
+                   <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <div className={`w-2.5 h-2.5 rounded-full ${lastSyncTime ? 'bg-emerald-500' : 'bg-slate-500'} animate-pulse`}></div>
+                        {lastSyncTime && <div className="absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-40"></div>}
+                      </div>
+                      <span className="text-[10px] font-black text-white uppercase tracking-widest italic">
+                        VAR LIVE MONITOR
+                      </span>
                    </div>
-                   <span className="text-[8px] font-bold text-white/40 uppercase">Last: {lastSyncTime || 'Waiting...'}</span>
-                </div>
-                <div className="space-y-1">
-                   {syncLogs.length === 0 ? (
-                     <div className="text-[8px] text-white/20 italic text-center py-1">Connecting to Global Data Network...</div>
-                   ) : syncLogs.map((log, i) => (
-                     <div key={i} className="flex items-center gap-2 text-[8px] font-mono leading-none">
-                        <span className="text-white/30">[{log.time}]</span>
-                        <span className={log.type === 'info' ? 'text-emerald-400' : log.type === 'warn' ? 'text-amber-400' : 'text-rose-400'}>{log.msg}</span>
-                     </div>
-                   ))}
-                </div>
+                   <div className="flex items-center gap-2">
+                      <span className="text-[8px] font-bold text-white/40 uppercase">Sync Status: Active</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 text-white/30 transition-transform duration-500 ${showVarDetails ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                   </div>
+                </button>
+
+                {showVarDetails && (
+                  <div className="mt-2 bg-slate-950/90 backdrop-blur-xl rounded-2xl p-4 border border-wc-gold/20 animate-in slide-in-from-top-2 duration-300 overflow-hidden relative">
+                    <div className="absolute top-0 right-0 p-2 opacity-5 pointer-events-none">
+                       <img src="/images/ball.png" className="w-16 h-16 grayscale" alt="" />
+                    </div>
+
+                    <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
+                       <span className="text-[9px] font-black text-wc-gold uppercase tracking-widest">Feed Dữ liệu Trực tiếp</span>
+                       <span className="text-[8px] font-mono text-white/30 italic">Channel ID: {match.id}</span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {syncLogs.length === 0 ? (
+                        <div className="text-[9px] text-white/30 font-medium italic text-center py-4">Đang đồng bộ với hệ thống vệ tinh...</div>
+                      ) : syncLogs.map((log, i) => (
+                        <div key={i} className="flex items-start gap-3 text-[9px] font-mono leading-tight">
+                           <span className="text-white/20 shrink-0">[{log.time}]</span>
+                           <span className={log.type === 'info' ? 'text-emerald-400' : log.type === 'warn' ? 'text-amber-400' : 'text-rose-400'}>
+                             {log.type === 'info' ? '>> ' : log.type === 'warn' ? '!! ' : 'ERR: '}
+                             {log.msg}
+                           </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-4 flex justify-between items-center pt-3 border-t border-white/5">
+                       <div className="flex gap-2">
+                          <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[7px] font-black uppercase rounded border border-emerald-500/20">Primary: OK</span>
+                          <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-[7px] font-black uppercase rounded border border-blue-500/20">Auto-Settle: ON</span>
+                       </div>
+                       <span className="text-[8px] text-white/20 font-bold">API-FOOTBALL v3.0</span>
+                    </div>
+                  </div>
+                )}
              </div>
            )}
-        </header>
         </header>
 
         <main className="flex-1 flex flex-col overflow-hidden relative bg-slate-50/20">
