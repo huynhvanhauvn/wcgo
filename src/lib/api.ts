@@ -337,6 +337,19 @@ export async function updateMatchTeam(matchId: number, side: 'a' | 'b', teamId: 
   return data
 }
 
+export async function updateMatchLive(matchId: number, scoreA: number, scoreB: number, status: string, elapsed?: number, period?: string) {
+  const payload: any = {
+    score_a: scoreA,
+    score_b: scoreB,
+    status,
+    elapsed,
+    period
+  }
+  const { data, error } = await supabase.from('matches').update(payload).eq('id', matchId)
+  if (error) throw error
+  return data
+}
+
 export async function fetchComments(matchId: number) {
   const { data, error } = await supabase
     .from('comments')

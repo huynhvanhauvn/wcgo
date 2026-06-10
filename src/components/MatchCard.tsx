@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthProvider'
 import * as api from '../lib/api'
 import { getFlagUrl } from '../lib/flags'
 import { calculateMatchPoints } from '../lib/scoring'
+import { useTimer } from '../context/TimerProvider'
 import WorldCupMark from './WorldCupMark'
 import UserAvatar from './UserAvatar'
 import WorldCupBall from './WorldCupBall'
@@ -244,9 +245,14 @@ export default function MatchCard({
 }) {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  const now = useTimer()
   const startLocal = useMemo(() => DateTime.fromISO(match.start_time).toLocal().setLocale(i18n.language), [match.start_time, i18n.language])
   const formattedStart = startLocal.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)
-  const locked = match.status === 'FINISHED' || DateTime.now() > startLocal.minus({ minutes: 15 })
+  const lockTime = startLocal.minus({ minutes: 15 })
+  const locked = match.status === 'FINISHED' || now > lockTime
+
+  // Show countdown if within 2 hours of lockTime and not locked
+  const isApproachingLock = !locked && now > lockTime.minus({ hours: 2 })
 
   const [predA, setPredA] = useState<number | ''>('')
   const [predB, setPredB] = useState<number | ''>('')
@@ -377,6 +383,27 @@ export default function MatchCard({
     if (isDone) {
        return <div className="absolute top-0 left-0 w-full h-[4px] z-20 bg-gradient-to-r from-emerald-500 to-teal-500 shadow-[0_1px_8px_rgba(16,185,129,0.4)]"></div>
     }
+
+    if (isApproachingLock) {
+      const diff = lockTime.diff(now, ['hours', 'minutes', 'seconds']).toObject()
+      const h = Math.floor(diff.hours || 0)
+      const m = Math.floor(diff.minutes || 0)
+      const s = Math.floor(diff.seconds || 0)
+      const timeStr = `${h > 0 ? `${h}h ` : ''}${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+
+      return (
+        <div className="absolute top-0 left-0 w-full h-[24px] z-20 bg-rose-600 flex items-center justify-center gap-2 overflow-hidden">
+          <div className="flex items-center gap-1 animate-pulse">
+            <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
+            <span className="text-[10px] font-black text-white uppercase tracking-widest">{t('match_card.closing_soon')}</span>
+          </div>
+          <span className="text-[11px] font-black text-white font-mono bg-black/20 px-2 py-0.5 rounded leading-none">
+            {timeStr}
+          </span>
+        </div>
+      )
+    }
+
     if (highlighted) {
       return <div className="absolute top-0 left-0 w-full h-[4px] z-20 bg-amber-500"></div>
     }

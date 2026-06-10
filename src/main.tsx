@@ -5,6 +5,7 @@ import App from './App'
 import './styles/index.css'
 import './i18n'
 import { AuthProvider } from './context/AuthProvider'
+import { TimerProvider } from './context/TimerProvider'
 
 // SECURITY: Disable all console logs in production mode to prevent information leakage
 if (import.meta.env.PROD) {
@@ -20,9 +21,11 @@ if (import.meta.env.PROD) {
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AuthProvider>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <TimerProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </TimerProvider>
     </AuthProvider>
   </React.StrictMode>
 )

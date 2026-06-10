@@ -5,7 +5,7 @@ import * as api from '../lib/api'
 import { useAuth } from '../context/AuthProvider'
 import { calculateStandings, sortGroupStandings, KNOCKOUT_PROGRESSION_MAP, getMatchWinner, getMatchLoser } from '../lib/standings'
 
-type AdminTab = 'matches' | 'players' | 'resets' | 'deletions'
+type AdminTab = 'matches' | 'players' | 'resets' | 'deletions' | 'live_sync'
 
 export default function AdminPage() {
   const { t } = useTranslation()
@@ -135,6 +135,7 @@ export default function AdminPage() {
         <button onClick={() => setActiveTab('players')} className={`flex-1 py-5 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'players' ? 'bg-[#0a2647] text-white' : 'text-slate-400 hover:bg-slate-50'}`}>{t('admin_panel.user_management')}</button>
         <button onClick={() => setActiveTab('resets')} className={`flex-1 py-5 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'resets' ? 'bg-[#0a2647] text-white' : 'text-slate-400 hover:bg-slate-50'}`}>OTP ({resetRequests.length})</button>
         <button onClick={() => setActiveTab('deletions')} className={`flex-1 py-5 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'deletions' ? 'bg-[#0a2647] text-white' : 'text-slate-400 hover:bg-slate-50'}`}>Xoá ({deletionRequests.length})</button>
+        <button onClick={() => setActiveTab('live_sync')} className={`flex-1 py-5 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'live_sync' ? 'bg-[#0a2647] text-white' : 'text-slate-400 hover:bg-slate-50'}`}>Live Sync</button>
       </div>
 
       {error && (
@@ -231,6 +232,60 @@ export default function AdminPage() {
                 </div>
               ))}
               {resetRequests.length === 0 && <div className="py-24 text-center bg-slate-50 rounded-[3rem] border-2 border-dashed border-slate-100 text-slate-300 font-bold uppercase tracking-widest text-xs">Hiện không có yêu cầu reset mật khẩu nào.</div>}
+            </div>
+          )}
+
+          {activeTab === 'live_sync' && (
+            <div className="space-y-6">
+              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                <h3 className="text-xl font-black text-[#0a2647] uppercase italic mb-4">Trình quản lý Live Sync</h3>
+                <p className="text-sm text-slate-500 font-medium mb-6">
+                  Hệ thống tự động đồng bộ tỉ số từ API-Football và OpenLigaDB.
+                  Để kích hoạt đồng bộ tự động, bạn cần mở trang <strong>Xem chung</strong> của trận đấu đang diễn ra.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Trạng thái API</div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+                      <span className="font-black text-[#0a2647] uppercase text-sm">Kết nối ổn định</span>
+                    </div>
+                  </div>
+                  <div className="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Tự động Chốt điểm</div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                      <span className="font-black text-[#0a2647] uppercase text-sm">Bật (Auto-Settle)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden shadow-sm">
+                <div className="p-6 border-b border-slate-50 bg-slate-50/30">
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Các trận đang giám sát</h4>
+                </div>
+                <div className="divide-y divide-slate-50">
+                  {matches.filter(m => m.status === 'LIVE' || m.status === 'SCHEDULED').slice(0, 5).map(m => (
+                    <div key={m.id} className="p-6 flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-lg">⚽</div>
+                        <div>
+                          <div className="font-black text-[#0a2647] uppercase text-sm italic">{m.team_a} vs {m.team_b}</div>
+                          <div className="text-[10px] font-bold text-slate-400 uppercase">{m.status} • {m.score_a ?? 0}-{m.score_b ?? 0}</div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => window.open(`/match/${m.id}`, '_blank')}
+                        className="px-4 py-2 bg-[#0a2647] text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-md"
+                      >
+                        Mở Sync Hub
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>

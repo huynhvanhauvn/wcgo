@@ -7,6 +7,7 @@ import axios from 'axios'
 import * as api from '../lib/api'
 import { useAuth } from '../context/AuthProvider'
 import { getFlagUrl } from '../lib/flags'
+import { fetchExternalLiveFixture, getStatusLabel, validateUpdate } from '../lib/liveSync'
 import UserAvatar from '../components/UserAvatar'
 import LoadingScreen from '../components/LoadingScreen'
 
@@ -74,6 +75,8 @@ export default function MatchHubPage() {
   const [loadingGiphy, setLoadingGiphy] = useState(false)
   const [activeGiphyType, setActiveGiphyType] = useState<'gifs' | 'stickers'>('gifs')
   const [isInputCollapsed, setIsInputCollapsed] = useState(false)
+  const [syncLogs, setSyncLogs] = useState<{ time: string; msg: string; type: 'info' | 'warn' | 'err' }[]>([])
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null)
 
   const randomHint = useMemo(() => CHAT_HINTS[Math.floor(Math.random() * CHAT_HINTS.length)], [CHAT_HINTS])
   const chatContainerRef = useRef<HTMLDivElement>(null)
@@ -142,8 +145,85 @@ export default function MatchHubPage() {
         }
       } else if (payload.eventType === 'DELETE') loadData()
     })
-    return () => { channel?.unsubscribe() }
+
+    const matchChannel = api.subscribeMatches((payload: any) => {
+      if (payload.new && payload.new.id === matchId) {
+        setMatch((prev: any) => ({ ...prev, ...payload.new }))
+      }
+    })
+
+    return () => {
+      channel?.unsubscribe()
+      matchChannel?.unsubscribe()
+    }
   }, [matchId, loadData, scrollToBottom])
+
+  // Automatic Live Sync (Admins only)
+  useEffect(() => {
+    if (!match || !isAdmin || match.status === 'FINISHED') return
+
+    const startTime = DateTime.fromISO(match.start_time)
+    const now = DateTime.now()
+
+    // Only sync if match is actually in progress (or within 3 hours of start)
+    const isActuallyLive = now > startTime.minus({ minutes: 5 }) && now < startTime.plus({ hours: 4 })
+
+    if (!isActuallyLive) return
+
+    const sync = async () => {
+      try {
+        const liveData = await fetchExternalLiveFixture(match.team_a, match.team_b)
+        const nowStr = DateTime.now().toFormat('HH:mm:ss')
+        setLastSyncTime(nowStr)
+
+        if (liveData) {
+          // Validate
+          const validation = validateUpdate(match, liveData)
+          if (!validation.valid) {
+            setSyncLogs(prev => [{ time: nowStr, msg: `Ignored: ${validation.reason}`, type: 'warn' }, ...prev].slice(0, 5))
+            return
+          }
+
+          // Check if data actually changed
+          const hasChanged =
+            match.score_a !== liveData.goalsA ||
+            match.score_b !== liveData.goalsB ||
+            match.status !== liveData.status ||
+            match.period !== liveData.period
+
+          if (hasChanged) {
+            setSyncLogs(prev => [{ time: nowStr, msg: `Update: ${liveData.goalsA}-${liveData.goalsB} (${liveData.source})`, type: 'info' }, ...prev].slice(0, 5))
+
+            // Push to DB
+            await api.updateMatchLive(
+              match.id,
+              liveData.goalsA,
+              liveData.goalsB,
+              liveData.status,
+              liveData.elapsed,
+              liveData.period
+            )
+
+            // If finished, auto-settle
+            if (liveData.status === 'FINISHED') {
+              setSyncLogs(prev => [{ time: nowStr, msg: 'Match Finished. Auto-settling...', type: 'info' }, ...prev].slice(0, 5))
+              await api.settleMatch(match.id, liveData.goalsA, liveData.goalsB)
+            }
+          } else {
+            setSyncLogs(prev => [{ time: nowStr, msg: `No change (${liveData.source})`, type: 'info' }, ...prev].slice(0, 5))
+          }
+        } else {
+          setSyncLogs(prev => [{ time: nowStr, msg: 'API returned no data', type: 'err' }, ...prev].slice(0, 5))
+        }
+      } catch (e: any) {
+        setSyncLogs(prev => [{ time: DateTime.now().toFormat('HH:mm:ss'), msg: `Error: ${e.message}`, type: 'err' }, ...prev].slice(0, 5))
+      }
+    }
+
+    sync()
+    const interval = setInterval(sync, 60000)
+    return () => clearInterval(interval)
+  }, [match?.id, isAdmin, match?.status, match?.start_time, match?.team_a, match?.team_b])
 
   // Initial scroll to bottom on load
   useEffect(() => {
@@ -215,7 +295,9 @@ export default function MatchHubPage() {
            <div className="flex flex-col items-center gap-2">
               <div className="flex items-center gap-2 px-3 py-0.5 bg-white/10 rounded-full">
                  <span className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-rose-500 animate-pulse' : 'bg-slate-400'}`}></span>
-                 <span className="text-[9px] font-black text-white uppercase tracking-widest">{match.status === 'FINISHED' ? t('match_hub.finished') : t('match_hub.live')}</span>
+                 <span className="text-[9px] font-black text-white uppercase tracking-widest">
+                    {getStatusLabel(match.status, match.elapsed, match.period, t)}
+                 </span>
               </div>
               <div className="w-full flex items-center justify-between px-4">
                  <div className="flex-1 flex flex-col items-center gap-1 min-w-0">
@@ -233,6 +315,30 @@ export default function MatchHubPage() {
                  </div>
               </div>
            </div>
+
+           {/* ADMIN SYNC VISUALIZER */}
+           {isAdmin && (
+             <div className="mt-4 w-full max-w-lg bg-black/30 backdrop-blur-md rounded-2xl p-3 border border-white/10 animate-in zoom-in-95">
+                <div className="flex items-center justify-between mb-2">
+                   <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${lastSyncTime ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,1)]' : 'bg-slate-400'}`}></div>
+                      <span className="text-[9px] font-black text-white/70 uppercase tracking-widest">Auto-Sync Engine</span>
+                   </div>
+                   <span className="text-[8px] font-bold text-white/40 uppercase">Last: {lastSyncTime || 'Waiting...'}</span>
+                </div>
+                <div className="space-y-1">
+                   {syncLogs.length === 0 ? (
+                     <div className="text-[8px] text-white/20 italic text-center py-1">Connecting to Global Data Network...</div>
+                   ) : syncLogs.map((log, i) => (
+                     <div key={i} className="flex items-center gap-2 text-[8px] font-mono leading-none">
+                        <span className="text-white/30">[{log.time}]</span>
+                        <span className={log.type === 'info' ? 'text-emerald-400' : log.type === 'warn' ? 'text-amber-400' : 'text-rose-400'}>{log.msg}</span>
+                     </div>
+                   ))}
+                </div>
+             </div>
+           )}
+        </header>
         </header>
 
         <main className="flex-1 flex flex-col overflow-hidden relative bg-slate-50/20">

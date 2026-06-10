@@ -157,7 +157,8 @@ const resources = {
         score_prediction: 'Score Prediction',
         check_var: 'Check VAR (Details)',
         var_center: 'VAR Center',
-        predicted_score: 'Predicted Score'
+        predicted_score: 'Predicted Score',
+        closing_soon: 'Closing Soon'
       },
       rules_screen: {
         title: 'GAME RULES & REGULATIONS',
@@ -232,6 +233,13 @@ const resources = {
         bulk_delete: 'Delete selected',
         bulk_delete_confirm: 'Delete {{count}} selected messages?',
         cancel_selection: 'Cancel',
+        periods: {
+          first_half: '1st Half',
+          second_half: '2nd Half',
+          half_time: 'Half Time',
+          extra_time: 'Extra Time',
+          penalty: 'Penalty Shootout'
+        },
         hints: {
           hint_1: 'Got something sharp to say?',
           hint_2: 'Say something to impress everyone?',
@@ -405,7 +413,8 @@ const resources = {
         score_prediction: 'Dự đoán tỉ số',
         check_var: 'Check VAR (Chi tiết)',
         var_center: 'Trung tâm VAR',
-        predicted_score: 'Tỉ số dự đoán'
+        predicted_score: 'Tỉ số dự đoán',
+        closing_soon: 'Sắp khóa'
       },
       rules_screen: {
         title: 'ĐIỀU LỆ VÀ QUY TẮC TRÒ CHƠI',
@@ -480,6 +489,13 @@ const resources = {
         bulk_delete: 'Xoá đã chọn',
         bulk_delete_confirm: 'Xoá {{count}} tin nhắn đã chọn?',
         cancel_selection: 'Huỷ',
+        periods: {
+          first_half: 'Hiệp 1',
+          second_half: 'Hiệp 2',
+          half_time: 'Nghỉ giữa hiệp',
+          extra_time: 'Hiệp phụ',
+          penalty: 'Loạt sút luân lưu'
+        },
         hints: {
           hint_1: 'Định gáy gì mà căng thế?',
           hint_2: 'Gáy một câu xem ai trầm trồ?',

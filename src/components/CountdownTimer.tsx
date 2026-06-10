@@ -1,9 +1,10 @@
 
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { DateTime } from 'luxon'
 import { useTranslation } from 'react-i18next'
 import { getFlagUrl } from '../lib/flags'
 import WorldCupBall from './WorldCupBall'
+import { useTimer } from '../context/TimerProvider'
 
 interface ConfettiData {
   id: number;
@@ -30,49 +31,43 @@ function ConfettiPiece({ color, left, delay, xSpread }: Omit<ConfettiData, 'id'>
 
 export default function CountdownTimer({ targetDate, teamA, teamB }: { targetDate: string; teamA: string; teamB: string }) {
   const { t } = useTranslation()
-  const [timeLeft, setTimeLeft] = useState<{ d: number; h: number; m: number; s: number } | null>(null)
+  const now = useTimer()
   const [confettiList, setConfettiList] = useState<ConfettiData[]>([])
   const lastFiredMinute = useRef<number | null>(null)
 
   const confettiColors = ['#f59e0b', '#00d4ff', '#ef3340', '#006341', '#ffffff']
 
+  const target = DateTime.fromISO(targetDate)
+  const diff = target.diff(now, ['days', 'hours', 'minutes', 'seconds']).toObject()
+  const isPast = diff.seconds && diff.seconds < 0
+
+  const m = Math.floor(diff.minutes || 0)
+  const s = Math.floor(diff.seconds || 0)
+
   useEffect(() => {
-    const timer = setInterval(() => {
-      const now = DateTime.now()
-      const target = DateTime.fromISO(targetDate)
-      const diff = target.diff(now, ['days', 'hours', 'minutes', 'seconds']).toObject()
+    if (isPast) return
 
-      if (diff.seconds && diff.seconds < 0) {
-        setTimeLeft(null)
-        clearInterval(timer)
-      } else {
-        const m = Math.floor(diff.minutes || 0)
-        const s = Math.floor(diff.seconds || 0)
+    // Trigger confetti burst with STABLE data
+    if (s === 0 && lastFiredMinute.current !== m) {
+      lastFiredMinute.current = m
 
-        setTimeLeft({ d: Math.floor(diff.days || 0), h: Math.floor(diff.hours || 0), m, s })
+      // Generate particles centered at 50%
+      const newParticles: ConfettiData[] = Array.from({ length: 40 }).map((_, i) => ({
+        id: Date.now() + i,
+        color: confettiColors[i % confettiColors.length],
+        left: `50%`, // Always start from center
+        delay: `${Math.random() * 0.4}s`,
+        xSpread: `${(Math.random() - 0.5) * 350}px` // Wider spread for the burst
+      }))
 
-        // Trigger confetti burst with STABLE data
-        if (s === 0 && lastFiredMinute.current !== m) {
-          lastFiredMinute.current = m
+      setConfettiList(newParticles)
+      setTimeout(() => setConfettiList([]), 5000)
+    }
+  }, [s, m, isPast])
 
-          // Generate particles centered at 50%
-          const newParticles: ConfettiData[] = Array.from({ length: 40 }).map((_, i) => ({
-            id: Date.now() + i,
-            color: confettiColors[i % confettiColors.length],
-            left: `50%`, // Always start from center
-            delay: `${Math.random() * 0.4}s`,
-            xSpread: `${(Math.random() - 0.5) * 350}px` // Wider spread for the burst
-          }))
+  if (isPast) return null
 
-          setConfettiList(newParticles)
-          setTimeout(() => setConfettiList([]), 5000)
-        }
-      }
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [targetDate])
-
-  if (!timeLeft) return null
+  const timeLeft = { d: Math.floor(diff.days || 0), h: Math.floor(diff.hours || 0), m, s }
 
   const localizedTeamA = t(`teams.${teamA}`, { defaultValue: teamA })
   const localizedTeamB = t(`teams.${teamB}`, { defaultValue: teamB })
