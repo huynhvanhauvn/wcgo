@@ -1,8 +1,10 @@
 
 import React, { useEffect, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { DateTime } from 'luxon'
 import * as api from '../lib/api'
 import { useAuth } from '../context/AuthProvider'
+import { getFlagUrl } from '../lib/flags'
 import { calculateStandings, sortGroupStandings, KNOCKOUT_PROGRESSION_MAP, getMatchWinner, getMatchLoser } from '../lib/standings'
 
 type AdminTab = 'matches' | 'players' | 'resets' | 'deletions' | 'live_sync'
@@ -67,24 +69,66 @@ export default function AdminPage() {
     if (isAdmin) loadData()
   }, [isAdmin])
 
-  const handleSettle = async (matchId: number) => {
+  const handleSettle = async (matchId: number, status: string = 'FINISHED') => {
     const input = scoreInputs[matchId]
-    if (input.a === '' || input.b === '') return
+
+    if (!input || input.a === '' || input.b === '') {
+      alert(t('admin_panel.msg_enter_score'))
+      return
+    }
+
     setSettling(prev => ({ ...prev, [matchId]: true }))
     try {
-      await api.settleMatch(matchId, input.a as number, input.b as number)
+      await api.settleMatch(matchId, input.a as number, input.b as number, status)
+
+      // Update local state immediately for better UX
+      setMatches(prev => prev.map(m =>
+        m.id === matchId ? { ...m, score_a: input.a, score_b: input.b, status } : m
+      ))
+
       const currentMatch = matches.find(m => m.id === matchId)
-      if (currentMatch) {
+      if (currentMatch && status === 'FINISHED') {
         const finishedMatch = { ...currentMatch, status: 'FINISHED', score_a: input.a, score_b: input.b }
         const winner = getMatchWinner(finishedMatch)
+
         const winnerDest = KNOCKOUT_PROGRESSION_MAP[`W${matchId}`]
-        if (winnerDest && winner) await api.updateMatchTeam(winnerDest.matchId, winnerDest.side, winner.id, winner.name)
+        if (winnerDest && winner) {
+          await api.updateMatchTeam(winnerDest.matchId, winnerDest.side, winner.id, winner.name)
+        }
       }
+
+      alert(t('admin_panel.msg_update_success', { id: matchId, scoreA: input.a, scoreB: input.b }))
+    } catch (e: any) {
+      alert(`LỖI: ${e.message}`)
+    } finally {
+      setSettling(prev => ({ ...prev, [matchId]: false }))
+    }
+  }
+
+  const handleReset = async (matchId: number) => {
+    if (!window.confirm(t('admin_panel.msg_reset_confirm'))) return
+    setSettling(prev => ({ ...prev, [matchId]: true }))
+    try {
+      await api.resetMatch(matchId)
       loadData()
     } catch (e: any) {
       alert(e.message)
     } finally {
       setSettling(prev => ({ ...prev, [matchId]: false }))
+    }
+  }
+
+  const handleFetchMatchesManually = async () => {
+    setLoading(true)
+    try {
+      const m = await api.fetchMatches()
+      setMatches(m || [])
+      console.log("[AdminDebug] Manually refreshed matches:", m)
+      alert(`Đã làm mới danh sách: ${m?.length || 0} trận đấu tìm thấy.`)
+    } catch (e: any) {
+      alert("Lỗi khi làm mới: " + e.message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -124,8 +168,111 @@ export default function AdminPage() {
 
   if (!isAdmin) return <div className="p-10 text-center font-bold text-rose-500">{t('authFailed')}</div>
 
-  const pendingMatches = matches.filter(m => m.status !== 'FINISHED')
+  const pendingMatches = matches.filter(m => m.status !== 'FINISHED').sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+  const finishedMatches = matches.filter(m => m.status === 'FINISHED').sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
   const deletionRequests = profiles.filter(p => p.deletion_status === 'PENDING')
+
+  const renderMatchList = (matchList: any[]) => (
+    <div className="grid gap-6">
+      {matchList.length === 0 ? (
+          <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-3xl text-slate-300 font-bold uppercase tracking-widest text-xs">
+            Không tìm thấy trận đấu nào.
+          </div>
+      ) : matchList.map(m => {
+        const startTime = DateTime.fromISO(m.start_time).toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)
+        const isLive = m.status === 'LIVE'
+        const isFinished = m.status === 'FINISHED'
+
+        return (
+          <div key={m.id} className={`bg-white rounded-[2rem] border transition-all overflow-hidden shadow-sm hover:shadow-md ${isLive ? 'border-emerald-200 ring-4 ring-emerald-50' : 'border-slate-100'}`}>
+            {/* Status Header */}
+            <div className={`px-6 py-2 flex justify-between items-center ${isLive ? 'bg-emerald-500' : isFinished ? 'bg-slate-100' : 'bg-slate-50'}`}>
+              <span className={`text-[8px] font-black uppercase tracking-[0.2em] ${isLive ? 'text-white' : 'text-slate-400'}`}>
+                Trận #{String(m.id).padStart(2, '0')} · {m.stage || 'Vòng bảng'}
+              </span>
+              <div className="flex items-center gap-2">
+                 {isLive && <span className="flex h-2 w-2 rounded-full bg-white animate-pulse"></span>}
+                 <span className={`text-[8px] font-black uppercase tracking-widest ${isLive ? 'text-white' : 'text-slate-500'}`}>
+                   {m.status}
+                 </span>
+              </div>
+            </div>
+
+            <div className="p-6 flex flex-col lg:flex-row justify-between items-center gap-8">
+              {/* Match Info */}
+              <div className="flex-1 w-full flex items-center justify-between lg:justify-start gap-4 md:gap-12">
+                <div className="flex flex-col items-center gap-2 min-w-[80px]">
+                  <img src={getFlagUrl(m.team_a)} className="h-8 w-12 object-cover rounded shadow-sm border border-slate-100" alt="" />
+                  <span className="text-[10px] font-black text-[#0a2647] uppercase text-center w-24 truncate">{m.team_a}</span>
+                </div>
+
+                <div className="flex flex-col items-center">
+                   <div className="text-xl font-black text-slate-200 italic mb-1">VS</div>
+                   <div className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter whitespace-nowrap">{startTime}</div>
+                </div>
+
+                <div className="flex flex-col items-center gap-2 min-w-[80px]">
+                  <img src={getFlagUrl(m.team_b)} className="h-8 w-12 object-cover rounded shadow-sm border border-slate-100" alt="" />
+                  <span className="text-[10px] font-black text-[#0a2647] uppercase text-center w-24 truncate">{m.team_b}</span>
+                </div>
+              </div>
+
+              {/* Controls */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto border-t lg:border-t-0 lg:border-l border-slate-100 pt-6 lg:pt-0 lg:pl-8">
+                <div className="flex items-center bg-slate-50 p-1 rounded-2xl border border-slate-200 shadow-inner">
+                  <div className="flex flex-col items-center px-2">
+                    <span className="text-[7px] font-black text-slate-300 uppercase mb-0.5">Team A</span>
+                    <input
+                      type="number"
+                      value={scoreInputs[m.id]?.a ?? ''}
+                      onChange={e => setScoreInputs({...scoreInputs, [m.id]: {...scoreInputs[m.id], a: e.target.value === '' ? '' : Number(e.target.value)}})}
+                      className="w-12 h-10 text-center font-black bg-transparent outline-none text-[#0a2647] text-xl"
+                      placeholder="0"
+                    />
+                  </div>
+                  <span className="text-slate-300 font-bold text-xl mt-3">−</span>
+                  <div className="flex flex-col items-center px-2">
+                    <span className="text-[7px] font-black text-slate-300 uppercase mb-0.5">Team B</span>
+                    <input
+                      type="number"
+                      value={scoreInputs[m.id]?.b ?? ''}
+                      onChange={e => setScoreInputs({...scoreInputs, [m.id]: {...scoreInputs[m.id], b: e.target.value === '' ? '' : Number(e.target.value)}})}
+                      className="w-12 h-10 text-center font-black bg-transparent outline-none text-[#0a2647] text-xl"
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 w-full sm:w-auto">
+                  <button
+                    onClick={() => handleSettle(m.id, 'LIVE')}
+                    disabled={settling[m.id]}
+                    className="bg-emerald-50 text-emerald-600 px-4 py-2.5 rounded-xl uppercase font-black text-[9px] tracking-widest hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100 shadow-sm disabled:opacity-30"
+                  >
+                    Update Live
+                  </button>
+                  <button
+                    onClick={() => handleSettle(m.id, 'FINISHED')}
+                    disabled={settling[m.id]}
+                    className="bg-[#0a2647] text-white px-4 py-2.5 rounded-xl uppercase font-black text-[9px] tracking-widest shadow-lg hover:bg-slate-800 transition-all disabled:opacity-30"
+                  >
+                    Cập nhật
+                  </button>
+                  <button
+                    onClick={() => handleReset(m.id)}
+                    disabled={settling[m.id]}
+                    className="col-span-2 bg-white text-rose-500 px-4 py-2 rounded-xl uppercase font-black text-[9px] tracking-widest hover:bg-rose-500 hover:text-white transition-all border border-rose-100 disabled:opacity-30"
+                  >
+                    Reset Trận Đấu
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  )
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20 px-2">
@@ -156,25 +303,23 @@ export default function AdminPage() {
       ) : (
         <div className="animate-in slide-in-from-bottom-2 duration-500">
           {activeTab === 'matches' && (
-            <div className="grid gap-4">
-              {pendingMatches.length === 0 ? (
-                 <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-3xl text-slate-300 font-bold uppercase tracking-widest text-xs">Tất cả trận đấu đã được chốt.</div>
-              ) : pendingMatches.map(m => (
-                <div key={m.id} className="bg-white p-6 rounded-[2rem] border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="text-center md:text-left">
-                    <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Trận #{m.id} · {m.stage}</span>
-                    <div className="font-black text-[#0a2647] text-lg uppercase italic mt-1">{m.team_a} vs {m.team_b}</div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center bg-slate-50 p-1 rounded-2xl border border-slate-100">
-                      <input type="number" value={scoreInputs[m.id]?.a ?? ''} onChange={e => setScoreInputs({...scoreInputs, [m.id]: {...scoreInputs[m.id], a: e.target.value === '' ? '' : Number(e.target.value)}})} className="w-14 h-12 text-center font-black bg-transparent outline-none text-[#0a2647] text-xl" placeholder="0" />
-                      <span className="text-slate-300 font-bold px-2">−</span>
-                      <input type="number" value={scoreInputs[m.id]?.b ?? ''} onChange={e => setScoreInputs({...scoreInputs, [m.id]: {...scoreInputs[m.id], b: e.target.value === '' ? '' : Number(e.target.value)}})} className="w-14 h-12 text-center font-black bg-transparent outline-none text-[#0a2647] text-xl" placeholder="0" />
-                    </div>
-                    <button onClick={() => handleSettle(m.id)} disabled={settling[m.id] || scoreInputs[m.id]?.a === ''} className="btn-primary px-8 h-14 rounded-2xl uppercase font-black text-[11px] tracking-widest shadow-xl disabled:opacity-30">Chốt</button>
-                  </div>
-                </div>
-              ))}
+            <div className="space-y-12">
+               {/* DEBUG REFRESH BUTTON */}
+               <div className="px-4 flex justify-end">
+                  <button
+                    onClick={handleFetchMatchesManually}
+                    className="text-[9px] font-black uppercase tracking-widest text-[#0a2647]/40 hover:text-[#0a2647] flex items-center gap-2 transition-colors"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    Làm mới Database
+                  </button>
+               </div>
+
+               {/* ALL MATCHES (Simplified View for Debugging) */}
+               <section className="space-y-6">
+                  <h2 className="text-xl font-black text-[#0a2647] uppercase italic tracking-tight px-4 border-l-4 border-wc-gold">Tất cả trận đấu</h2>
+                  {renderMatchList(matches)}
+               </section>
             </div>
           )}
 

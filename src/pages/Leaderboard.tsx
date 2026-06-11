@@ -150,14 +150,15 @@ export default function LeaderboardPage() {
   useEffect(() => {
     api.fetchMatches().then(setMatches).catch(console.error)
     fetchLeaderboard()
-    const chan = api.subscribeUserTotals((payload: any) => {
+
+    // Subscribe to multiple table changes for immediate feedback
+    const chan = api.subscribeUserTotals(() => {
       fetchLeaderboard()
-      if (payload.new?.user_id === user?.id) {
-        loadPersonalData()
-      }
+      loadPersonalData()
     })
+
     return () => { chan?.unsubscribe?.() }
-  }, [user, matches.length])
+  }, [user?.id])
 
   useEffect(() => {
     loadPersonalData()

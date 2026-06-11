@@ -22,13 +22,16 @@ export function calculateMatchPoints(pred: Prediction, actualA: number, actualB:
   const pB = pred.predicted_b
   const m = getMultiplier(pred.match_id)
 
+  // 3đ: Đúng tỉ số chính xác
   if (pA === actualA && pB === actualB) return 3 * m
 
   const predDiff = pA - pB
   const actualDiff = actualA - actualB
 
-  if (Math.sign(predDiff) === Math.sign(actualDiff) && predDiff === actualDiff) return 2 * m
+  // 2đ: Đúng đội thắng VÀ đúng cách biệt (GD) - Chỉ áp dụng cho thắng/thua, không tính Hòa
+  if (predDiff === actualDiff && actualDiff !== 0) return 2 * m
 
+  // 1đ: Chỉ đúng kết quả Thắng/Hòa/Thua
   if (outcome(pA, pB) === outcome(actualA, actualB)) return 1 * m
 
   return 0

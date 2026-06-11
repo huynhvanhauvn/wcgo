@@ -78,6 +78,11 @@ export default function MatchHubPage() {
   const [syncLogs, setSyncLogs] = useState<{ time: string; msg: string; type: 'info' | 'warn' | 'err' }[]>([])
   const [lastSyncTime, setLastSyncTime] = useState<string | null>(null)
   const [showVarDetails, setShowVarDetails] = useState(false)
+  const [isManualMode, setIsManualMode] = useState(false)
+  const [manualScoreA, setManualScoreA] = useState<number>(0)
+  const [manualScoreB, setManualScoreB] = useState<number>(0)
+  const [manualStatus, setManualStatus] = useState<string>('LIVE')
+  const [isUpdatingManual, setIsUpdatingManual] = useState(false)
 
   const randomHint = useMemo(() => CHAT_HINTS[Math.floor(Math.random() * CHAT_HINTS.length)], [CHAT_HINTS])
   const chatContainerRef = useRef<HTMLDivElement>(null)
@@ -159,9 +164,34 @@ export default function MatchHubPage() {
     }
   }, [matchId, loadData, scrollToBottom])
 
+  // Sync manual state with match data when entering manual mode
+  useEffect(() => {
+    if (isManualMode && match) {
+      setManualScoreA(match.score_a ?? 0)
+      setManualScoreB(match.score_b ?? 0)
+      setManualStatus(match.status)
+    }
+  }, [isManualMode, match?.id])
+
+  const handleManualUpdate = async () => {
+    if (!match) return
+    setIsUpdatingManual(true)
+    const nowStr = DateTime.now().toFormat('HH:mm:ss')
+    try {
+      await api.settleMatch(match.id, manualScoreA, manualScoreB, manualStatus)
+      setSyncLogs(prev => [{ time: nowStr, msg: `Manual Update: ${manualScoreA}-${manualScoreB} (${manualStatus})`, type: 'info' }, ...prev].slice(0, 5))
+      alert('Cập nhật thành công!')
+    } catch (e: any) {
+      setSyncLogs(prev => [{ time: nowStr, msg: `Manual Error: ${e.message}`, type: 'err' }, ...prev].slice(0, 5))
+      alert('Lỗi: ' + e.message)
+    } finally {
+      setIsUpdatingManual(false)
+    }
+  }
+
   // Automatic Live Sync (Admins only)
   useEffect(() => {
-    if (!match || !isAdmin || match.status === 'FINISHED') return
+    if (!match || !isAdmin || match.status === 'FINISHED' || isManualMode) return
 
     const startTime = DateTime.fromISO(match.start_time)
     const now = DateTime.now()
@@ -195,7 +225,15 @@ export default function MatchHubPage() {
           if (hasChanged) {
             setSyncLogs(prev => [{ time: nowStr, msg: `Update: ${liveData.goalsA}-${liveData.goalsB} (${liveData.source})`, type: 'info' }, ...prev].slice(0, 5))
 
-            // Push to DB
+            // Push to DB and update points in real-time
+            await api.settleMatch(
+              match.id,
+              liveData.goalsA,
+              liveData.goalsB,
+              liveData.status
+            )
+
+            // Still update elapsed and period (these are not in settleMatch)
             await api.updateMatchLive(
               match.id,
               liveData.goalsA,
@@ -204,12 +242,6 @@ export default function MatchHubPage() {
               liveData.elapsed,
               liveData.period
             )
-
-            // If finished, auto-settle
-            if (liveData.status === 'FINISHED') {
-              setSyncLogs(prev => [{ time: nowStr, msg: 'Match Finished. Auto-settling...', type: 'info' }, ...prev].slice(0, 5))
-              await api.settleMatch(match.id, liveData.goalsA, liveData.goalsB)
-            }
           } else {
             setSyncLogs(prev => [{ time: nowStr, msg: `No change (${liveData.source})`, type: 'info' }, ...prev].slice(0, 5))
           }
@@ -349,22 +381,75 @@ export default function MatchHubPage() {
 
                     <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
                        <span className="text-[9px] font-black text-wc-gold uppercase tracking-widest">Feed Dữ liệu Trực tiếp</span>
-                       <span className="text-[8px] font-mono text-white/30 italic">Channel ID: {match.id}</span>
+                       <div className="flex items-center gap-3">
+                          <label className="flex items-center gap-2 cursor-pointer group">
+                             <span className={`text-[8px] font-bold uppercase transition-colors ${isManualMode ? 'text-amber-400' : 'text-white/30'}`}>Chế độ Thủ công</span>
+                             <div className="relative" onClick={() => setIsManualMode(!isManualMode)}>
+                                <div className={`w-8 h-4 rounded-full transition-colors ${isManualMode ? 'bg-amber-500' : 'bg-white/10'}`}></div>
+                                <div className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform duration-300 ${isManualMode ? 'translate-x-4' : 'translate-x-0'}`}></div>
+                             </div>
+                          </label>
+                          <span className="text-[8px] font-mono text-white/30 italic">Channel ID: {match.id}</span>
+                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      {syncLogs.length === 0 ? (
-                        <div className="text-[9px] text-white/30 font-medium italic text-center py-4">Đang đồng bộ với hệ thống vệ tinh...</div>
-                      ) : syncLogs.map((log, i) => (
-                        <div key={i} className="flex items-start gap-3 text-[9px] font-mono leading-tight">
-                           <span className="text-white/20 shrink-0">[{log.time}]</span>
-                           <span className={log.type === 'info' ? 'text-emerald-400' : log.type === 'warn' ? 'text-amber-400' : 'text-rose-400'}>
-                             {log.type === 'info' ? '>> ' : log.type === 'warn' ? '!! ' : 'ERR: '}
-                             {log.msg}
-                           </span>
-                        </div>
-                      ))}
-                    </div>
+                    {isManualMode ? (
+                      <div className="bg-white/5 rounded-xl p-3 border border-white/5 animate-in fade-in zoom-in-95">
+                         <div className="flex items-center justify-between gap-4 mb-4">
+                            <div className="flex-1 space-y-2">
+                               <div className="text-[7px] font-black text-white/40 uppercase tracking-widest text-center">Score Control</div>
+                               <div className="flex items-center justify-center gap-4 bg-black/40 p-2 rounded-xl border border-white/5">
+                                  <div className="flex flex-col items-center gap-1">
+                                     <button onClick={() => setManualScoreA(prev => Math.max(0, prev - 1))} className="w-6 h-6 flex items-center justify-center bg-white/10 rounded-lg text-xs hover:bg-white/20">−</button>
+                                     <span className="text-xl font-black text-white">{manualScoreA}</span>
+                                     <button onClick={() => setManualScoreA(prev => prev + 1)} className="w-6 h-6 flex items-center justify-center bg-white/10 rounded-lg text-xs hover:bg-white/20">+</button>
+                                  </div>
+                                  <div className="text-white/20 font-black italic">VS</div>
+                                  <div className="flex flex-col items-center gap-1">
+                                     <button onClick={() => setManualScoreB(prev => Math.max(0, prev - 1))} className="w-6 h-6 flex items-center justify-center bg-white/10 rounded-lg text-xs hover:bg-white/20">−</button>
+                                     <span className="text-xl font-black text-white">{manualScoreB}</span>
+                                     <button onClick={() => setManualScoreB(prev => prev + 1)} className="w-6 h-6 flex items-center justify-center bg-white/10 rounded-lg text-xs hover:bg-white/20">+</button>
+                                  </div>
+                               </div>
+                            </div>
+                            <div className="flex-1 space-y-2">
+                               <div className="text-[7px] font-black text-white/40 uppercase tracking-widest text-center">Match Status</div>
+                               <div className="grid grid-cols-1 gap-1">
+                                  {['SCHEDULED', 'LIVE', 'FINISHED'].map(st => (
+                                    <button
+                                      key={st}
+                                      onClick={() => setManualStatus(st)}
+                                      className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${manualStatus === st ? 'bg-wc-gold text-slate-900 shadow-[0_0_10px_rgba(245,158,11,0.3)]' : 'bg-white/5 text-white/40 hover:bg-white/10'}`}
+                                    >
+                                      {st}
+                                    </button>
+                                  ))}
+                               </div>
+                            </div>
+                         </div>
+                         <button
+                           onClick={handleManualUpdate}
+                           disabled={isUpdatingManual}
+                           className="w-full py-3 bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                         >
+                           {isUpdatingManual ? 'Syncing to Stadium...' : 'Push to Tournament DB'}
+                         </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {syncLogs.length === 0 ? (
+                          <div className="text-[9px] text-white/30 font-medium italic text-center py-4">Đang đồng bộ với hệ thống vệ tinh...</div>
+                        ) : syncLogs.map((log, i) => (
+                          <div key={i} className="flex items-start gap-3 text-[9px] font-mono leading-tight">
+                             <span className="text-white/20 shrink-0">[{log.time}]</span>
+                             <span className={log.type === 'info' ? 'text-emerald-400' : log.type === 'warn' ? 'text-amber-400' : 'text-rose-400'}>
+                               {log.type === 'info' ? '>> ' : log.type === 'warn' ? '!! ' : 'ERR: '}
+                               {log.msg}
+                             </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     <div className="mt-4 flex justify-between items-center pt-3 border-t border-white/5">
                        <div className="flex gap-2">

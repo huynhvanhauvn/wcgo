@@ -1,5 +1,6 @@
 
 import React, { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { DateTime } from 'luxon'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -29,18 +30,18 @@ function MatchVarModal({ match, stats, onClose }: { match: any; stats: any; onCl
   const startLocal = DateTime.fromISO(match.start_time).toLocal().setLocale(i18n.language)
   const formattedStart = startLocal.toLocaleString(DateTime.DATETIME_MED_WITH_WEEKDAY)
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 md:p-10">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-md animate-in fade-in duration-300" onClick={onClose}></div>
-      <div className="relative glass-card w-full max-w-2xl bg-white overflow-hidden animate-in zoom-in-95 duration-300 border-slate-200 shadow-[0_20px_60px_rgba(0,0,0,0.4)] max-h-[85vh] flex flex-col rounded-[2.5rem]">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose}></div>
+      <div className="relative glass-card w-full max-w-2xl bg-white overflow-hidden animate-in zoom-in-95 duration-300 border-slate-200 shadow-[0_20px_60px_rgba(0,0,0,0.4)] max-h-[90vh] flex flex-col mt-10 rounded-[2.5rem]">
         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#0a2647] via-wc-gold to-wc-canada z-30"></div>
 
         {/* Header */}
-        <div className="p-6 border-b border-slate-100 flex flex-col items-center text-center relative">
+        <div className="p-6 md:p-8 border-b border-slate-100 flex flex-col items-center text-center relative shrink-0">
            <button onClick={onClose} className="absolute top-4 right-4 text-slate-300 hover:text-[#0a2647] p-2 bg-slate-50 rounded-full transition-all">
              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
            </button>
-           <h3 className="text-2xl font-black text-[#0a2647] uppercase tracking-tighter italic mb-1">{t('match_card.var_center')}</h3>
+           <h3 className="text-2xl md:text-3xl font-black text-[#0a2647] uppercase tracking-tighter italic mb-1">{t('match_card.var_center')}</h3>
            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{formattedStart} · {match.venue}</p>
 
            <div className="flex items-center gap-6 mt-6">
@@ -56,65 +57,66 @@ function MatchVarModal({ match, stats, onClose }: { match: any; stats: any; onCl
            </div>
         </div>
 
-        <div className="overflow-y-auto no-scrollbar flex-1 p-6 md:p-8 space-y-8">
+        <div className="overflow-y-auto no-scrollbar flex-1 p-6 md:p-10 space-y-10">
           {/* Summary Stats */}
           {stats && (
-            <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 shadow-inner">
+            <div className="bg-slate-50 p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-inner">
                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] text-center mb-6">{t('match_card.community_predictions')}</h4>
-               <div className="h-2 w-full bg-slate-200 rounded-full overflow-hidden flex shadow-inner mb-4">
+               <div className="h-3 w-full bg-slate-200 rounded-full overflow-hidden flex shadow-inner mb-6">
                   <div style={{ width: `${stats.winA}%` }} className="bg-emerald-500 h-full"></div>
                   <div style={{ width: `${stats.draw}%` }} className="bg-slate-400 h-full border-x border-white/20"></div>
                   <div style={{ width: `${stats.winB}%` }} className="bg-rose-500 h-full"></div>
                </div>
-               <div className="grid grid-cols-3 text-[9px] font-black uppercase tracking-widest gap-2">
-                  <div className="text-emerald-600 text-left">WIN A: {stats.winA}%</div>
-                  <div className="text-slate-400 text-center">DRAW: {stats.draw}%</div>
-                  <div className="text-rose-600 text-right">WIN B: {stats.winB}%</div>
+               <div className="grid grid-cols-3 text-[10px] font-black uppercase tracking-widest gap-4">
+                  <div className="text-emerald-600 text-left bg-emerald-50/50 p-3 rounded-xl border border-emerald-100/50">WIN A: {stats.winA}%</div>
+                  <div className="text-slate-400 text-center bg-white p-3 rounded-xl border border-slate-100">DRAW: {stats.draw}%</div>
+                  <div className="text-rose-600 text-right bg-rose-50/50 p-3 rounded-xl border border-rose-100/50">WIN B: {stats.winB}%</div>
                </div>
             </div>
           )}
 
           {/* User List */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             <h4 className="text-sm font-black text-[#0a2647] uppercase tracking-tight italic border-l-4 border-wc-accent pl-4 mb-6">
               {t('match_card.predicted_score')}
             </h4>
 
             {loading ? (
-              <div className="py-10 flex justify-center"><div className="animate-spin h-8 w-8 border-4 border-[#0a2647] border-t-transparent rounded-full"></div></div>
+              <div className="py-20 flex justify-center"><div className="animate-spin h-10 w-10 border-4 border-[#0a2647] border-t-transparent rounded-full"></div></div>
             ) : (
-              <div className="grid gap-3">
+              <div className="grid gap-4">
                 {predictions.map((p, idx) => {
                   const profile = p.profiles || {}
                   const displayName = profile.display_name || profile.username || "User"
                   return (
-                    <div key={idx} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 hover:shadow-md transition-all">
-                      <div className="flex items-center gap-3">
-                        <UserAvatar name={displayName} avatarUrl={profile.avatar_url} className="h-10 w-10 ring-2 ring-slate-100" />
+                    <div key={idx} className="flex items-center justify-between p-4 md:p-5 bg-white rounded-2xl border border-slate-100 hover:shadow-xl hover:scale-[1.01] transition-all group">
+                      <div className="flex items-center gap-4">
+                        <UserAvatar name={displayName} avatarUrl={profile.avatar_url} className="h-10 w-10 md:h-12 md:w-12 ring-2 ring-slate-100 group-hover:ring-wc-accent transition-all" />
                         <div className="flex flex-col">
-                          <span className="text-sm font-black text-[#0a2647]">{displayName}</span>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase">{profile.real_name || 'Anonymous'}</span>
+                          <span className="text-sm md:text-base font-black text-[#0a2647]">{displayName}</span>
+                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{profile.real_name || 'Anonymous'}</span>
                         </div>
                       </div>
-                      <div className="px-4 py-2 bg-slate-50 text-[#0a2647] rounded-xl font-black text-lg border border-slate-100">
+                      <div className="px-6 py-2.5 bg-[#0a2647] text-wc-gold rounded-xl font-black text-xl md:text-2xl shadow-lg transform group-hover:scale-110 transition-transform">
                         {p.predicted_a} - {p.predicted_b}
                       </div>
                     </div>
                   )
                 })}
                 {predictions.length === 0 && (
-                   <div className="py-10 text-center text-slate-300 font-bold uppercase tracking-widest text-xs italic">No predictions submitted.</div>
+                   <div className="py-20 text-center text-slate-300 font-bold uppercase tracking-widest text-xs italic bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-100">No predictions submitted yet.</div>
                 )}
               </div>
             )}
           </div>
         </div>
 
-        <div className="p-4 bg-slate-900 text-center">
+        <div className="p-4 bg-slate-900 text-center shrink-0">
            <p className="text-[9px] font-black text-white uppercase tracking-[0.3em]">Official WC2026 VAR Center · {predictions.length} Participants</p>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
@@ -136,8 +138,12 @@ function ScoreStepper({ value, onChange, disabled, result }: ScoreStepperProps) 
 
   const handleDecrement = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (disabled || currentVal <= 0) return
-    onChange(currentVal - 1)
+    if (disabled) return
+    if (value === '') {
+      onChange(0)
+    } else if (currentVal > 0) {
+      onChange(currentVal - 1)
+    }
   }
 
   const getContainerClass = () => {
@@ -149,15 +155,16 @@ function ScoreStepper({ value, onChange, disabled, result }: ScoreStepperProps) 
     return `${base} bg-white border-slate-200`
   }
 
-  const getBtnClass = () => {
+  const getBtnClass = (isMinus: boolean) => {
     const base = "w-5 h-5 md:w-8 md:h-8 flex items-center justify-center rounded font-bold transition-all active:scale-90 border border-transparent shrink-0"
-    if (disabled) return `${base} text-slate-200 cursor-not-allowed`
+    const isBtnDisabled = isMinus ? (disabled || (value !== '' && currentVal <= 0)) : disabled
+    if (isBtnDisabled) return `${base} text-slate-200 cursor-not-allowed`
     return `${base} bg-white text-slate-400 hover:text-[#0a2647]`
   }
 
   return (
     <div className={getContainerClass()}>
-      <button onClick={handleDecrement} disabled={disabled || currentVal <= 0} className={getBtnClass()}>
+      <button onClick={handleDecrement} disabled={disabled || (value !== '' && currentVal <= 0)} className={getBtnClass(true)}>
         <span className="text-xs md:text-lg">−</span>
       </button>
 
@@ -171,7 +178,7 @@ function ScoreStepper({ value, onChange, disabled, result }: ScoreStepperProps) 
         className={`w-6 md:w-10 text-center font-black text-sm md:text-2xl bg-transparent outline-none transition-colors shrink-0 ${disabled ? 'text-slate-300' : 'text-[#0a2647]'}`}
       />
 
-      <button onClick={handleIncrement} disabled={disabled} className={getBtnClass()}>
+      <button onClick={handleIncrement} disabled={disabled} className={getBtnClass(false)}>
         <span className="text-xs md:text-lg">+</span>
       </button>
     </div>
@@ -269,6 +276,26 @@ export default function MatchCard({
   const { user } = useAuth()
 
   const isDone = !!savedAt || (!!prediction && prediction.predicted_a !== undefined);
+
+  const updatePredA = (val: number | '') => {
+    if (locked) return
+    if (val !== '' && predA === '' && predB === '') {
+      setPredA(val)
+      setPredB(0)
+    } else {
+      setPredA(val)
+    }
+  }
+
+  const updatePredB = (val: number | '') => {
+    if (locked) return
+    if (val !== '' && predA === '' && predB === '') {
+      setPredA(0)
+      setPredB(val)
+    } else {
+      setPredB(val)
+    }
+  }
 
   const hasSavedPrediction = savedAt && savedPredA !== '' && savedPredB !== ''
   const predictionChanged = predA !== savedPredA || predB !== savedPredB
@@ -450,11 +477,11 @@ export default function MatchCard({
           <div className="shrink-0 flex items-center h-full">
             <div className="bg-slate-50/50 p-1 md:p-3 rounded-lg md:rounded-xl border border-slate-100 shadow-inner">
                <div className="flex items-center justify-center gap-1 md:gap-2">
-                  <ScoreStepper value={predA} onChange={setPredA} disabled={locked} result={teamAResult} />
+                  <ScoreStepper value={predA} onChange={updatePredA} disabled={locked} result={teamAResult} />
                   <div className="flex flex-col items-center justify-center px-1 md:px-2">
                     <WorldCupBall size={20} animate="vs-pulse" className="md:w-7 md:h-7 opacity-80" />
                   </div>
-                  <ScoreStepper value={predB} onChange={setPredB} disabled={locked} result={teamBResult} />
+                  <ScoreStepper value={predB} onChange={updatePredB} disabled={locked} result={teamBResult} />
                </div>
             </div>
           </div>
@@ -532,12 +559,13 @@ export default function MatchCard({
         </div>
       </div>
 
-      {showVarModal && (
+      {showVarModal && createPortal(
         <MatchVarModal
           match={match}
           stats={stats}
           onClose={() => setShowVarModal(false)}
-        />
+        />,
+        document.body
       )}
     </>
   )

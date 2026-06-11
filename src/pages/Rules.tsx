@@ -50,6 +50,15 @@ export default function RulesPage() {
           </div>
         </div>
 
+        <div className="mt-6 p-5 bg-amber-50 rounded-2xl border border-amber-200">
+          <div className="flex gap-3">
+            <span className="text-xl">⚠️</span>
+            <p className="text-sm font-bold text-amber-900 leading-relaxed">
+              {t('rules_screen.rule_extra_time')}
+            </p>
+          </div>
+        </div>
+
         <div className="mt-10 pt-8 border-t border-slate-100">
           <h3 className="font-black text-[#0a2647] uppercase tracking-widest text-sm mb-6">{t('rules_screen.multipliers_title')}</h3>
           <ul className="space-y-4">

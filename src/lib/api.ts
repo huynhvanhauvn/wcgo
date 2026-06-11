@@ -219,11 +219,12 @@ export async function approveAccountDeletion(userId: string) {
   return data
 }
 
-export async function settleMatch(matchId: number, scoreA: number, scoreB: number) {
+export async function settleMatch(matchId: number, scoreA: number, scoreB: number, status: string = 'FINISHED') {
   const { data, error } = await supabase.rpc('settle_match', {
     p_match_id: matchId,
     p_score_a: scoreA,
-    p_score_b: scoreB
+    p_score_b: scoreB,
+    p_status: status
   })
   if (error) {
     const details = [error.message, error.details, error.hint].filter(Boolean).join(' | ')
