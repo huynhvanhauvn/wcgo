@@ -29,7 +29,7 @@ type UserStats = {
 
 function formatPenalty(amount: number) {
   if (amount === 0) return '0'
-  return `-${Math.round(amount / 1000)}`
+  return `Phạt: ${Math.round(amount / 1000)}k`
 }
 
 function getRankedRows(rows: LeaderboardRow[]) {
@@ -277,7 +277,7 @@ export default function LeaderboardPage() {
                     <div className="font-black text-2xl md:text-3xl text-[#0a2647] tracking-tighter leading-none">
                       {row.total} <span className="text-[8px] md:text-[10px] uppercase ml-0.5 opacity-60 font-bold">{t('pts')}</span>
                     </div>
-                    <div className={`text-[10px] md:text-sm font-black uppercase tracking-widest mt-2 ${penalty > 0 ? 'text-rose-600 animate-pulse-slow' : 'text-[#0a2647]/30'}`}>
+                    <div className={`text-[10px] md:text-sm font-black uppercase tracking-widest mt-2 ${penalty > 0 ? 'text-rose-600 animate-pulse-slow' : 'text-slate-200'}`}>
                       {formatPenalty(penalty)}
                     </div>
                   </div>

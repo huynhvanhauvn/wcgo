@@ -7,7 +7,11 @@ type Prediction = {
 }
 
 export function getMultiplier(matchId: number) {
-  if (matchId >= 73 && matchId <= 102) return 2
+  // Theo luật:
+  // Vòng bảng (1-72) & Vòng 32 (73-88): x1
+  // Vòng 16 (89-96), Tứ kết (97-100), Bán kết (101-102): x2
+  // Chung kết (104) & Hạng 3 (103): x3
+  if (matchId >= 89 && matchId <= 102) return 2
   if (matchId === 103 || matchId === 104) return 3
   return 1
 }
@@ -55,15 +59,17 @@ export function calculatePenalties(userTotals: { user_id: string; total: number 
     lastRank = rank
     return { ...u, rank }
   })
-  const top3Score = ranked.filter((u) => u.rank <= 3).at(-1)?.total ?? ranked[ranked.length - 1].total
-  const bottomScore = sorted[sorted.length - 1].total
+  const top3Score = ranked.filter((u) => u.rank <= 3).at(-1)?.total ?? (ranked.length > 0 ? ranked[0].total : 0)
+  const bottomScore = sorted.length > 0 ? sorted[sorted.length - 1].total : 0
 
   return ranked.map((u) => {
     if (u.rank <= 3) return { user_id: u.user_id, penalty: 0 }
-    if (u.total === bottomScore) return { user_id: u.user_id, penalty: 500000 }
-    const denom = top3Score - bottomScore
-    if (denom === 0) return { user_id: u.user_id, penalty: 0 }
-    const pen = Math.round(500000 * (top3Score - u.total) / denom)
+
+    // Nếu tất cả bằng điểm nhau, không có penalty
+    if (top3Score === bottomScore) return { user_id: u.user_id, penalty: 0 }
+
+    // Tính mức phạt tối đa 500,000 dựa trên khoảng cách điểm
+    const pen = Math.round(500000 * (top3Score - u.total) / (top3Score - bottomScore))
     return { user_id: u.user_id, penalty: pen }
   })
 }

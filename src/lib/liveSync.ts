@@ -133,22 +133,9 @@ export async function fetchExternalLiveFixture(teamA: string, teamB: string): Pr
 
   // 2. Try Fallback if Primary failed
   if (!data) {
-    console.log('LiveSync: Primary source failed, trying Fallback...')
     data = await fetchFromOpenLigaDB(teamA, teamB)
   }
 
-  // 3. Mock Data (Only if no real data and specifically requested or in dev)
-  if (!data && (import.meta.env.DEV || !RAPIDAPI_KEY)) {
-    console.log('LiveSync: Using Mock Data')
-    return {
-      status: 'LIVE',
-      elapsed: 45,
-      goalsA: 1,
-      goalsB: 0,
-      period: '1H',
-      source: 'Mock'
-    }
-  }
-
+  // NOTE: We no longer return Mock data here for database updates.
   return data
 }

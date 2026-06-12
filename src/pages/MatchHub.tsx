@@ -89,6 +89,7 @@ export default function MatchHubPage() {
   const chatEndRef = useRef<HTMLDivElement>(null)
   const searchTimeoutRef = useRef<any>(null)
   const isAutoScrolling = useRef(false)
+  const isSyncing = useRef(false)
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
     if (chatEndRef.current) {
@@ -202,6 +203,8 @@ export default function MatchHubPage() {
     if (!isActuallyLive) return
 
     const sync = async () => {
+      if (isSyncing.current) return
+      isSyncing.current = true
       try {
         const liveData = await fetchExternalLiveFixture(match.team_a, match.team_b)
         const nowStr = DateTime.now().toFormat('HH:mm:ss')
@@ -233,7 +236,7 @@ export default function MatchHubPage() {
               liveData.status
             )
 
-            // Still update elapsed and period (these are not in settleMatch)
+            // Still update elapsed and period
             await api.updateMatchLive(
               match.id,
               liveData.goalsA,
@@ -246,17 +249,18 @@ export default function MatchHubPage() {
             setSyncLogs(prev => [{ time: nowStr, msg: `No change (${liveData.source})`, type: 'info' }, ...prev].slice(0, 5))
           }
         } else {
-          setSyncLogs(prev => [{ time: nowStr, msg: 'API returned no data', type: 'err' }, ...prev].slice(0, 5))
+          setSyncLogs(prev => [{ time: nowStr, msg: 'API: No live data for this match', type: 'info' }, ...prev].slice(0, 5))
         }
       } catch (e: any) {
         setSyncLogs(prev => [{ time: DateTime.now().toFormat('HH:mm:ss'), msg: `Error: ${e.message}`, type: 'err' }, ...prev].slice(0, 5))
+      } finally {
+        isSyncing.current = false
       }
     }
 
-    sync()
     const interval = setInterval(sync, 60000)
     return () => clearInterval(interval)
-  }, [match?.id, isAdmin, match?.status, match?.start_time, match?.team_a, match?.team_b])
+  }, [match?.id, isAdmin, isManualMode]) // Reduced dependencies to prevent infinite loops
 
   // Initial scroll to bottom on load
   useEffect(() => {
