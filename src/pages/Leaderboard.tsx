@@ -29,7 +29,7 @@ type UserStats = {
 
 function formatPenalty(amount: number) {
   if (amount === 0) return '0'
-  return `Phạt: ${Math.round(amount / 1000)}k`
+  return `-${Math.round(amount / 1000)}`
 }
 
 function getRankedRows(rows: LeaderboardRow[]) {
