@@ -137,5 +137,15 @@ export async function fetchExternalLiveFixture(teamA: string, teamB: string): Pr
   }
 
   // NOTE: We no longer return Mock data here for database updates.
+  if (!data && (import.meta.env.DEV || !RAPIDAPI_KEY)) {
+    return {
+      status: 'LIVE',
+      elapsed: 45,
+      goalsA: 1,
+      goalsB: 0,
+      period: '1H',
+      source: 'Mock'
+    }
+  }
   return data
 }

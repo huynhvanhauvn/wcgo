@@ -228,23 +228,28 @@ export default function MatchHubPage() {
           if (hasChanged) {
             setSyncLogs(prev => [{ time: nowStr, msg: `Update: ${liveData.goalsA}-${liveData.goalsB} (${liveData.source})`, type: 'info' }, ...prev].slice(0, 5))
 
-            // Push to DB and update points in real-time
-            await api.settleMatch(
-              match.id,
-              liveData.goalsA,
-              liveData.goalsB,
-              liveData.status
-            )
+            // Only push to DB if it's NOT mock data
+            if (liveData.source !== 'Mock') {
+              // Push to DB and update points in real-time
+              await api.settleMatch(
+                match.id,
+                liveData.goalsA,
+                liveData.goalsB,
+                liveData.status
+              )
 
-            // Still update elapsed and period
-            await api.updateMatchLive(
-              match.id,
-              liveData.goalsA,
-              liveData.goalsB,
-              liveData.status,
-              liveData.elapsed,
-              liveData.period
-            )
+              // Still update elapsed and period
+              await api.updateMatchLive(
+                match.id,
+                liveData.goalsA,
+                liveData.goalsB,
+                liveData.status,
+                liveData.elapsed,
+                liveData.period
+              )
+            } else {
+              setSyncLogs(prev => [{ time: nowStr, msg: `Mock data ignored for DB update`, type: 'warn' }, ...prev].slice(0, 5))
+            }
           } else {
             setSyncLogs(prev => [{ time: nowStr, msg: `No change (${liveData.source})`, type: 'info' }, ...prev].slice(0, 5))
           }
