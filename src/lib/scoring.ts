@@ -7,12 +7,11 @@ type Prediction = {
 }
 
 export function getMultiplier(matchId: number) {
-  // Theo luật:
-  // Vòng bảng (1-72) & Vòng 32 (73-88): x1
-  // Vòng 16 (89-96), Tứ kết (97-100), Bán kết (101-102): x2
-  // Chung kết (104) & Hạng 3 (103): x3
-  if (matchId >= 89 && matchId <= 102) return 2
-  if (matchId === 103 || matchId === 104) return 3
+  // Hệ số điểm chuẩn FIFA 2026 (Thập phân, không làm tròn):
+  if (matchId >= 1 && matchId <= 72) return 1       // Vòng bảng
+  if (matchId >= 73 && matchId <= 100) return 1.2   // Vòng 32, 16, Tứ kết
+  if (matchId >= 101 && matchId <= 103) return 1.5  // Bán kết, Hạng 3
+  if (matchId === 104) return 1.8                  // Chung kết
   return 1
 }
 

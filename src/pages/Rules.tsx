@@ -61,17 +61,21 @@ export default function RulesPage() {
 
         <div className="mt-10 pt-8 border-t border-slate-100">
           <h3 className="font-black text-[#0a2647] uppercase tracking-widest text-sm mb-6">{t('rules_screen.multipliers_title')}</h3>
-          <ul className="space-y-4">
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <li className="flex items-center gap-4 p-4 bg-slate-50 rounded-xl">
-               <span className="w-10 h-10 flex items-center justify-center bg-white rounded-lg font-black text-[#0a2647] shadow-sm">x1</span>
+               <span className="w-10 h-10 flex items-center justify-center bg-white rounded-lg font-black text-[#0a2647] shadow-sm shrink-0">x1.0</span>
                <span className="text-sm font-bold text-slate-600">{t('rules_screen.mult_group')}</span>
             </li>
             <li className="flex items-center gap-4 p-4 bg-blue-50/50 rounded-xl">
-               <span className="w-10 h-10 flex items-center justify-center bg-[#0a2647] rounded-lg font-black text-white shadow-md">x2</span>
+               <span className="w-10 h-10 flex items-center justify-center bg-[#0a2647] rounded-lg font-black text-white shadow-md shrink-0">x1.2</span>
                <span className="text-sm font-bold text-slate-600">{t('rules_screen.mult_knockout')}</span>
             </li>
-            <li className="flex items-center gap-4 p-4 bg-amber-50/50 rounded-xl">
-               <span className="w-10 h-10 flex items-center justify-center bg-wc-gold rounded-lg font-black text-white shadow-md">x3</span>
+            <li className="flex items-center gap-4 p-4 bg-indigo-50/50 rounded-xl">
+               <span className="w-10 h-10 flex items-center justify-center bg-indigo-900 rounded-lg font-black text-white shadow-md shrink-0">x1.5</span>
+               <span className="text-sm font-bold text-slate-600">{t('rules_screen.mult_sf')}</span>
+            </li>
+            <li className="flex items-center gap-4 p-4 bg-amber-50/50 rounded-xl border border-wc-gold/20">
+               <span className="w-10 h-10 flex items-center justify-center bg-wc-gold rounded-lg font-black text-white shadow-md shrink-0">x1.8</span>
                <span className="text-sm font-bold text-slate-600">{t('rules_screen.mult_final')}</span>
             </li>
           </ul>
