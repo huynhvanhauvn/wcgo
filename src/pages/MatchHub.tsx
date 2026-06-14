@@ -343,7 +343,19 @@ export default function MatchHubPage() {
               </div>
               <div className="w-full flex items-center justify-between px-4">
                  <div className="flex-1 flex flex-col items-center gap-1 min-w-0">
-                    <img src={getFlagUrl(match.team_a) || ''} className="h-7 w-10 md:h-10 md:w-15 object-cover rounded-sm" alt="" />
+                    <img
+                      src={getFlagUrl(match.team_a) || ''}
+                      className="h-7 w-10 md:h-10 md:w-15 object-cover rounded-sm"
+                      alt=""
+                      crossOrigin="anonymous"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        if (target.crossOrigin) {
+                          target.removeAttribute('crossOrigin');
+                          target.src = getFlagUrl(match.team_a) || '';
+                        }
+                      }}
+                    />
                     <h3 className="text-[10px] font-black text-white uppercase truncate w-full text-center">{t(`teams.${match.team_a}`, { defaultValue: match.team_a })}</h3>
                  </div>
                  <div className="flex items-center gap-4 md:gap-8 mx-4">
@@ -352,7 +364,19 @@ export default function MatchHubPage() {
                     <span className="text-4xl md:text-5xl font-black text-white">{match.score_b ?? 0}</span>
                  </div>
                  <div className="flex-1 flex flex-col items-center gap-1 min-w-0">
-                    <img src={getFlagUrl(match.team_b) || ''} className="h-7 w-10 md:h-10 md:w-15 object-cover rounded-sm" alt="" />
+                    <img
+                      src={getFlagUrl(match.team_b) || ''}
+                      className="h-7 w-10 md:h-10 md:w-15 object-cover rounded-sm"
+                      alt=""
+                      crossOrigin="anonymous"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        if (target.crossOrigin) {
+                          target.removeAttribute('crossOrigin');
+                          target.src = getFlagUrl(match.team_b) || '';
+                        }
+                      }}
+                    />
                     <h3 className="text-[10px] font-black text-white uppercase truncate w-full text-center">{t(`teams.${match.team_b}`, { defaultValue: match.team_b })}</h3>
                  </div>
               </div>

@@ -47,17 +47,39 @@ function MiniMatchCard({ match }: { match: any }) {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 overflow-hidden flex-1">
-            <img src={flagA || ''} alt="" className="w-4 h-2.5 object-cover rounded-sm ring-1 ring-slate-100" />
+            <img
+              src={flagA || ''}
+              className="w-4 h-2.5 object-cover rounded-sm ring-1 ring-slate-100"
+              crossOrigin="anonymous"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                if (target.crossOrigin) {
+                  target.removeAttribute('crossOrigin');
+                  target.src = flagA || '';
+                }
+              }}
+            />
             <span className="font-bold text-slate-800 truncate text-[10px]">{teamAName}</span>
           </div>
-          {isFinished && <span className="font-black text-[#0a2647] ml-2 text-[10px]">{match.score_a}</span>}
+          {(isFinished || isLive) && <span className="font-black text-[#0a2647] ml-2 text-[10px]">{match.score_a ?? 0}</span>}
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 overflow-hidden flex-1">
-            <img src={flagB || ''} alt="" className="w-4 h-2.5 object-cover rounded-sm ring-1 ring-slate-100" />
+            <img
+              src={flagB || ''}
+              className="w-4 h-2.5 object-cover rounded-sm ring-1 ring-slate-100"
+              crossOrigin="anonymous"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                if (target.crossOrigin) {
+                  target.removeAttribute('crossOrigin');
+                  target.src = flagB || '';
+                }
+              }}
+            />
             <span className="font-bold text-slate-800 truncate text-[10px]">{teamBName}</span>
           </div>
-          {isFinished && <span className="font-black text-[#0a2647] ml-2 text-[10px]">{match.score_b}</span>}
+          {(isFinished || isLive) && <span className="font-black text-[#0a2647] ml-2 text-[10px]">{match.score_b ?? 0}</span>}
         </div>
       </div>
     </div>
@@ -263,7 +285,7 @@ export default function NewsPage() {
             {articles.map((article) => (
               <div key={article.id} className="bg-white border border-slate-100 rounded-3xl overflow-hidden flex flex-col hover:shadow-xl transition-all duration-300 group shadow-sm">
                 <div className="w-full h-44 overflow-hidden shrink-0 relative bg-slate-100">
-                  <img src={article.imageUrl} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <img src={article.imageUrl} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" crossOrigin="anonymous" />
                   <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-lg text-[8px] font-black text-[#0a2647] uppercase tracking-widest border border-slate-100 shadow-sm">
                     {article.source}
                   </div>

@@ -226,7 +226,16 @@ function TeamName({ name, teamData, align = 'left' }: { name: string; teamData?:
           alt=""
           className="h-3.5 w-5 md:h-5 md:w-7 shrink-0 rounded-sm object-cover ring-1 ring-slate-200 shadow-sm"
           loading="lazy"
-          onError={() => setError(true)}
+          crossOrigin="anonymous"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            if (target.crossOrigin) {
+              target.removeAttribute('crossOrigin');
+              target.src = flagUrl;
+            } else {
+              setError(true);
+            }
+          }}
         />
       ) : (
         <div className="h-3.5 w-5 md:h-5 md:w-7 shrink-0 rounded-sm bg-slate-50 border border-dashed border-slate-200 flex items-center justify-center text-[6px] font-bold text-slate-300">

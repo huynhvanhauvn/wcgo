@@ -1,9 +1,9 @@
 
-import { toJpeg } from 'html-to-image'
+import html2canvas from 'html2canvas'
 
 /**
  * Captures a DOM element as a high-quality JPEG and shares or downloads it.
- * Handles long scrollable lists by temporarily expanding them.
+ * Uses html2canvas for better compatibility with external images and CORS.
  */
 export async function captureAndShare(elementId: string, fileName: string) {
   const node = document.getElementById(elementId)
@@ -15,17 +15,12 @@ export async function captureAndShare(elementId: string, fileName: string) {
   try {
     // 1. Store original styles to restore later
     const originalStyle = node.style.cssText
-    const originalHeight = node.style.height
-    const originalMaxHeight = node.style.maxHeight
-    const originalOverflow = node.style.overflow
 
-    // 2. Find the scrollable container inside if any, or use the node itself
-    // For our app, modals and cards usually have an overflow-y-auto section
-    const scrollContainer = node.querySelector('.overflow-y-auto') as HTMLElement || node
-
-    // 3. Expand the element to its full scroll height for capture
+    // 2. Expand the element to its full scroll height for capture
     // This ensures we get the full list even if it's scrollable
-    if (scrollContainer !== node) {
+    const scrollContainer = node.querySelector('.overflow-y-auto') as HTMLElement
+
+    if (scrollContainer) {
       scrollContainer.style.height = 'auto'
       scrollContainer.style.maxHeight = 'none'
       scrollContainer.style.overflow = 'visible'
@@ -35,28 +30,32 @@ export async function captureAndShare(elementId: string, fileName: string) {
     node.style.maxHeight = 'none'
     node.style.overflow = 'visible'
 
-    // 4. Generate Image
-    // Use a slight delay to ensure browser repaints the expanded layout
-    await new Promise(resolve => setTimeout(resolve, 100))
-
-    const dataUrl = await toJpeg(node, {
-      quality: 0.95,
-      backgroundColor: '#f8fafc', // Matches app slate-50
-      style: {
-        borderRadius: '0',
-      },
-      // Ensure we capture the full expanded height
-      height: node.scrollHeight,
-      width: node.scrollWidth,
+    // 3. Generate Canvas
+    const canvas = await html2canvas(node, {
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor: '#f8fafc',
+      scale: 2, // Higher resolution
+      logging: false,
+      onclone: (clonedDoc) => {
+        // Additional tweaks to the cloned element before capture
+        const clonedNode = clonedDoc.getElementById(elementId)
+        if (clonedNode) {
+          clonedNode.style.borderRadius = '0'
+        }
+      }
     })
 
-    // 5. Restore original styles immediately
+    // 4. Restore original styles immediately
     node.style.cssText = originalStyle
-    if (scrollContainer !== node) {
+    if (scrollContainer) {
       scrollContainer.style.height = ''
       scrollContainer.style.maxHeight = ''
       scrollContainer.style.overflow = ''
     }
+
+    // 5. Convert to Data URL
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.95)
 
     // 6. Share or Download
     const blob = await (await fetch(dataUrl)).blob()
@@ -77,6 +76,6 @@ export async function captureAndShare(elementId: string, fileName: string) {
     }
   } catch (error) {
     console.error('Sharing failed:', error)
-    alert('Could not generate image. Please try again.')
+    alert('Could not generate image. Please check your internet connection or try a different browser.')
   }
 }

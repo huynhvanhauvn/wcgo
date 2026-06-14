@@ -50,7 +50,18 @@ function StandingTable({ group, teams }: { group: string; teams: TeamStanding[] 
                   {idx < 2 && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>}
                   {idx === 2 && <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400"></div>}
                   <span className="text-[9px] text-slate-400 font-black w-3 shrink-0">{idx + 1}</span>
-                  <img src={getFlagUrl(s.name) || ''} alt="" className="w-4 h-3 md:w-5 md:h-3.5 object-cover rounded-sm shadow-sm shrink-0" />
+                  <img
+                    src={getFlagUrl(s.name) || ''}
+                    className="w-4 h-3 md:w-5 md:h-3.5 object-cover rounded-sm shadow-sm shrink-0"
+                    crossOrigin="anonymous"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      if (target.crossOrigin) {
+                        target.removeAttribute('crossOrigin');
+                        target.src = getFlagUrl(s.name) || '';
+                      }
+                    }}
+                  />
                   <span className="font-bold text-slate-800 truncate">{t(`teams.${s.name}`, { defaultValue: s.name })}</span>
                 </td>
                 <td className="px-1 py-3 text-center text-slate-500">{s.played}</td>

@@ -10,6 +10,15 @@ export default function UserAvatar({ name, avatarUrl, className = '' }: { name: 
         alt={name}
         className={`h-9 w-9 rounded-full object-cover ring-2 ring-white/40 ${className}`}
         loading="lazy"
+        crossOrigin="anonymous"
+        onError={(e) => {
+          // If CORS fails, try loading without crossOrigin (image won't be captureable but will show)
+          const target = e.target as HTMLImageElement;
+          if (target.crossOrigin) {
+            target.removeAttribute('crossOrigin');
+            target.src = avatarUrl;
+          }
+        }}
       />
     )
   }
