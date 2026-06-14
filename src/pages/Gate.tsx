@@ -29,8 +29,7 @@ export default function GatePage({ onAccessGranted }: { onAccessGranted: () => v
 
       <div className="relative glass-card bg-white/5 border-white/10 p-8 md:p-12 max-w-md w-full text-center space-y-8 animate-in zoom-in-95 duration-500 backdrop-blur-2xl rounded-[3rem] shadow-2xl">
         <div className="flex flex-col items-center gap-4">
-          <WorldCupBall size={80} animate="vs-pulse" />
-          <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter italic leading-none">Arena Access Control</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter italic leading-none">Internal Access Control</h1>
         </div>
 
         <div className="space-y-3">
@@ -39,7 +38,7 @@ export default function GatePage({ onAccessGranted }: { onAccessGranted: () => v
               Đây là hệ thống dành riêng cho các thành viên của team
             </p>
           </div>
-          <p className="text-white/40 text-[10px] font-medium uppercase tracking-[0.2em]">Vui lòng nhập mã bí mật để tiếp tục</p>
+          <p className="text-white/40 text-[10px] font-medium uppercase tracking-[0.2em]">Vui lòng nhập mã thành viên để tiếp tục</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -48,7 +47,7 @@ export default function GatePage({ onAccessGranted }: { onAccessGranted: () => v
               type="password"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="SECRET CODE"
+              placeholder="MÃ THÀNH VIÊN"
               className={`w-full bg-white/5 border-2 ${error ? 'border-rose-500 animate-shake' : 'border-white/10'} rounded-2xl py-4 px-6 text-center text-white font-black tracking-[0.5em] focus:bg-white/10 outline-none transition-all placeholder:text-white/10 placeholder:tracking-widest`}
             />
             {error && <p className="absolute -bottom-6 left-0 right-0 text-rose-500 text-[10px] font-black uppercase">Mã không chính xác!</p>}
@@ -57,11 +56,11 @@ export default function GatePage({ onAccessGranted }: { onAccessGranted: () => v
             type="submit"
             className="w-full py-4 bg-wc-gold text-slate-900 rounded-2xl font-black uppercase tracking-[0.2em] text-xs shadow-xl shadow-wc-gold/20 hover:scale-[1.02] active:scale-95 transition-all"
           >
-            Vào Arena
+            Là thành viên team
           </button>
         </form>
 
-        <p className="text-white/10 text-[8px] font-bold uppercase tracking-[0.3em] pt-4">Official World Cup 2026 Prediction System</p>
+        <p className="text-white/10 text-[8px] font-bold uppercase tracking-[0.3em] pt-4">Internal Team System v1.0</p>
       </div>
     </div>
   )
