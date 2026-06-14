@@ -9,6 +9,7 @@ import * as api from '../lib/api'
 import { getFlagUrl } from '../lib/flags'
 import { calculateMatchPoints } from '../lib/scoring'
 import { useTimer } from '../context/TimerProvider'
+import { captureAndShare } from '../lib/shareUtils'
 import WorldCupMark from './WorldCupMark'
 import UserAvatar from './UserAvatar'
 import WorldCupBall from './WorldCupBall'
@@ -20,6 +21,7 @@ function MatchVarModal({ match, stats, onClose }: { match: any; stats: any; onCl
   const { t, i18n } = useTranslation()
   const [predictions, setPredictions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const modalId = `var-modal-${match.id}`
 
   useEffect(() => {
     api.fetchPredictionsByMatch(match.id)
@@ -33,7 +35,7 @@ function MatchVarModal({ match, stats, onClose }: { match: any; stats: any; onCl
   return createPortal(
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 md:p-10">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={onClose}></div>
-      <div className="relative glass-card w-full max-w-2xl bg-white overflow-hidden animate-in zoom-in-95 duration-300 border-slate-200 shadow-[0_20px_60px_rgba(0,0,0,0.4)] max-h-[90vh] flex flex-col mt-10 rounded-[2.5rem]">
+      <div id={modalId} className="relative glass-card w-full max-w-2xl bg-white overflow-hidden animate-in zoom-in-95 duration-300 border-slate-200 shadow-[0_20px_60px_rgba(0,0,0,0.4)] max-h-[90vh] flex flex-col mt-10 rounded-[2.5rem]">
         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#0a2647] via-wc-gold to-wc-canada z-30"></div>
 
         {/* Header */}
@@ -41,6 +43,16 @@ function MatchVarModal({ match, stats, onClose }: { match: any; stats: any; onCl
            <button onClick={onClose} className="absolute top-4 right-4 text-slate-300 hover:text-[#0a2647] p-2 bg-slate-50 rounded-full transition-all">
              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
            </button>
+
+           <button
+             onClick={() => captureAndShare(modalId, `Match-${match.id}-Predictions`)}
+             className="absolute top-4 left-4 flex items-center gap-1.5 bg-emerald-500 text-white px-3 py-1.5 rounded-full shadow-lg hover:bg-emerald-600 transition-all group z-50"
+             title="Share Image"
+           >
+             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+             <span className="text-[10px] font-black uppercase tracking-widest">Share</span>
+           </button>
+
            <h3 className="text-2xl md:text-3xl font-black text-[#0a2647] uppercase tracking-tighter italic mb-1">{t('match_card.var_center')}</h3>
            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{formattedStart} · {match.venue}</p>
 

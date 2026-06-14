@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthProvider'
 import * as api from '../lib/api'
 import UserAvatar from '../components/UserAvatar'
+import { captureAndShare } from '../lib/shareUtils'
 
 export default function ProfilePage() {
   const { t } = useTranslation()
@@ -87,8 +88,17 @@ export default function ProfilePage() {
   return (
     <div className="max-w-2xl mx-auto space-y-8 pb-20 animate-in fade-in duration-500">
       {/* PROFILE HEADER CARD */}
-      <section className="glass-card bg-white p-8 md:p-10 shadow-2xl border-none overflow-hidden relative">
+      <section id="profile-card" className="glass-card bg-white p-8 md:p-10 shadow-2xl border-none overflow-hidden relative">
         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#0a2647] via-wc-gold to-wc-canada"></div>
+
+        <button
+          onClick={() => captureAndShare('profile-card', `Profile-${displayName}`)}
+          className="absolute top-4 right-4 text-slate-300 hover:text-emerald-500 transition-all p-2 bg-slate-50 rounded-full shadow-sm z-30 group"
+          title="Share Profile"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+        </button>
+
         <div className="flex flex-col md:flex-row items-center gap-8">
            <div className="relative group">
               <UserAvatar name={displayName || user.email} avatarUrl={avatarUrl} className="h-24 w-24 md:h-32 md:w-32 text-4xl ring-8 ring-slate-50 shadow-2xl" />

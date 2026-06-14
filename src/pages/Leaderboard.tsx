@@ -7,6 +7,7 @@ import { calculatePenalties, getMultiplier } from '../lib/scoring'
 import UserAvatar from '../components/UserAvatar'
 import { useAuth } from '../context/AuthProvider'
 import { getFlagUrl } from '../lib/flags'
+import { captureAndShare } from '../lib/shareUtils'
 
 type LeaderboardRow = {
   user_id: string
@@ -232,12 +233,22 @@ export default function LeaderboardPage() {
   return (
     <div className="flex flex-col lg:flex-row gap-6 md:gap-8 items-start animate-in fade-in duration-500">
       {/* LEFT COLUMN */}
-      <div className="flex-[7] w-full glass-card bg-white shadow-2xl border-white relative min-h-[400px] overflow-hidden">
+      <div id="leaderboard-main" className="flex-[7] w-full glass-card bg-white shadow-2xl border-white relative min-h-[400px] overflow-hidden">
         <div className="p-6 md:p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h2 className="text-2xl md:text-3xl font-black text-[#0a2647] uppercase tracking-tight italic flex items-center gap-3">
-            <span className="p-2 bg-wc-accent/10 rounded-lg text-2xl">🏆</span>
-            {t('realtimeLeaderboard')}
-          </h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-2xl md:text-3xl font-black text-[#0a2647] uppercase tracking-tight italic flex items-center gap-3">
+              <span className="p-2 bg-wc-accent/10 rounded-lg text-2xl">🏆</span>
+              {t('realtimeLeaderboard')}
+            </h2>
+            <button
+              onClick={() => captureAndShare('leaderboard-main', 'WC2026-Leaderboard')}
+              className="flex items-center gap-2 bg-emerald-500 text-white px-4 py-2 rounded-xl shadow-md hover:bg-emerald-600 transition-all group"
+              title="Share Leaderboard"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+              <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">Share List</span>
+            </button>
+          </div>
           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] bg-slate-50 px-4 py-2 rounded-full border border-slate-100">
             {t('liveUpdates')}
           </div>
@@ -293,13 +304,20 @@ export default function LeaderboardPage() {
 
       {/* RIGHT COLUMN */}
       <aside className="hidden lg:block flex-[3] sticky top-24 w-full space-y-6 pb-10">
-        <div className="glass-card bg-white shadow-xl border-none overflow-hidden relative">
+        <div id="personal-stats-card" className="glass-card bg-white shadow-xl border-none overflow-hidden relative">
           <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-wc-accent to-wc-gold"></div>
           {loadingPersonal ? (
             <div className="py-20 flex flex-col items-center gap-4"><div className="animate-spin h-8 w-8 border-2 border-[#0a2647] border-t-transparent rounded-full"></div></div>
           ) : personalStats && (
             <div className="flex flex-col">
-              <div className="p-6 flex flex-col items-center text-center border-b border-slate-50">
+              <div className="p-6 flex flex-col items-center text-center border-b border-slate-50 relative">
+                <button
+                  onClick={() => captureAndShare('personal-stats-card', `Stats-${myRow?.profile?.display_name}`)}
+                  className="absolute top-4 right-4 text-slate-300 hover:text-emerald-500 transition-all p-2 bg-slate-50 rounded-full shadow-sm group"
+                  title="Share Stats"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+                </button>
                 <div className="relative mb-4">
                   <UserAvatar name={myRow?.profile?.display_name || user?.email} avatarUrl={myRow?.profile?.avatar_url} className="h-16 w-16 md:h-20 md:w-20 ring-4 ring-slate-50 shadow-xl" />
                   <div className="absolute -bottom-1 -right-1 bg-[#0a2647] text-white font-black text-[10px] h-7 w-7 flex items-center justify-center rounded-xl shadow-lg border-2 border-white italic">#{myRow?.rank || '?'}</div>
@@ -330,9 +348,17 @@ export default function LeaderboardPage() {
       {selectedUser && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 md:p-10">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setSelectedUser(null)}></div>
-          <div className="relative glass-card w-full max-w-md bg-white overflow-hidden animate-in zoom-in-95 duration-300 border-slate-200 shadow-[0_20px_60px_rgba(0,0,0,0.3)] max-h-[70vh] flex flex-col rounded-[2.5rem] mt-10">
+          <div id="player-stats-modal" className="relative glass-card w-full max-w-md bg-white overflow-hidden animate-in zoom-in-95 duration-300 border-slate-200 shadow-[0_20px_60px_rgba(0,0,0,0.3)] max-h-[70vh] flex flex-col rounded-[2.5rem] mt-10">
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-wc-accent via-wc-gold to-wc-canada z-30"></div>
             <button onClick={() => setSelectedUser(null)} className="absolute top-4 right-4 text-slate-300 hover:text-[#0a2647] transition-all p-2 bg-white/80 rounded-full z-40 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg></button>
+
+            <button
+              onClick={() => captureAndShare('player-stats-modal', `Stats-${selectedUser.profile?.display_name}`)}
+              className="absolute top-4 left-4 text-slate-300 hover:text-emerald-500 transition-all p-2 bg-white/80 rounded-full z-40 shadow-sm group"
+              title="Share Player Stats"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+            </button>
 
             <div className="overflow-y-auto no-scrollbar flex-1">
               {loadingStats ? (

@@ -4,16 +4,28 @@ import { useTranslation } from 'react-i18next'
 import * as api from '../lib/api'
 import { calculateStandings, sortGroupStandings, TeamStanding } from '../lib/standings'
 import { getFlagUrl } from '../lib/flags'
+import { captureAndShare } from '../lib/shareUtils'
 import LoadingScreen from '../components/LoadingScreen'
 
 function StandingTable({ group, teams }: { group: string; teams: TeamStanding[] }) {
   const { t } = useTranslation()
   const sorted = useMemo(() => sortGroupStandings(teams), [teams])
+  const tableId = `standing-table-${group}`
 
   return (
-    <div className="glass-card overflow-hidden bg-white shadow-lg border-slate-100">
+    <div id={tableId} className="glass-card overflow-hidden bg-white shadow-lg border-slate-100 relative group/table">
       <div className="bg-[#0a2647] p-4 flex items-center justify-between">
-        <h3 className="text-white font-black uppercase tracking-widest italic text-[13px]">Group {group}</h3>
+        <div className="flex items-center gap-3">
+          <h3 className="text-white font-black uppercase tracking-widest italic text-[13px]">Group {group}</h3>
+          <button
+            onClick={() => captureAndShare(tableId, `Group-${group}-Standings`)}
+            className="p-2 bg-emerald-500 text-white hover:bg-emerald-600 rounded-xl transition-all flex items-center gap-2 shadow-lg border border-emerald-400/20"
+            title="Share Group Standings"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+            <span className="text-[9px] font-black uppercase tracking-widest hidden sm:inline">Share</span>
+          </button>
+        </div>
         <span className="text-[9px] text-white/50 font-bold uppercase tracking-[0.2em]">WC2026</span>
       </div>
       <div className="overflow-x-auto no-scrollbar">
