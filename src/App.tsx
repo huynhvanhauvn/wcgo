@@ -13,11 +13,19 @@ import RulesPage from './pages/Rules'
 import ProfilePage from './pages/Profile'
 import AdminPage from './pages/Admin'
 import MatchHubPage from './pages/MatchHub'
+import GatePage from './pages/Gate'
 import FloatingMusicPlayer from './components/FloatingMusicPlayer'
 import WorldCupBall from './components/WorldCupBall'
 
 export default function App() {
   const { user, loading, isAdmin } = useAuth()
+  const [hasTeamAccess, setHasTeamAccess] = React.useState(() => {
+    return localStorage.getItem('team_access_granted') === 'true'
+  })
+
+  if (!hasTeamAccess) {
+    return <GatePage onAccessGranted={() => setHasTeamAccess(true)} />
+  }
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-slate-50 font-bold">Loading Arena...</div>

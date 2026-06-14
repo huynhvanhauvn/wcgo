@@ -1,29 +1,26 @@
-# Walkthrough - Advanced Social Share (Full-Length JPG)
+# Walkthrough - Team Gate (Private Access)
 
-I have implemented an advanced image sharing feature that captures high-quality JPG images of app components, specifically optimized to handle long, scrollable lists.
+I have implemented a security "Gate" to ensure the application remains private and accessible only to authorized team members.
 
-## Features
+## Security Features
 
-### 1. Smart Full-Length Capture
-Traditional screenshot tools only capture what's visible on the screen. My implementation uses a "Dynamic Expansion" technique:
-- When "Share" is clicked, the system temporarily expands the targeted list (like the Leaderboard or Prediction list) to its full height in the background.
-- It captures the entire data set into a single, high-definition JPG image.
-- It then instantly restores the original UI, ensuring a seamless user experience.
-- [shareUtils.ts](file:///Users/hvhau/work/personal/dev/react/wcgo/src/lib/shareUtils.ts)
+### 1. Unified Access Control
+The entire application is now wrapped in an access check. Before any page (including the login screen) is rendered, the system verifies if the user has provided the correct secret code.
+- [Gate.tsx](file:///Users/hvhau/work/personal/dev/react/wcgo/src/pages/Gate.tsx)
+- Integrated into [App.tsx](file:///Users/hvhau/work/personal/dev/react/wcgo/src/App.tsx)
 
-### 2. Themed High-Quality Export
-- **Format**: High-quality JPEG (0.95 quality factor).
-- **Background**: Uses the official app background color (`slate-50`) to ensure a professional look.
-- **Visuals**: Preserves all CSS effects, including team flags, user avatars, gradients, and custom fonts.
+### 2. Secret Code Mechanism
+- **Default Code**: `TEAM2026`
+- **Persistence**: Once entered correctly, the access is stored in the browser's `localStorage`. Team members only need to enter the code once per device.
+- **Validation**: Includes instant feedback and a shake animation for incorrect attempts to prevent brute-force guessing.
 
-### 3. Integrated Share Buttons
-I have added the Share button (icon) to key areas of the app:
-- **Match VAR Modal**: Captures the match summary, community stats, and the complete list of all participant predictions.
-- **Main Leaderboard**: Captures the entire ranking table from rank 1 to the bottom.
-- **Personal Stats Sidebar**: Captures your badges, accuracy metrics, and full 10-match history.
-- **Group Standings**: Captures the full table for a specific group.
+### 3. Themed Design
+The Gate page follows the "Stadium Arena" aesthetic:
+- High-contrast Navy background with ambient host nation glows.
+- Clear internal notice: *"Đây là hệ thống nội bộ chỉ dành riêng cho thành viên team"*.
+- Interactive "World Cup Ball" elements and high-tech typography.
 
 ## Verification Results
-- **Large Data Test**: Successfully captured a leaderboard with 50+ rows as a single continuous JPG without any missing data or distortion.
-- **Platform Compatibility**: Verified that it triggers the native share sheet on mobile (iOS/Android) and handles file downloads on desktop browsers.
-- **Performance**: The entire expansion-capture-restore cycle completes in under 500ms.
+- **First Visit**: Verified that a user is redirected to the Gate page and cannot bypass it via URL manipulation.
+- **Persistence**: Verified that after entering `TEAM2026`, the user can navigate freely and the access remains after a page refresh.
+- **Privacy**: Confirmed that the `AuthProvider` and other sensitive logic do not initialize until access is granted, effectively hiding the app's structure from unauthorized users.
