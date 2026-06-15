@@ -25,6 +25,7 @@ export async function fetchPredictionsByMatch(matchId: number) {
       )
     `)
     .eq('match_id', matchId)
+    .order('created_at', { ascending: false })
 
   if (error) {
     console.error('Error fetching predictions:', error)
@@ -363,6 +364,7 @@ export async function fetchComments(matchId: number) {
       )
     `)
     .eq('match_id', matchId)
+    .order('created_at', { ascending: false })
     .order('created_at', { ascending: true })
   if (error) throw error
   return data

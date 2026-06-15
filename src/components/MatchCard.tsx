@@ -104,9 +104,17 @@ function MatchVarModal({ match, stats, onClose }: { match: any; stats: any; onCl
                     <div key={idx} className="flex items-center justify-between p-4 md:p-5 bg-white rounded-2xl border border-slate-100 hover:shadow-xl hover:scale-[1.01] transition-all group">
                       <div className="flex items-center gap-4">
                         <UserAvatar name={displayName} avatarUrl={profile.avatar_url} className="h-10 w-10 md:h-12 md:w-12 ring-2 ring-slate-100 group-hover:ring-wc-accent transition-all" />
-                        <div className="flex flex-col">
-                          <span className="text-sm md:text-base font-black text-[#0a2647]">{displayName}</span>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{profile.real_name || 'Anonymous'}</span>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-sm md:text-base font-black text-[#0a2647] truncate">{displayName}</span>
+                          <div className="flex items-center gap-2">
+                             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest shrink-0">{profile.real_name || 'Anonymous'}</span>
+                             {p.created_at && (
+                               <span className="text-[9px] text-blue-500 font-black italic bg-blue-50 px-1.5 py-0.5 rounded shadow-sm shrink-0 flex items-center gap-1">
+                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                 {DateTime.fromISO(p.created_at).setLocale(i18n.language).toRelative()}
+                               </span>
+                             )}
+                          </div>
                         </div>
                       </div>
                       <div className="px-6 py-2.5 bg-[#0a2647] text-wc-gold rounded-xl font-black text-xl md:text-2xl shadow-lg transform group-hover:scale-110 transition-transform">
