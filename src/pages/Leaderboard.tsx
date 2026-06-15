@@ -75,6 +75,9 @@ export default function LeaderboardPage() {
 
   const [activePopupTab, setActivePopupTab] = useState<'stats' | 'history'>('stats')
 
+  const [showAllPersonalHistory, setShowAllPersonalHistory] = useState(false)
+  const [showAllPlayerHistory, setShowAllPlayerHistory] = useState(false)
+
   const fetchLeaderboard = () => {
     api.fetchLeaderboardWithProfiles().then((rows: any[]) => {
       const verifiedRows = rows.filter(r => r.profile?.is_verified === true)
@@ -109,7 +112,7 @@ export default function LeaderboardPage() {
       else stats.wrong++
     })
 
-    stats.history = sortedPoints.slice(0, 10).map(p => {
+    stats.history = sortedPoints.map(p => {
       const m = matches.find(match => match.id === p.match_id)
       const pred = predictions.find(pr => pr.match_id === p.match_id)
       return {
@@ -203,32 +206,48 @@ export default function LeaderboardPage() {
   const penalties = calculatePenalties(rankedRows.map((t) => ({ user_id: t.user_id, total: t.total })))
   const myRow = rankedRows.find(r => r.user_id === user?.id)
 
-  const renderHistoryTable = (history: any[]) => (
-    <div className="overflow-hidden rounded-xl border border-slate-100 shadow-sm mb-4">
-      <table className="w-full text-left border-collapse bg-white">
-        <thead>
-          <tr className="bg-slate-50/80 text-[8px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
-            <th className="p-2">{t('stats.history_table.col_match')}</th>
-            <th className="p-2 text-center">{t('stats.history_table.col_pred')}</th>
-            <th className="p-2 text-center">{t('stats.history_table.col_result')}</th>
-            <th className="p-2 text-right">{t('stats.history_table.col_pts')}</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-50">
-          {history.length > 0 ? history.map((h, i) => (
-            <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-              <td className="p-2 text-[9px] font-black text-slate-700 truncate">{h.team_a_code} <span className="text-[7px] text-slate-300">vs</span> {h.team_b_code}</td>
-              <td className="p-2 text-[9px] font-bold text-center text-slate-400">{h.predicted_a}-{h.predicted_b}</td>
-              <td className="p-2 text-[9px] font-black text-center text-[#0a2647]">{h.score_a !== null ? `${h.score_a}-${h.score_b}` : '-'}</td>
-              <td className={`p-2 text-[10px] font-black text-right ${h.points > 0 ? 'text-emerald-500' : 'text-slate-300'}`}>+{h.points}</td>
-            </tr>
-          )) : (
-            <tr><td colSpan={4} className="p-10 text-center text-[9px] font-bold text-slate-300 italic uppercase">{t('stats.history_table.no_history')}</td></tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  )
+  const renderHistoryTable = (history: any[], showAll: boolean, onToggle: () => void) => {
+    const displayHistory = showAll ? history : history.slice(0, 10)
+    const hasMore = history.length > 10
+
+    return (
+      <div className="space-y-4">
+        <div className="overflow-hidden rounded-xl border border-slate-100 shadow-sm">
+          <table className="w-full text-left border-collapse bg-white">
+            <thead>
+              <tr className="bg-slate-50/80 text-[8px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                <th className="p-2">{t('stats.history_table.col_match')}</th>
+                <th className="p-2 text-center">{t('stats.history_table.col_pred')}</th>
+                <th className="p-2 text-center">{t('stats.history_table.col_result')}</th>
+                <th className="p-2 text-right">{t('stats.history_table.col_pts')}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {displayHistory.length > 0 ? displayHistory.map((h, i) => (
+                <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                  <td className="p-2 text-[9px] font-black text-slate-700 truncate">{h.team_a_code} <span className="text-[7px] text-slate-300">vs</span> {h.team_b_code}</td>
+                  <td className="p-2 text-[9px] font-bold text-center text-slate-400">{h.predicted_a}-{h.predicted_b}</td>
+                  <td className="p-2 text-[9px] font-black text-center text-[#0a2647]">{h.score_a !== null ? `${h.score_a}-${h.score_b}` : '-'}</td>
+                  <td className={`p-2 text-[10px] font-black text-right ${h.points > 0 ? 'text-emerald-500' : 'text-slate-300'}`}>+{h.points}</td>
+                </tr>
+              )) : (
+                <tr><td colSpan={4} className="p-10 text-center text-[9px] font-bold text-slate-300 italic uppercase">{t('stats.history_table.no_history')}</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {hasMore && (
+          <button
+            onClick={onToggle}
+            className="w-full py-2.5 bg-slate-50 text-slate-400 hover:text-[#0a2647] hover:bg-slate-100 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all border border-slate-100 shadow-sm"
+          >
+            {showAll ? 'Show Less' : `Show All (${history.length})`}
+          </button>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 md:gap-8 items-start animate-in fade-in duration-500">
@@ -337,7 +356,7 @@ export default function LeaderboardPage() {
                       <div className="space-y-3"><div className="flex items-center justify-between px-1"><h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">{t('stats.current_form')}</h4><span className="text-[8px] font-bold text-slate-300 uppercase">{t('stats.history_table.last_5')}</span></div><div className="space-y-2">{personalStats.history.slice(0, 5).map((h, i) => (<div key={i} className="bg-slate-50/80 p-2 rounded-xl border border-slate-100 flex items-center justify-between gap-2 group transition-all hover:bg-white hover:shadow-sm"><div className="flex items-center gap-2 flex-1 min-w-0"><div className="flex flex-col gap-0.5 shrink-0"><img src={getFlagUrl(h.team_a_full) || ''} className="h-2.5 w-4 rounded-[1px] shadow-sm" alt="" crossOrigin="anonymous" /><img src={getFlagUrl(h.team_b_full) || ''} className="h-2.5 w-4 rounded-[1px] shadow-sm" alt="" crossOrigin="anonymous" /></div><div className="min-w-0 flex-1"><div className="text-[9px] font-black text-slate-700 truncate">{h.team_a_code} vs {h.team_b_code}</div><div className="text-[8px] font-bold text-slate-400">P:{h.predicted_a}-{h.predicted_b} | R:{h.score_a}-{h.score_b}</div></div></div><div className={`shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black ${h.points > 0 ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-300'}`}>+{h.points}</div></div>))}</div></div>
                       <div className="space-y-2 pt-2 border-t border-slate-50"><div className="flex justify-between text-[8px] font-black uppercase tracking-widest text-slate-400"><span>{t('stats.accuracy')}</span><span className="text-[#0a2647]">{personalStats.totalMatches > 0 ? Math.round(((personalStats.totalMatches - personalStats.wrong) / personalStats.totalMatches) * 100) : 0}%</span></div><div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden"><div style={{ width: `${personalStats.totalMatches > 0 ? Math.round(((personalStats.totalMatches - personalStats.wrong) / personalStats.totalMatches) * 100) : 0}%` }} className="bg-emerald-500 h-full"></div></div></div>
                    </div>
-                 ) : renderHistoryTable(personalStats.history)}
+                 ) : renderHistoryTable(personalStats.history, showAllPersonalHistory, () => setShowAllPersonalHistory(!showAllPersonalHistory))}
               </div>
             </div>
           )}
@@ -347,10 +366,10 @@ export default function LeaderboardPage() {
       {/* PLAYER STATS MODAL */}
       {selectedUser && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6 md:p-10">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setSelectedUser(null)}></div>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => { setSelectedUser(null); setShowAllPlayerHistory(false); }}></div>
           <div id="player-stats-modal" className="relative glass-card w-full max-w-md bg-white overflow-hidden animate-in zoom-in-95 duration-300 border-slate-200 shadow-[0_20px_60px_rgba(0,0,0,0.3)] max-h-[70vh] flex flex-col rounded-[2.5rem] mt-10">
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-wc-accent via-wc-gold to-wc-canada z-30"></div>
-            <button onClick={() => setSelectedUser(null)} className="absolute top-4 right-4 text-slate-300 hover:text-[#0a2647] transition-all p-2 bg-white/80 rounded-full z-40 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg></button>
+            <button onClick={() => { setSelectedUser(null); setShowAllPlayerHistory(false); }} className="absolute top-4 right-4 text-slate-300 hover:text-[#0a2647] transition-all p-2 bg-white/80 rounded-full z-40 shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg></button>
 
             <button
               onClick={() => captureAndShare('player-stats-modal', `Stats-${selectedUser.profile?.display_name}`)}
@@ -398,7 +417,7 @@ export default function LeaderboardPage() {
                         <div className="grid grid-cols-2 gap-3 md:gap-4"><div className="bg-emerald-50/30 p-4 rounded-[1.5rem] border border-emerald-100 flex flex-col items-center text-center"><span className="text-2xl mb-1">🎯</span><span className="text-[8px] font-black text-emerald-800 uppercase tracking-widest mb-1">{t('stats.bullseye')}</span><span className="text-2xl font-black text-emerald-700">{userStats.exact}</span></div><div className="bg-orange-50/30 p-4 rounded-[1.5rem] border border-orange-100 flex flex-col items-center text-center"><span className="text-2xl mb-1">🔥</span><span className="text-[8px] font-black text-orange-800 uppercase tracking-widest mb-1">{t('stats.streak')}</span><span className="text-2xl font-black text-orange-700">{userStats.currentStreak}</span></div></div>
                         <div className="space-y-2"><div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-slate-400"><span>{t('stats.overall_accuracy')}</span><span className="text-[#0a2647]">{userStats.totalMatches > 0 ? Math.round(((userStats.totalMatches - userStats.wrong) / userStats.totalMatches) * 100) : 0}%</span></div><div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner"><div style={{ width: `${userStats.totalMatches > 0 ? Math.round(((userStats.totalMatches - userStats.wrong) / userStats.totalMatches) * 100) : 0}%` }} className="bg-gradient-to-r from-emerald-400 to-emerald-600 h-full transition-all duration-1000"></div></div></div>
                       </div>
-                    ) : renderHistoryTable(userStats.history)}
+                    ) : renderHistoryTable(userStats.history, showAllPlayerHistory, () => setShowAllPlayerHistory(!showAllPlayerHistory))}
                   </div>
 
                   <div className="flex flex-col items-center gap-2 pt-4 border-t border-slate-100 pb-4">
