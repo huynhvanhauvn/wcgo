@@ -120,10 +120,25 @@ export default function MatchesPage() {
     }))
   }
 
+  const liveMatches = useMemo(() => {
+    return matches.filter(m => {
+      const isLiveStatus = m.status === 'LIVE'
+      const startTime = DateTime.fromISO(m.start_time)
+      const now = DateTime.now()
+      // Automatically consider matches live if they started within the last 3.5 hours and aren't finished
+      const isTimeLive = now >= startTime && now <= startTime.plus({ hours: 3.5 }) && m.status !== 'FINISHED'
+
+      return isLiveStatus || isTimeLive
+    }).sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
+  }, [matches])
+
   const upcomingMatchesList = useMemo(() => {
     return matches.filter((match) => {
       const startTime = DateTime.fromISO(match.start_time)
-      return startTime >= DateTime.now() && match.status !== 'FINISHED'
+      const now = DateTime.now()
+      // Upcoming must be in the future and NOT currently live by time or status
+      const isLiveByTime = now >= startTime && now <= startTime.plus({ hours: 3.5 })
+      return startTime > now && match.status !== 'FINISHED' && match.status !== 'LIVE' && !isLiveByTime
     })
   }, [matches])
 
@@ -139,13 +154,13 @@ export default function MatchesPage() {
   }, [upcomingMatchesList])
 
   const filteredMatches = useMemo(() => {
-    return matches.filter((m) => {
+    const list = matches.filter((m) => {
       const pred = predictionsByMatch[m.id]
       const isPredicted = !!pred
 
       if (activeTab === 'all') return true
       if (activeTab === 'predicted') return isPredicted
-      if (activeTab === 'not_predicted') return !isPredicted
+      if (activeTab === 'not_predicted') return !isPredicted && m.status !== 'FINISHED'
 
       if (activeTab.startsWith('pts_') && m.status === 'FINISHED' && isPredicted) {
         const targetBasePts = parseInt(activeTab.split('_')[1])
@@ -160,6 +175,15 @@ export default function MatchesPage() {
       }
       return false
     })
+
+    // Sorting logic
+    if (activeTab === 'all' || activeTab === 'not_predicted') {
+      // Sort by start time ascending (closest match first)
+      return list.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+    } else {
+      // For results, live, and predicted: sort by start time descending (most recent first)
+      return list.sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
+    }
   }, [matches, predictionsByMatch, activeTab, user])
 
   if (loading) return <div className="max-w-4xl mx-auto"><MatchesSkeleton /></div>
@@ -189,6 +213,34 @@ export default function MatchesPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in duration-700">
+      {/* LIVE MATCHES AT THE TOP */}
+      {liveMatches.length > 0 && (
+        <section className="space-y-6">
+          <div className="flex items-center gap-4 bg-emerald-500 p-5 rounded-3xl border border-emerald-400 shadow-lg shadow-emerald-500/20">
+            <div className="w-3 h-3 bg-white rounded-full animate-ping"></div>
+            <div>
+              <h2 className="text-2xl font-black text-white uppercase tracking-tight italic leading-none">{t('match_hub.live')}</h2>
+              <p className="text-[10px] font-black text-emerald-100 uppercase tracking-widest mt-1">Đang diễn ra trực tiếp</p>
+            </div>
+          </div>
+          <div className="space-y-6">
+            {liveMatches.map((m) => {
+              const globalIndex = matches.findIndex(match => match.id === m.id) + 1;
+              return (
+                <MatchCard
+                  key={m.id}
+                  match={m}
+                  matchNumber={globalIndex}
+                  highlighted
+                  prediction={predictionsByMatch[m.id] ?? null}
+                  onPredictionSaved={handlePredictionSaved}
+                />
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {/* NEXT MATCH COUNTDOWN */}
       {nextMatch && (
         <CountdownTimer

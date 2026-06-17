@@ -83,6 +83,7 @@ const resources = {
       },
       match_tabs: {
         all: 'All',
+        live: 'Live',
         predicted: 'Predicted',
         not_predicted: 'Not Predicted',
         pts_3: '3 Pts',
@@ -344,6 +345,7 @@ const resources = {
       },
       match_tabs: {
         all: 'Tất cả',
+        live: 'Đang đá',
         predicted: 'Đã dự đoán',
         not_predicted: 'Chưa dự đoán',
         pts_3: '3 điểm',
