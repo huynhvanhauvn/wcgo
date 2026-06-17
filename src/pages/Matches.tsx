@@ -122,11 +122,21 @@ export default function MatchesPage() {
 
   const liveMatches = useMemo(() => {
     return matches.filter(m => {
-      const isLiveStatus = m.status === 'LIVE'
       const startTime = DateTime.fromISO(m.start_time)
       const now = DateTime.now()
-      // Automatically consider matches live if they started within the last 3.5 hours and aren't finished
-      const isTimeLive = now >= startTime && now <= startTime.plus({ hours: 3.5 }) && m.status !== 'FINISHED'
+
+      // FIFA Standard:
+      // Group: ~120 mins (including halftime/stoppage)
+      // Knockout: ~150 mins (including extra time/penalties)
+      const isGroup = m.stage === 'GROUP' || m.id <= 72
+      const limitMinutes = isGroup ? 120 : 150
+
+      const isTimeLive = now >= startTime && now <= startTime.plus({ minutes: limitMinutes })
+      const isLiveStatus = m.status === 'LIVE'
+
+      // Keep it in Live section even if score is updated, until time is up
+      // unless admin explicitly marks it as FINISHED
+      if (m.status === 'FINISHED') return false
 
       return isLiveStatus || isTimeLive
     }).sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
@@ -136,8 +146,11 @@ export default function MatchesPage() {
     return matches.filter((match) => {
       const startTime = DateTime.fromISO(match.start_time)
       const now = DateTime.now()
-      // Upcoming must be in the future and NOT currently live by time or status
-      const isLiveByTime = now >= startTime && now <= startTime.plus({ hours: 3.5 })
+
+      const isGroup = match.stage === 'GROUP' || match.id <= 72
+      const limitMinutes = isGroup ? 120 : 150
+      const isLiveByTime = now >= startTime && now <= startTime.plus({ minutes: limitMinutes })
+
       return startTime > now && match.status !== 'FINISHED' && match.status !== 'LIVE' && !isLiveByTime
     })
   }, [matches])
