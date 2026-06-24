@@ -101,7 +101,12 @@ function MatchVarModal({ match, stats, onClose }: { match: any; stats: any; onCl
                   const profile = p.profiles || {}
                   const displayName = profile.display_name || profile.username || "User"
                   return (
-                    <div key={idx} className="flex items-center justify-between p-4 md:p-5 bg-white rounded-2xl border border-slate-100 hover:shadow-xl hover:scale-[1.01] transition-all group">
+                    <div key={idx} className={`flex items-center justify-between p-4 md:p-5 rounded-2xl border transition-all group ${
+                      match.score_a !== null && match.score_b !== null &&
+                      calculateMatchPoints({ id: '', user_id: '', match_id: match.id, predicted_a: p.predicted_a, predicted_b: p.predicted_b }, match.score_a, match.score_b) / getMultiplier(match.id) === 3
+                        ? 'bg-emerald-50 border-emerald-200 shadow-emerald-100 ring-2 ring-emerald-500/20 scale-[1.02] z-10'
+                        : 'bg-white border-slate-100 hover:shadow-xl hover:scale-[1.01]'
+                    }`}>
                       <div className="flex items-center gap-4">
                         <UserAvatar name={displayName} avatarUrl={profile.avatar_url} className="h-10 w-10 md:h-12 md:w-12 ring-2 ring-slate-100 group-hover:ring-wc-accent transition-all" />
                         <div className="flex flex-col min-w-0">
@@ -117,8 +122,25 @@ function MatchVarModal({ match, stats, onClose }: { match: any; stats: any; onCl
                           </div>
                         </div>
                       </div>
-                      <div className="px-6 py-2.5 bg-[#0a2647] text-wc-gold rounded-xl font-black text-xl md:text-2xl shadow-lg transform group-hover:scale-110 transition-transform">
+                      <div className="px-6 py-2.5 bg-[#0a2647] text-wc-gold rounded-xl font-black text-xl md:text-2xl shadow-lg transform group-hover:scale-110 transition-transform relative overflow-hidden">
                         {p.predicted_a} - {p.predicted_b}
+
+                        {/* Winner/Loser Highlighting based on current match score */}
+                        {match.score_a !== null && match.score_b !== null && (
+                          (() => {
+                            const pts = calculateMatchPoints(
+                              { id: '', user_id: '', match_id: match.id, predicted_a: p.predicted_a, predicted_b: p.predicted_b },
+                              match.score_a,
+                              match.score_b
+                            );
+                            const mult = getMultiplier(match.id);
+                            const base = pts / mult;
+
+                            if (base === 3) return <div className="absolute inset-0 bg-emerald-500/20 border-2 border-emerald-500 animate-pulse rounded-xl"></div>
+                            if (base === 0) return <div className="absolute inset-0 bg-rose-500/10 border-2 border-rose-500/30 rounded-xl grayscale opacity-50"></div>
+                            return null;
+                          })()
+                        )}
                       </div>
                     </div>
                   )

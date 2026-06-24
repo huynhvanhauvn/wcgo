@@ -203,6 +203,7 @@ export default function LeaderboardPage() {
   }
 
   const rankedRows = getRankedRows(totals)
+  const bottomRank = Math.max(...rankedRows.map(r => r.rank || 0))
   const penalties = calculatePenalties(rankedRows.map((t) => ({ user_id: t.user_id, total: t.total })))
   const myRow = rankedRows.find(r => r.user_id === user?.id)
 
@@ -278,22 +279,62 @@ export default function LeaderboardPage() {
             const pen = penalties.find((p) => p.user_id === row.user_id)
             const displayName = row.profile?.display_name || row.profile?.username || row.user_id
             const penalty = pen?.penalty ?? 0
+            const isBottom = row.rank === bottomRank && bottomRank > 3
+            const isTop1 = row.rank === 1
+            const isTop2 = row.rank === 2
+            const isTop3 = row.rank === 3
+
             return (
-              <div key={row.user_id} className={`flex items-center justify-between rounded-2xl border p-4 md:p-6 transition-all duration-300 hover:scale-[1.015] hover:shadow-lg cursor-pointer group shadow-sm ${getRankClass(row)}`} onClick={() => handleUserClick(row)}>
-                <div className="flex items-center space-x-3 md:space-x-5 min-w-0 flex-1 h-full">
-                  <div className={`w-6 md:w-8 text-xl md:text-2xl italic shrink-0 self-center ${getRankNumberClass(row.rank)}`}>{row.rank}</div>
+              <div key={row.user_id} className={`flex items-center justify-between rounded-2xl border p-4 md:p-6 transition-all duration-300 hover:scale-[1.015] hover:shadow-lg cursor-pointer group shadow-sm relative overflow-hidden ${getRankClass(row)} ${isBottom ? 'border-rose-500 ring-4 ring-rose-100' : ''}`} onClick={() => handleUserClick(row)}>
+
+                {/* DYNAMIC ITEM BACKGROUNDS */}
+                <div className="absolute inset-0 opacity-[0.08] pointer-events-none select-none overflow-hidden">
+                  {isTop1 && (
+                    <>
+                      <div className="absolute -right-4 -bottom-4 text-8xl transform -rotate-12 animate-bounce-slow">🏆</div>
+                      <div className="absolute left-10 top-1/2 -translate-y-1/2 text-6xl animate-pulse">✨</div>
+                      <div className="absolute right-1/4 top-0 text-4xl">⭐</div>
+                    </>
+                  )}
+                  {isTop2 && (
+                    <>
+                      <div className="absolute -right-4 -bottom-4 text-8xl transform rotate-12 opacity-80">🥈</div>
+                      <div className="absolute left-12 top-1/3 text-5xl">⚡</div>
+                      <div className="absolute right-1/3 bottom-2 text-4xl animate-float-note">🚀</div>
+                    </>
+                  )}
+                  {isTop3 && (
+                    <>
+                      <div className="absolute -right-4 -bottom-4 text-8xl transform -rotate-6 opacity-60">🥉</div>
+                      <div className="absolute left-1/4 top-1/4 text-5xl animate-pulse">🔥</div>
+                      <div className="absolute right-10 bottom-1/2 text-4xl">💪</div>
+                    </>
+                  )}
+                  {isBottom && (
+                    <>
+                      <div className="absolute -right-4 -bottom-4 text-8xl transform rotate-12">⚓</div>
+                      <div className="absolute left-10 top-1/2 -translate-y-1/2 text-6xl">🌊</div>
+                      <div className="absolute right-1/4 top-0 text-4xl">🦈</div>
+                    </>
+                  )}
+                </div>
+
+                <div className="flex items-center space-x-3 md:space-x-5 min-w-0 flex-1 h-full relative z-10">
+                  <div className={`w-6 md:w-8 text-xl md:text-2xl italic shrink-0 self-center ${getRankNumberClass(row.rank)} ${isBottom ? 'text-rose-600 scale-125' : ''}`}>{row.rank}</div>
 
                   <div className="flex items-center gap-6 md:gap-8 min-w-0 flex-1 relative h-full">
                     <div className="relative shrink-0 flex items-center justify-center">
-                      <UserAvatar name={displayName} avatarUrl={row.profile?.avatar_url} className="h-10 w-10 md:h-12 md:w-12 lg:h-14 lg:w-14 ring-2 ring-slate-100 group-hover:ring-wc-accent transition-all shadow-md" />
+                      <UserAvatar name={displayName} avatarUrl={row.profile?.avatar_url} className={`h-10 w-10 md:h-12 md:w-12 lg:h-14 lg:w-14 ring-2 ring-slate-100 group-hover:ring-wc-accent transition-all shadow-md ${isBottom ? 'ring-rose-400 grayscale-[0.3]' : ''}`} />
                       {row.rank === 1 && <span className="absolute -top-[16px] left-1/2 -translate-x-1/2 z-10 text-2xl drop-shadow-lg animate-crown-wiggle select-none pointer-events-none">👑</span>}
                       {row.rank === 2 && <span className="absolute -bottom-1 -right-1 z-10 text-base md:text-lg drop-shadow-md transform rotate-12 select-none">🥈</span>}
                       {row.rank === 3 && <span className="absolute -bottom-1 -right-1 z-10 text-base md:text-lg drop-shadow-md transform -rotate-12 select-none">🥉</span>}
+                      {isBottom && <span className="absolute -top-3 -right-2 z-10 text-2xl drop-shadow-md select-none animate-bounce-slow">⚓</span>}
                     </div>
 
                     <div className="min-w-0 flex-1 flex flex-col justify-center h-full relative px-1">
-                      <div className="font-black text-slate-800 text-sm md:text-base lg:text-lg leading-none group-hover:text-[#0a2647] transition-colors truncate">
+                      <div className={`font-black text-slate-800 text-sm md:text-base lg:text-lg leading-none group-hover:text-[#0a2647] transition-colors truncate ${isBottom ? 'text-rose-700' : ''}`}>
                         {displayName}
+                        {isBottom && <span className="ml-2 text-[9px] text-white font-black uppercase tracking-widest bg-rose-600 px-2 py-1 rounded-lg shadow-sm italic animate-pulse">Bét bảng - Đang bơi</span>}
                       </div>
                       <div className="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-widest absolute top-full left-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
                         {row.profile?.real_name || 'ID: ' + row.user_id.substring(0, 8)}
@@ -302,9 +343,9 @@ export default function LeaderboardPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-4 md:space-x-8 ml-4 shrink-0 self-center">
+                <div className="flex items-center space-x-4 md:space-x-8 ml-4 shrink-0 self-center relative z-10">
                   <div className="text-right">
-                    <div className="font-black text-2xl md:text-3xl text-[#0a2647] tracking-tighter leading-none">
+                    <div className={`font-black text-2xl md:text-3xl tracking-tighter leading-none ${isBottom ? 'text-rose-600' : 'text-[#0a2647]'}`}>
                       {row.total} <span className="text-[8px] md:text-[10px] uppercase ml-0.5 opacity-60 font-bold">{t('pts')}</span>
                     </div>
                     <div className={`text-[10px] md:text-sm font-black uppercase tracking-widest mt-2 ${penalty > 0 ? 'text-rose-600 animate-pulse-slow' : 'text-slate-200'}`}>
