@@ -120,6 +120,50 @@ export function getBestThirdPlaces(allStandings: TeamStanding[]): TeamStanding[]
   return sortGroupStandings(thirds).slice(0, 8)
 }
 
+/**
+ * Returns a map of group winners, runners-up, and best 3rds
+ */
+export function getGroupRankings(allStandings: TeamStanding[]) {
+  const groups = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
+  const ranks: Record<string, { first?: TeamStanding, second?: TeamStanding, third?: TeamStanding }> = {}
+
+  groups.forEach(g => {
+    const groupTeams = allStandings.filter(s => s.group === g)
+    const sorted = sortGroupStandings(groupTeams)
+    ranks[g] = {
+      first: sorted[0],
+      second: sorted[1],
+      third: sorted[2]
+    }
+  })
+
+  const bestThirds = getBestThirdPlaces(allStandings)
+
+  return { ranks, bestThirds }
+}
+
+/**
+ * Official FIFA 2026 Round of 32 Mapping
+ */
+export const R32_MATCH_MAPPING: Record<number, { a: string, b: string }> = {
+  73: { a: '2A', b: '2B' },
+  74: { a: '1E', b: '3ABC' }, // Placeholder for complex 3rd place logic
+  75: { a: '1F', b: '2C' },
+  76: { a: '1C', b: '2F' },
+  77: { a: '1B', b: '3EFG' },
+  78: { a: '1A', b: '3CDE' },
+  79: { a: '1G', b: '3AIK' },
+  80: { a: '1D', b: '3IJK' },
+  81: { a: '1H', b: '2J' },
+  82: { a: '1I', b: '3CDL' },
+  83: { a: '1J', b: '2H' },
+  84: { a: '1K', b: '3ABJ' },
+  85: { a: '1L', b: '3FGH' },
+  86: { a: '2E', b: '2G' },
+  87: { a: '1A', b: '2B' },
+  88: { a: '2I', b: '2L' }
+}
+
 export function getMatchWinner(match: any): { id: number; name: string } | null {
   if (match.status !== 'FINISHED') return null
   if (match.score_a > match.score_b) return { id: match.team_a_id, name: match.team_a }

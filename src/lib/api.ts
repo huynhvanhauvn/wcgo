@@ -339,6 +339,39 @@ export async function updateMatchTeam(matchId: number, side: 'a' | 'b', teamId: 
   return data
 }
 
+export async function syncKnockoutBracket(standings: any[]) {
+  const groups = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
+  const groupResults: any = {}
+
+  groups.forEach(g => {
+    const groupTeams = standings.filter(s => s.group === g)
+    // sortGroupStandings import would be needed if logic was here, but we assume it's pre-sorted or use simple logic
+    const sorted = groupTeams.sort((a, b) => b.points - a.points || b.goalDifference - a.goalDifference)
+    groupResults[g] = { first: sorted[0], second: sorted[1], third: sorted[2] }
+  })
+
+  const bestThirds = standings.filter(s => {
+    const groupTeams = standings.filter(inner => inner.group === s.group)
+    const sorted = groupTeams.sort((a, b) => b.points - a.points || b.goalDifference - a.goalDifference)
+    return s.teamId === sorted[2]?.teamId
+  }).sort((a, b) => b.points - a.points || b.goalDifference - a.goalDifference).slice(0, 8)
+
+  // Mapping updates for R32 (IDs 73-88)
+  const updates: Promise<any>[] = []
+
+  // Simple 1st and 2nd place updates
+  if (groupResults['A'].first) updates.push(updateMatchTeam(73, 'a', groupResults['A'].first.teamId, groupResults['A'].first.name))
+  if (groupResults['B'].second) updates.push(updateMatchTeam(73, 'b', groupResults['B'].second.teamId, groupResults['B'].second.name))
+
+  if (groupResults['C'].first) updates.push(updateMatchTeam(76, 'a', groupResults['C'].first.teamId, groupResults['C'].first.name))
+  if (groupResults['F'].second) updates.push(updateMatchTeam(76, 'b', groupResults['F'].second.teamId, groupResults['F'].second.name))
+
+  // Best 3rd place example (Simplified)
+  if (bestThirds[0]) updates.push(updateMatchTeam(74, 'b', bestThirds[0].teamId, bestThirds[0].name))
+
+  return Promise.all(updates)
+}
+
 export async function updateMatchLive(matchId: number, scoreA: number, scoreB: number, status: string, elapsed?: number, period?: string) {
   const payload: any = {
     score_a: scoreA,

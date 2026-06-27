@@ -24,6 +24,44 @@ export default function AdminPage() {
   const [scoreInputs, setScoreInputs] = useState<Record<number, { a: number | ''; b: number | '' }>>({})
   const [editingNames, setEditingNames] = useState<Record<string, string>>({})
   const [newPasswords, setNewPasswords] = useState<Record<string, string>>({})
+  const [teams, setTeams] = useState<any[]>([])
+  const [pairingMatch, setPairingMatch] = useState<{ match: any, side: 'a' | 'b' } | null>(null)
+
+  // Team Selector Modal for pairing
+  const renderTeamSelector = () => {
+    if (!pairingMatch) return null
+    const currentId = pairingMatch.side === 'a' ? pairingMatch.match.team_a_id : pairingMatch.match.team_b_id
+
+    return (
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setPairingMatch(null)}></div>
+        <div className="relative bg-white w-full max-w-sm rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[70vh] animate-in zoom-in-95 duration-300 border border-slate-200">
+          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="font-black text-[#0a2647] uppercase tracking-widest text-sm">Chọn Đội {pairingMatch.side.toUpperCase()}</h3>
+            <button onClick={() => setPairingMatch(null)} className="text-slate-300 hover:text-[#0a2647]">✕</button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            <button
+              onClick={() => handleUpdateTeam(null, '')}
+              className="w-full p-4 text-left hover:bg-rose-50 rounded-2xl font-black text-rose-500 text-[10px] uppercase tracking-widest border border-rose-100 border-dashed transition-all mb-2"
+            >
+              XOÁ TRỐNG VỊ TRÍ
+            </button>
+            {teams.map(team => (
+              <button
+                key={team.id}
+                onClick={() => handleUpdateTeam(team.id, team.name)}
+                className={`w-full p-3 flex items-center gap-4 hover:bg-blue-50 rounded-2xl transition-all ${currentId === team.id ? 'bg-blue-50 ring-2 ring-blue-100' : ''}`}
+              >
+                <img src={getFlagUrl(team.name) || ''} className="h-5 w-8 rounded-sm object-cover shadow-sm" alt="" />
+                <span className="font-black text-[#0a2647] text-sm uppercase">{t(`teams.${team.name}`, { defaultValue: team.name })}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const loadData = async () => {
     setLoading(true)
@@ -32,10 +70,12 @@ export default function AdminPage() {
       // Fetch all data in a single block to catch any schema/RLS errors
       const m = await api.fetchMatches()
       const pRows = await api.fetchAllProfiles()
+      const tRows = await api.fetchTeams()
       const rRows = await api.fetchPasswordResetRequests().catch(() => []) // Optional, don't crash
 
       setMatches(m || [])
       setAllProfiles(pRows || [])
+      setTeams(tRows || [])
       setResetRequests(rRows || [])
 
       // Init inputs
@@ -158,12 +198,16 @@ export default function AdminPage() {
     } catch (e: any) { alert(e.message) }
   }
 
-  const handleDelete = async (userId: string) => {
-    if (!window.confirm(t('admin_deletion.confirm_delete'))) return
+  const handleUpdateTeam = async (teamId: number | null, teamName: string) => {
+    if (!pairingMatch) return
     try {
-      await api.deleteUserByAdmin(userId)
+      await api.updateMatchTeam(pairingMatch.match.id, pairingMatch.side, teamId, teamName)
+      alert(`Đã cập nhật Đội ${pairingMatch.side.toUpperCase()} cho trận #${pairingMatch.match.id}`)
       loadData()
-    } catch (e: any) { alert(e.message) }
+      setPairingMatch(null)
+    } catch (e: any) {
+      alert(e.message)
+    }
   }
 
   if (!isAdmin) return <div className="p-10 text-center font-bold text-rose-500">{t('authFailed')}</div>
@@ -199,10 +243,18 @@ export default function AdminPage() {
             </div>
 
             <div className="p-6 flex flex-col lg:flex-row justify-between items-center gap-8">
-              {/* Match Info */}
+              {/* Match Info with Pairing Controls */}
               <div className="flex-1 w-full flex items-center justify-between lg:justify-start gap-4 md:gap-12">
-                <div className="flex flex-col items-center gap-2 min-w-[80px]">
-                  <img src={getFlagUrl(m.team_a)} className="h-8 w-12 object-cover rounded shadow-sm border border-slate-100" alt="" />
+                <div
+                  className="flex flex-col items-center gap-2 min-w-[80px] cursor-pointer hover:bg-slate-50 p-2 rounded-2xl transition-all border border-transparent hover:border-slate-100 group"
+                  onClick={() => setPairingMatch({ match: m, side: 'a' })}
+                >
+                  <div className="relative">
+                    <img src={getFlagUrl(m.team_a)} className="h-8 w-12 object-cover rounded shadow-sm border border-slate-100" alt="" />
+                    <div className="absolute -top-1 -right-1 bg-emerald-500 text-white p-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h8.828l8.38-8.379-2.83-2.828z" /></svg>
+                    </div>
+                  </div>
                   <span className="text-[10px] font-black text-[#0a2647] uppercase text-center w-24 truncate">{m.team_a}</span>
                 </div>
 
@@ -211,8 +263,16 @@ export default function AdminPage() {
                    <div className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter whitespace-nowrap">{startTime}</div>
                 </div>
 
-                <div className="flex flex-col items-center gap-2 min-w-[80px]">
-                  <img src={getFlagUrl(m.team_b)} className="h-8 w-12 object-cover rounded shadow-sm border border-slate-100" alt="" />
+                <div
+                  className="flex flex-col items-center gap-2 min-w-[80px] cursor-pointer hover:bg-slate-50 p-2 rounded-2xl transition-all border border-transparent hover:border-slate-100 group"
+                  onClick={() => setPairingMatch({ match: m, side: 'b' })}
+                >
+                  <div className="relative">
+                    <img src={getFlagUrl(m.team_b)} className="h-8 w-12 object-cover rounded shadow-sm border border-slate-100" alt="" />
+                    <div className="absolute -top-1 -right-1 bg-emerald-500 text-white p-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h8.828l8.38-8.379-2.83-2.828z" /></svg>
+                    </div>
+                  </div>
                   <span className="text-[10px] font-black text-[#0a2647] uppercase text-center w-24 truncate">{m.team_b}</span>
                 </div>
               </div>
@@ -276,6 +336,9 @@ export default function AdminPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20 px-2">
+      {/* PAIRING MODAL */}
+      {renderTeamSelector()}
+
       {/* TABS */}
       <div className="flex border-b border-slate-100 bg-white rounded-t-[2rem] overflow-hidden shadow-sm">
         <button onClick={() => setActiveTab('matches')} className={`flex-1 py-5 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'matches' ? 'bg-[#0a2647] text-white' : 'text-slate-400 hover:bg-slate-50'}`}>{t('matches')}</button>

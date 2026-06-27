@@ -288,34 +288,34 @@ export default function LeaderboardPage() {
               <div key={row.user_id} className={`flex items-center justify-between rounded-2xl border p-4 md:p-6 transition-all duration-300 hover:scale-[1.015] hover:shadow-lg cursor-pointer group shadow-sm relative overflow-hidden ${getRankClass(row)} ${isBottom ? 'border-rose-500 ring-4 ring-rose-100' : ''}`} onClick={() => handleUserClick(row)}>
 
                 {/* DYNAMIC ITEM BACKGROUNDS */}
-                <div className="absolute inset-0 opacity-[0.08] pointer-events-none select-none overflow-hidden">
+                <div className="absolute inset-0 opacity-[0.12] pointer-events-none select-none overflow-hidden">
                   {isTop1 && (
-                    <>
-                      <div className="absolute -right-4 -bottom-4 text-8xl transform -rotate-12 animate-bounce-slow">🏆</div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-100/50 via-transparent to-transparent">
+                      <div className="absolute -right-4 -bottom-4 text-9xl transform -rotate-12 animate-bounce-slow opacity-20">🏆</div>
                       <div className="absolute left-10 top-1/2 -translate-y-1/2 text-6xl animate-pulse">✨</div>
                       <div className="absolute right-1/4 top-0 text-4xl">⭐</div>
-                    </>
+                    </div>
                   )}
                   {isTop2 && (
-                    <>
-                      <div className="absolute -right-4 -bottom-4 text-8xl transform rotate-12 opacity-80">🥈</div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-slate-100/50 via-transparent to-transparent">
+                      <div className="absolute -right-4 -bottom-4 text-9xl transform rotate-12 animate-bounce-slow opacity-20">🥈</div>
                       <div className="absolute left-12 top-1/3 text-5xl">⚡</div>
-                      <div className="absolute right-1/3 bottom-2 text-4xl animate-float-note">🚀</div>
-                    </>
+                      <div className="absolute right-1/3 bottom-2 text-4xl">🚀</div>
+                    </div>
                   )}
                   {isTop3 && (
-                    <>
-                      <div className="absolute -right-4 -bottom-4 text-8xl transform -rotate-6 opacity-60">🥉</div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-orange-50/50 via-transparent to-transparent">
+                      <div className="absolute -right-4 -bottom-4 text-9xl transform -rotate-6 animate-bounce-slow opacity-20">🥉</div>
                       <div className="absolute left-1/4 top-1/4 text-5xl animate-pulse">🔥</div>
                       <div className="absolute right-10 bottom-1/2 text-4xl">💪</div>
-                    </>
+                    </div>
                   )}
                   {isBottom && (
-                    <>
-                      <div className="absolute -right-4 -bottom-4 text-8xl transform rotate-12">⚓</div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-rose-100/50 via-transparent to-transparent">
+                      <div className="absolute -right-4 -bottom-4 text-9xl transform rotate-12 opacity-30">⚓</div>
                       <div className="absolute left-10 top-1/2 -translate-y-1/2 text-6xl">🌊</div>
                       <div className="absolute right-1/4 top-0 text-4xl">🦈</div>
-                    </>
+                    </div>
                   )}
                 </div>
 
