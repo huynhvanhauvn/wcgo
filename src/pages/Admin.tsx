@@ -26,37 +26,60 @@ export default function AdminPage() {
   const [newPasswords, setNewPasswords] = useState<Record<string, string>>({})
   const [teams, setTeams] = useState<any[]>([])
   const [pairingMatch, setPairingMatch] = useState<{ match: any, side: 'a' | 'b' } | null>(null)
+  const [teamSearch, setTeamSearch] = useState('')
 
   // Team Selector Modal for pairing
   const renderTeamSelector = () => {
     if (!pairingMatch) return null
     const currentId = pairingMatch.side === 'a' ? pairingMatch.match.team_a_id : pairingMatch.match.team_b_id
 
+    const filteredTeams = teamSearch.trim() === ''
+      ? teams
+      : teams.filter(t => t.name.toLowerCase().includes(teamSearch.toLowerCase()))
+
     return (
       <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setPairingMatch(null)}></div>
+        <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => { setPairingMatch(null); setTeamSearch(''); }}></div>
         <div className="relative bg-white w-full max-w-sm rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[70vh] animate-in zoom-in-95 duration-300 border border-slate-200">
           <div className="p-6 border-b border-slate-100 flex items-center justify-between">
             <h3 className="font-black text-[#0a2647] uppercase tracking-widest text-sm">Chọn Đội {pairingMatch.side.toUpperCase()}</h3>
-            <button onClick={() => setPairingMatch(null)} className="text-slate-300 hover:text-[#0a2647]">✕</button>
+            <button onClick={() => { setPairingMatch(null); setTeamSearch(''); }} className="text-slate-300 hover:text-[#0a2647]">✕</button>
           </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+
+          <div className="p-4 bg-slate-50 border-b border-slate-100">
+            <input
+              type="text"
+              autoFocus
+              placeholder="Tìm tên đội..."
+              value={teamSearch}
+              onChange={e => setTeamSearch(e.target.value)}
+              className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-100 outline-none font-bold text-sm"
+            />
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-2 no-scrollbar">
             <button
               onClick={() => handleUpdateTeam(null, '')}
-              className="w-full p-4 text-left hover:bg-rose-50 rounded-2xl font-black text-rose-500 text-[10px] uppercase tracking-widest border border-rose-100 border-dashed transition-all mb-2"
+              className="w-full p-4 text-left hover:bg-rose-50 rounded-2xl font-black text-rose-50 text-[10px] uppercase tracking-widest border border-rose-100 border-dashed transition-all mb-2"
             >
               XOÁ TRỐNG VỊ TRÍ
             </button>
-            {teams.map(team => (
-              <button
-                key={team.id}
-                onClick={() => handleUpdateTeam(team.id, team.name)}
-                className={`w-full p-3 flex items-center gap-4 hover:bg-blue-50 rounded-2xl transition-all ${currentId === team.id ? 'bg-blue-50 ring-2 ring-blue-100' : ''}`}
-              >
-                <img src={getFlagUrl(team.name) || ''} className="h-5 w-8 rounded-sm object-cover shadow-sm" alt="" />
-                <span className="font-black text-[#0a2647] text-sm uppercase">{t(`teams.${team.name}`, { defaultValue: team.name })}</span>
-              </button>
-            ))}
+            <div className="grid grid-cols-1 gap-1">
+              {filteredTeams.map(team => (
+                <button
+                  key={team.id}
+                  onClick={() => handleUpdateTeam(team.id, team.name)}
+                  className={`w-full p-3 flex items-center gap-4 hover:bg-blue-50 rounded-2xl transition-all ${currentId === team.id ? 'bg-blue-50 ring-2 ring-blue-100' : ''}`}
+                >
+                  <img src={getFlagUrl(team.name) || ''} className="h-5 w-8 rounded-sm object-cover shadow-sm" alt="" />
+                  <span className="font-black text-[#0a2647] text-sm uppercase">{t(`teams.${team.name}`, { defaultValue: team.name })}</span>
+                  {currentId === team.id && <span className="ml-auto text-blue-500">✓</span>}
+                </button>
+              ))}
+              {filteredTeams.length === 0 && (
+                <div className="p-10 text-center text-slate-300 font-bold text-xs uppercase italic">Không tìm thấy đội phù hợp</div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -200,13 +223,27 @@ export default function AdminPage() {
 
   const handleUpdateTeam = async (teamId: number | null, teamName: string) => {
     if (!pairingMatch) return
+
+    // Update local state immediately for instant feedback
+    setMatches(prev => prev.map(m => {
+      if (m.id === pairingMatch.match.id) {
+        return {
+          ...m,
+          [pairingMatch.side === 'a' ? 'team_a_id' : 'team_b_id']: teamId,
+          [pairingMatch.side === 'a' ? 'team_a' : 'team_b']: teamName
+        }
+      }
+      return m
+    }))
+
     try {
       await api.updateMatchTeam(pairingMatch.match.id, pairingMatch.side, teamId, teamName)
-      alert(`Đã cập nhật Đội ${pairingMatch.side.toUpperCase()} cho trận #${pairingMatch.match.id}`)
-      loadData()
+      // We don't call loadData() here to avoid a full-page loading flicker
       setPairingMatch(null)
+      setTeamSearch('')
     } catch (e: any) {
       alert(e.message)
+      loadData() // Rollback on error
     }
   }
 
